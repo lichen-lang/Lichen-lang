@@ -10,7 +10,7 @@ mod token;
 #[cfg(test)]
 mod tests {
 
-    use std::string;
+    use std::{error, string};
 
     use crate::{parser::expr_parser, Parser, StateParser};
 
@@ -109,6 +109,8 @@ pub fn up(a:i32,b:i32):(i32,i32){
         }
     }
 
+    /// # expr_test00
+    /// 式を正しくIR(中間形式)に変換できるかどうかのテスト
     #[test]
     fn expr_test01() {
         let code = "func(10,1) + 2 * x";
@@ -119,6 +121,21 @@ pub fn up(a:i32,b:i32):(i32,i32){
         if let Ok(e) = a {
             for i in e {
                 i.show()
+            }
+        }
+    }
+
+    #[test]
+    fn expr_test02() {
+        let code = "func(10,1) + 2 * x";
+        let string_code: String = String::from(code);
+        let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
+
+        if let Err(a) = e_parser.resolve2() {
+            println!("ParseError occured");
+        } else {
+            for i in e_parser.code_list {
+                i.show();
             }
         }
     }

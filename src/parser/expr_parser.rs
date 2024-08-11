@@ -6,6 +6,7 @@ use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::unknown::UnKnownBranch;
+use crate::token::word::WordBranch;
 
 use super::parser_errors::ParserError;
 
@@ -29,6 +30,68 @@ impl ExprParser {
             depth: depth,
             loopdepth: loopdepth,
         }
+    }
+
+    pub fn resolve2(&mut self) -> Result<(), ParserError> {
+        self.code_list = self.code2_vec_pre_proc_func(&self.code);
+        if let Err(e) = self.code2vec2() {
+            return Err(e);
+        } else {
+            for i in &mut self.code_list {
+                if let Err(e) = i.resolve_self() {
+                    return Err(e);
+                }
+            }
+            return Ok(());
+        }
+    }
+
+    fn grouping_words2(&mut self) -> Result<(), ParserError> {
+        let mut rlist: Vec<BaseElem> = Vec::new();
+        let mut group: String = String::new();
+
+        for inner in &self.code_list {
+            if let BaseElem::UnKnownElem(ref e) = inner {
+                if Self::SPLIT_CHAR.contains(&e.contents)
+                // inner in split
+                {
+                    if !group.is_empty() {
+                        rlist.push(BaseElem::WordElem(WordBranch {
+                            contents: group.clone(),
+                        }));
+                        group.clear();
+                    }
+                } else if Self::EXCLUDE_WORDS.contains(&e.contents)
+                // inner in split
+                {
+                    if !group.is_empty() {
+                        rlist.push(BaseElem::WordElem(WordBranch {
+                            contents: group.clone(),
+                        }));
+                        group.clear();
+                    }
+                    rlist.push(inner.clone());
+                } else {
+                    group.push(e.contents);
+                }
+            } else {
+                if !group.is_empty() {
+                    rlist.push(BaseElem::WordElem(WordBranch {
+                        contents: group.clone(),
+                    }));
+                    group.clear();
+                }
+                rlist.push(inner.clone());
+            }
+        }
+        if !group.is_empty() {
+            rlist.push(BaseElem::WordElem(WordBranch {
+                contents: group.clone(),
+            }));
+            group.clear();
+        }
+        self.code_list = rlist;
+        return Ok(());
     }
 
     fn grouping_quotation2(&mut self) -> Result<(), ParserError> {
@@ -171,6 +234,7 @@ impl ExprParser {
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
         ));
+        err_proc!(self.grouping_words2());
         return Ok(());
     }
 
