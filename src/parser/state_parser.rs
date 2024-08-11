@@ -22,26 +22,6 @@ impl StateParser {
         }
     }
 
-    // pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
-    //     let code_list_data = self.code2_vec_pre_proc_func(&self.code);
-    //     let code_list = self.code2vec(&code_list_data);
-    //     match code_list {
-    //         Ok(mut v) => {
-    //             for i in &mut v {
-    //                 match i.resolve_self() {
-    //                     Ok(_) => { /* pass */ }
-    //                     //Err(e) => return Err(e)
-    //                     Err(_) => { /* pass */ }
-    //                 }
-    //             }
-    //             return Ok(v);
-    //         }
-    //         Err(e) => {
-    //             return Err(e);
-    //         }
-    //     }
-    // }
-
     pub fn create_parser_from_vec(
         code_list: Vec<BaseElem>,
         depth: isize,
@@ -52,20 +32,6 @@ impl StateParser {
             code_list: code_list,
             depth: depth,
             loopdepth: loopdepth,
-        }
-    }
-
-    pub fn resolve2(&mut self) -> Result<(), ParserError> {
-        self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec2() {
-            return Err(e);
-        } else {
-            for i in &mut self.code_list {
-                if let Err(e) = i.resolve_self() {
-                    return Err(e);
-                }
-            }
-            return Ok(());
         }
     }
 
@@ -266,4 +232,18 @@ impl StateParser {
     }
 }
 
-impl Parser<'_> for StateParser {}
+impl Parser<'_> for StateParser {
+    fn resolve(&mut self) -> Result<(), ParserError> {
+        self.code_list = self.code2_vec_pre_proc_func(&self.code);
+        if let Err(e) = self.code2vec2() {
+            return Err(e);
+        } else {
+            for i in &mut self.code_list {
+                if let Err(e) = i.resolve_self() {
+                    return Err(e);
+                }
+            }
+            return Ok(());
+        }
+    }
+}

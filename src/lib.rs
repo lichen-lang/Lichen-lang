@@ -8,8 +8,6 @@ mod token;
 #[cfg(test)]
 mod tests {
 
-    use std::{error, string};
-
     use crate::parser::core_parser::Parser;
     use crate::parser::state_parser::StateParser;
 
@@ -28,7 +26,7 @@ mod tests {
         let string_code: String = String::from(code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
 
-        if let Err(a) = e_parser.resolve2() {
+        if let Err(_) = e_parser.resolve() {
             println!("ParseError occured");
         } else {
             for i in e_parser.code_list {
@@ -39,11 +37,11 @@ mod tests {
 
     #[test]
     fn expr_test01() {
-        let code = "(10 + 1) + 2 * x";
+        let code = "func(10, 1) + 2 * x";
         let string_code: String = String::from(code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
 
-        if let Err(a) = e_parser.resolve2() {
+        if let Err(_) = e_parser.resolve() {
             println!("ParseError occured");
         } else {
             for i in e_parser.code_list {

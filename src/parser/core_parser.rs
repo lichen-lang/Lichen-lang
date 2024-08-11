@@ -1,8 +1,7 @@
 // use crate::parser::token::*;
 use crate::abs::ast::*;
-use crate::token::{
-    func::FuncBranch, string::StringBranch, unknown::UnKnownBranch, word::WordBranch,
-};
+use crate::errors::parser_errors::ParserError;
+use crate::token::unknown::UnKnownBranch;
 
 /// # Parser trait
 /// パーサのコア実装
@@ -145,6 +144,8 @@ pub trait Parser<'a> {
     const BLOCK_LIST_CLOSE: char = ']';
 
     // fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str>;
+
+    fn resolve(&mut self) -> Result<(), ParserError>;
 
     fn code2_vec_pre_proc_func(&self, code: &String) -> Vec<BaseElem> {
         return code
