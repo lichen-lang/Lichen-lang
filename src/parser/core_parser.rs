@@ -54,12 +54,14 @@ pub trait Parser<'a> {
     const RIGHT_PRIORITY_LIST: [(&'a str, isize); 7] = [
         // PRIORITY -4
         (Self::ASSIGNMENT, -4), // =
-        (Self::ADDEQ, -4),      // +=
-        (Self::SUBEQ, -4),      // -=
-        (Self::MULEQ, -4),      // *=
-        (Self::DIVEQ, -4),      // /=
-        (Self::MODEQ, -4),      // %=
-        (Self::POW, 3),         // **
+        // <<< DO NOT USE >>>
+        (Self::ADDEQ, -4), // +=
+        (Self::SUBEQ, -4), // -=
+        (Self::MULEQ, -4), // *=
+        (Self::DIVEQ, -4), // /=
+        (Self::MODEQ, -4), // %=
+        // <<< ^^^^^^^^^^ >>>
+        (Self::POW, 3), // **
     ];
     const PREFIX_PRIORITY_LIST: [(&'a str, isize); 1] = [
         // PRIORITY -1
