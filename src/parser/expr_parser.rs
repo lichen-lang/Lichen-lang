@@ -8,7 +8,7 @@ use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
-use super::parser_errors::ParserError;
+use super::parser_errors::{self, ParserError};
 
 pub struct ExprParser {
     // TODO: 一時的にpublicにしているだけ
@@ -19,6 +19,35 @@ pub struct ExprParser {
 }
 
 impl ExprParser {
+    pub fn new(code: String, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: code,
+            code_list: Vec::new(),
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
+
+    pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
+        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
+        let code_list = self.code2vec(&code_list_data);
+        match code_list {
+            Ok(mut v) => {
+                for i in &mut v {
+                    match i.resolve_self() {
+                        Ok(_) => { /* pass */ }
+                        //Err(e) => return Err(e)
+                        Err(_) => { /* pass */ }
+                    }
+                }
+                return Ok(v);
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
+    }
+
     pub fn create_parser_from_vec(
         code_list: Vec<BaseElem>,
         depth: isize,
@@ -417,38 +446,80 @@ impl ExprParser {
         }
         return Ok(rlist);
     }
+
+    fn grouping_syntaxbox2(&mut self) -> Result<(), ParserError> {
+        let mut flag = false;
+        let mut name: String = String::new();
+        let mut group: Vec<SyntaxBranch> = Vec::new();
+        let mut rlist: Vec<BaseElem> = Vec::new();
+
+        for inner in &self.code_list {
+            if let BaseElem::SyntaxElem(ref e) = inner {
+                if Self::SYNTAX_WORDS_HEADS.contains(&e.name.as_str()) {
+                    flag = true;
+                    name = e.name.clone();
+                    group.push(e.clone());
+                } else if e.name == "elif" {
+                    if flag {
+                        group.push(e.clone());
+                    } else {
+                        return Err(ParserError::GroupingSyntaxBoxError);
+                        // TODO:
+                    }
+                } else if e.name == "else" {
+                    if flag {
+                        group.push(e.clone());
+                        rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {
+                            name: name.clone(),
+                            contents: group.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                        group.clear();
+                        name = String::from("");
+                        flag = false;
+                    } else {
+                        return Err(ParserError::GroupingSyntaxBoxError);
+                        // TODO:
+                    }
+                } else {
+                    rlist.push(inner.clone());
+                }
+            } else {
+                if flag {
+                    if !group.is_empty() {
+                        rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {
+                            name: name.clone(),
+                            contents: group.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                        group.clear();
+                        name = String::from("");
+                    } else {
+                        //pass
+                    }
+                    flag = false;
+                } else {
+                    //pass
+                }
+                rlist.push(inner.clone());
+            }
+        }
+        if !group.is_empty() {
+            rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {
+                name: name.clone(),
+                contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
+        }
+        self.code_list = rlist;
+        return Ok(());
+    }
 }
 
 impl Parser<'_> for ExprParser {
-    fn new(code: String, depth: isize, loopdepth: isize) -> Self {
-        Self {
-            code_list: Vec::new(),
-            code: code,
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
-    fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
-        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
-        let code_list = self.code2vec(&code_list_data);
-        match code_list {
-            Ok(mut v) => {
-                for i in &mut v {
-                    match i.resolve_self() {
-                        Ok(_) => { /* pass */ }
-                        //Err(e) => return Err(e)
-                        Err(_) => { /* pass */ }
-                    }
-                }
-                return Ok(v);
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-    }
-
     /// the function that groups token
     fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
         // -----    macro   -----
@@ -495,75 +566,5 @@ impl Parser<'_> for ExprParser {
 
     fn get_loopdepth(&self) -> isize {
         self.loopdepth
-    }
-
-    fn grouping_syntaxbox(&self, codelist: Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
-        let mut flag = false;
-        let mut name: String = String::new();
-        let mut group: Vec<SyntaxBranch> = Vec::new();
-        let mut rlist: Vec<BaseElem> = Vec::new();
-
-        for inner in codelist {
-            if let BaseElem::SyntaxElem(ref e) = inner {
-                if Self::SYNTAX_WORDS_HEADS.contains(&e.name.as_str()) {
-                    flag = true;
-                    name = e.name.clone();
-                    group.push(e.clone());
-                } else if e.name == "elif" {
-                    if flag {
-                        group.push(e.clone());
-                    } else {
-                        return Err("please write \"if\",\"while\" or \"for\" statement head");
-                        // TODO:
-                    }
-                } else if e.name == "else" {
-                    if flag {
-                        group.push(e.clone());
-                        rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {
-                            name: name.clone(),
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                        group.clear();
-                        name = String::from("");
-                        flag = false;
-                    } else {
-                        return Err("please write \"if\",\"while\" or \"for\" statement head");
-                        // TODO:
-                    }
-                } else {
-                    rlist.push(inner);
-                }
-            } else {
-                if flag {
-                    if !group.is_empty() {
-                        rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {
-                            name: name.clone(),
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                        group.clear();
-                        name = String::from("");
-                    } else {
-                        //pass
-                    }
-                    flag = false;
-                } else {
-                    //pass
-                }
-                rlist.push(inner);
-            }
-        }
-        if !group.is_empty() {
-            rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {
-                name: name.clone(),
-                contents: group.clone(),
-                depth: self.depth,
-                loopdepth: self.loopdepth,
-            }));
-        }
-        return Ok(rlist);
     }
 }

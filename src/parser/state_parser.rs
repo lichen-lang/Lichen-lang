@@ -13,6 +13,35 @@ pub struct StateParser {
 }
 
 impl StateParser {
+    pub fn new(code: String, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: code,
+            code_list: Vec::new(),
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
+
+    pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
+        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
+        let code_list = self.code2vec(&code_list_data);
+        match code_list {
+            Ok(mut v) => {
+                for i in &mut v {
+                    match i.resolve_self() {
+                        Ok(_) => { /* pass */ }
+                        //Err(e) => return Err(e)
+                        Err(_) => { /* pass */ }
+                    }
+                }
+                return Ok(v);
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
+    }
+
     pub fn create_parser_from_vec(
         code_list: Vec<BaseElem>,
         depth: isize,
@@ -238,35 +267,6 @@ impl StateParser {
 }
 
 impl Parser<'_> for StateParser {
-    fn new(code: String, depth: isize, loopdepth: isize) -> Self {
-        Self {
-            code: code,
-            code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
-    fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
-        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
-        let code_list = self.code2vec(&code_list_data);
-        match code_list {
-            Ok(mut v) => {
-                for i in &mut v {
-                    match i.resolve_self() {
-                        Ok(_) => { /* pass */ }
-                        //Err(e) => return Err(e)
-                        Err(_) => { /* pass */ }
-                    }
-                }
-                return Ok(v);
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-    }
-
     fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
         // -----    macro   -----
         /// # err_proc
@@ -311,10 +311,5 @@ impl Parser<'_> for StateParser {
 
     fn get_loopdepth(&self) -> isize {
         self.loopdepth
-    }
-
-    // grouping functions
-    fn grouping_syntaxbox(&self, codelist: Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
-        todo!()
     }
 }
