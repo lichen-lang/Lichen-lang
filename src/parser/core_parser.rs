@@ -68,18 +68,20 @@ pub trait Parser<'a> {
 
     /// 演算子を文字列として長いものからの順番で並べたもの
     const LENGTH_ORDER_OPE_LIST: [&'a str; 22] = [
-        Self::OR,         // ||
-        Self::AND,        // &&
-        Self::EQ,         // ==
-        Self::NE,         // !=
-        Self::LE,         // <=
-        Self::GE,         // >=
-        Self::ADDEQ,      // +=
-        Self::SUBEQ,      // -=
-        Self::MULEQ,      // *=
-        Self::DIVEQ,      // /=
-        Self::MODEQ,      // %=
-        Self::POW,        // **
+        // length 2
+        Self::OR,    // ||
+        Self::AND,   // &&
+        Self::EQ,    // ==
+        Self::NE,    // !=
+        Self::LE,    // <=
+        Self::GE,    // >=
+        Self::ADDEQ, // +=
+        Self::SUBEQ, // -=
+        Self::MULEQ, // *=
+        Self::DIVEQ, // /=
+        Self::MODEQ, // %=
+        Self::POW,   // **
+        // length 1
         Self::LT,         // <
         Self::GT,         // >
         Self::ADD,        // +
@@ -104,19 +106,19 @@ pub trait Parser<'a> {
     const SYNTAX_MATCH: &'a str = "match";
 
     const SYNTAX_WORDS: [&'a str; 7] = [
-        Self::SYNTAX_IF,    // if
-        Self::SYNTAX_ELIF,  // elif
-        Self::SYNTAX_ELSE,  // else
-        Self::SYNTAX_LOOP,  // loop
-        Self::SYNTAX_FOR,   // for
-        Self::SYNTAX_WHILE, // while
-        Self::SYNTAX_MATCH, // match
+        Self::SYNTAX_IF,    // if   (){}
+        Self::SYNTAX_ELIF,  // elif (){}
+        Self::SYNTAX_ELSE,  // else {}
+        Self::SYNTAX_LOOP,  // loop {}
+        Self::SYNTAX_FOR,   // for  (){}
+        Self::SYNTAX_WHILE, // while(){}
+        Self::SYNTAX_MATCH, // match(){}
     ];
     const SYNTAX_WORDS_HEADS: [&'a str; 4] = [
-        Self::SYNTAX_IF,    // if
-        Self::SYNTAX_LOOP,  // loop
-        Self::SYNTAX_FOR,   // for
-        Self::SYNTAX_WHILE, // while
+        Self::SYNTAX_IF,    // if   (){} ...
+        Self::SYNTAX_LOOP,  // loop (){} ...
+        Self::SYNTAX_FOR,   // for  (){} ...
+        Self::SYNTAX_WHILE, // while(){} ...
     ];
     const ESCAPECHAR: char = '\\';
     const FUNCTION: &'a str = "fn";
