@@ -1,6 +1,5 @@
 use crate::abs::ast::*;
-
-use crate::parser::parser_errors::ParserError;
+use crate::errors::parser_errors::ParserError;
 
 /// #ListBlockBranch
 /// listを格納するためのデータstruct

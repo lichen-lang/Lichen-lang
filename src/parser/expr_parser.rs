@@ -8,7 +8,7 @@ use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
-use super::parser_errors::ParserError;
+use crate::errors::parser_errors::ParserError;
 
 pub struct ExprParser {
     // TODO: 一時的にpublicにしているだけ
@@ -354,6 +354,7 @@ impl ExprParser {
         self.code_list = rlist;
         return Ok(());
     }
+
     /// 演算子をまとめる
     /// 演算子が長いものから順番にまとめていく必要がある
     /// 例えば、

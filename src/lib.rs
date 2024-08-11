@@ -1,9 +1,10 @@
-mod parser;
 //use crate::parser::core::ExprParser;
 use parser::core_parser::Parser;
 use parser::state_parser::StateParser;
 
 mod abs;
+mod errors;
+mod parser;
 mod token;
 
 // test case

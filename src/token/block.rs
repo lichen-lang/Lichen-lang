@@ -1,6 +1,6 @@
 use crate::abs::ast::*;
 
-use crate::parser::parser_errors::ParserError;
+use crate::errors::parser_errors::ParserError;
 use crate::parser::state_parser::*;
 
 /// # BlockBranch

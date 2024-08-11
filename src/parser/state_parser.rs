@@ -1,6 +1,6 @@
 use crate::abs::ast::*;
+use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::*;
-use crate::parser::parser_errors::ParserError;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 

@@ -1,7 +1,6 @@
 use crate::abs::ast::*;
+use crate::errors::parser_errors::ParserError;
 use crate::token::{block::BlockBranch, paren_block::ParenBlockBranch};
-
-use crate::parser::parser_errors::ParserError;
 
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct
