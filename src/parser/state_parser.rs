@@ -35,7 +35,7 @@ impl StateParser {
         }
     }
 
-    fn grouping_quotation2(&mut self) -> Result<(), ParserError> {
+    fn grouping_quotation(&mut self) -> Result<(), ParserError> {
         let mut open_flag = false;
         let mut escape_flag = false;
         let mut rlist = Vec::new();
@@ -90,7 +90,7 @@ impl StateParser {
         return Ok(());
     }
 
-    fn grouping_elements2<T>(
+    fn grouping_elements<T>(
         &mut self,
         elemtype: fn(T) -> BaseElem,
         open_char: char,
@@ -154,7 +154,7 @@ impl StateParser {
         return Ok(());
     }
 
-    fn grouping_words2(&mut self) -> Result<(), ParserError> {
+    fn grouping_words(&mut self) -> Result<(), ParserError> {
         let mut rlist: Vec<BaseElem> = Vec::new();
         let mut group: String = String::new();
 
@@ -202,7 +202,7 @@ impl StateParser {
         return Ok(());
     }
 
-    pub fn code2vec2(&mut self) -> Result<(), ParserError> {
+    pub fn code2vec(&mut self) -> Result<(), ParserError> {
         // --- macro ---
         macro_rules! err_proc {
             ($a:expr) => {
@@ -211,19 +211,19 @@ impl StateParser {
                 }
             };
         }
-        err_proc!(self.grouping_quotation2());
-        err_proc!(self.grouping_words2());
-        err_proc!(self.grouping_elements2(
+        err_proc!(self.grouping_quotation());
+        err_proc!(self.grouping_words());
+        err_proc!(self.grouping_elements(
             BaseElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
         ));
-        err_proc!(self.grouping_elements2(
+        err_proc!(self.grouping_elements(
             BaseElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
         ));
-        err_proc!(self.grouping_elements2(
+        err_proc!(self.grouping_elements(
             BaseElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
@@ -235,7 +235,7 @@ impl StateParser {
 impl Parser<'_> for StateParser {
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec2() {
+        if let Err(e) = self.code2vec() {
             return Err(e);
         } else {
             for i in &mut self.code_list {

@@ -23,7 +23,7 @@ impl RecursiveAnalysisElements for ParenBlockBranch {
         if let Some(a) = &self.contents {
             let mut parser =
                 ExprParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
-            match parser.code2vec2() {
+            match parser.code2vec() {
                 Ok(_) => {
                     let mut rlist = parser.code_list;
                     for i in &mut rlist {
