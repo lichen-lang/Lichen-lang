@@ -426,8 +426,7 @@ impl ExprParser {
                 if flag {
                     if let Some(ref base_e) = name_tmp {
                         if let BaseElem::WordElem(ref wb) = base_e {
-                            if <Self as Parser>::CONTROL_STATEMENT.contains(&(&wb.contents as &str))
-                            {
+                            if Self::CONTROL_STATEMENT.contains(&(&wb.contents as &str)) {
                                 rlist.push(BaseElem::FuncElem(FuncBranch {
                                     name: Box::new(base_e.clone()),
                                     contents: pbb.clone(),
