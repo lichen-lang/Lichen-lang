@@ -1,6 +1,12 @@
 use crate::abs::ast::*;
+use crate::parser::parser_errors::ParserError;
 use crate::token::paren_block::ParenBlockBranch;
 
+/// # FuncBranch
+/// 関数呼び出しのトークン
+/// ```
+/// f(args)
+/// ```
 #[derive(Clone)]
 pub struct FuncBranch {
     pub name: Box<BaseElem>,
@@ -15,11 +21,8 @@ impl ASTBranch for FuncBranch {
     }
 }
 
-impl ASTAreaBranch for FuncBranch {
-    fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
-        todo!()
-    }
-    fn resolve_self(&mut self) -> Result<&str, String> {
+impl RecursiveAnalysisElements for FuncBranch {
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
         todo!()
     }
 }

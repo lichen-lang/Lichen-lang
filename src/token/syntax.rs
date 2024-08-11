@@ -1,5 +1,8 @@
 use crate::abs::ast::*;
 use crate::token::{block::BlockBranch, paren_block::ParenBlockBranch};
+
+use crate::parser::parser_errors::ParserError;
+
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct
 /// resolve_selfはそれぞれ
@@ -21,12 +24,8 @@ impl ASTBranch for SyntaxBranch {
     }
 }
 
-impl ASTAreaBranch for SyntaxBranch {
-    fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
-        todo!()
-    }
-
-    fn resolve_self(&mut self) -> Result<&str, String> {
+impl RecursiveAnalysisElements for SyntaxBranch {
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
         todo!()
     }
 }
