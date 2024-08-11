@@ -127,7 +127,7 @@ pub fn up(a:i32,b:i32):(i32,i32){
 
     #[test]
     fn expr_test02() {
-        let code = "func(10,1) + 2 * x";
+        let code = "(10 + 1) + 2 * x";
         let string_code: String = String::from(code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
 

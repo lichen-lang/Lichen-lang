@@ -234,10 +234,97 @@ impl ExprParser {
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
         ));
+        err_proc!(self.grouoping_operator2());
         err_proc!(self.grouping_words2());
         return Ok(());
     }
 
+    fn grouoping_operator2(&mut self) -> Result<(), ParserError> {
+        for ope in Self::LENGTH_ORDER_OPE_LIST {
+            if let Err(e) = self.grouoping_operator_unit2(ope.to_string()) {
+                return Err(e);
+            }
+            // rlist = match self.grouoping_operator_unit(rlist, ope.to_string()) {
+            //     Ok(v) => v,
+            //     Err(e) => return Err(e),
+            // }
+        }
+        return Ok(());
+    }
+
+    fn grouoping_operator_unit2(&mut self, ope: String) -> Result<(), ParserError> {
+        let mut group: String = String::new();
+        let mut rlist: Vec<BaseElem> = Vec::new();
+
+        let ope_size = ope.len();
+        for inner in &self.code_list {
+            if let BaseElem::UnKnownElem(e) = inner {
+                // 未解決の場合
+                group.push(e.contents);
+                if group.len() < ope_size {
+                    continue;
+                } else if ope_size == group.len() {
+                    if group == ope {
+                        rlist.push(BaseElem::OpeElem(OperatorBranch {
+                            ope: group.clone(),
+                            depth: self.depth,
+                        }))
+                    } else {
+                        // rlist += group
+                        let grouup_tmp: Vec<BaseElem> = group
+                            .chars()
+                            .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                            .collect();
+                        rlist.extend(grouup_tmp);
+                    }
+                } else {
+                    // ope_size < group.len()
+                    // rlist += group
+                    let grouup_tmp: Vec<BaseElem> = group
+                        .chars()
+                        .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                        .collect();
+                    rlist.extend(grouup_tmp);
+                }
+                group.clear();
+            } else {
+                // 既にtokenが割り当てられているとき
+                if group.len() < ope_size {
+                    // rlist += group
+                    let grouup_tmp: Vec<BaseElem> = group
+                        .chars()
+                        .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                        .collect();
+                    rlist.extend(grouup_tmp);
+                } else if ope_size == group.len() {
+                    if group == ope {
+                        rlist.push(BaseElem::OpeElem(OperatorBranch {
+                            ope: group.clone(),
+                            depth: self.depth,
+                        }))
+                    } else {
+                        // rlist += group
+                        let grouup_tmp: Vec<BaseElem> = group
+                            .chars()
+                            .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                            .collect();
+                        rlist.extend(grouup_tmp);
+                    }
+                } else {
+                    // rlist += group
+                    let grouup_tmp: Vec<BaseElem> = group
+                        .chars()
+                        .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                        .collect();
+                    rlist.extend(grouup_tmp);
+                }
+                group.clear();
+                rlist.push(inner.clone());
+            }
+        } //end of "for inner in codelist"
+        self.code_list = rlist;
+        return Ok(());
+    }
     /// 演算子をまとめる
     /// 演算子が長いものから順番にまとめていく必要がある
     /// 例えば、
