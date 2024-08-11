@@ -8,7 +8,7 @@ use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
-use super::parser_errors::{self, ParserError};
+use super::parser_errors::ParserError;
 
 pub struct ExprParser {
     // TODO: 一時的にpublicにしているだけ
