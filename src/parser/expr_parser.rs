@@ -388,6 +388,7 @@ impl ExprParser {
         self.code_list = rlist;
         return Ok(());
     }
+
     ///
     /// TODO: Word以外について`()`が付与され呼ばれたときに
     /// 関数として認識できるようにする必要がある
@@ -396,12 +397,12 @@ impl ExprParser {
     /// funcA()() // 関数を返却するような関数
     /// a[]()     // 関数を保持しているリスト
     /// ```
-    fn grouping_functioncall<T>(&self, codelist: Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
+    fn grouping_functioncall<T>(&mut self) -> Result<(), ParserError> {
         let mut flag: bool = false;
         let mut name_tmp: Option<BaseElem> = None;
         let mut rlist: Vec<BaseElem> = Vec::new();
 
-        for inner in codelist {
+        for inner in &self.code_list {
             if let BaseElem::WordElem(ref wb) = inner {
                 // Case WordElem
                 if flag {
@@ -409,7 +410,7 @@ impl ExprParser {
                         rlist.push(e);
                     }
                 }
-                name_tmp = Some(inner);
+                name_tmp = Some(inner.clone());
                 flag = true;
             } else if let BaseElem::FuncElem(ref fb) = inner {
                 // Case FuncElem
@@ -418,7 +419,7 @@ impl ExprParser {
                         rlist.push(e);
                     }
                 }
-                name_tmp = Some(inner);
+                name_tmp = Some(inner.clone());
                 flag = true;
             } else if let BaseElem::ParenBlockElem(ref pbb) = inner {
                 // Case ParenBlockElem
@@ -438,7 +439,7 @@ impl ExprParser {
                             } else {
                                 // name tmp is not none
                                 rlist.push(base_e.clone()); // contents of name_tmp -> base_e
-                                rlist.push(inner);
+                                rlist.push(inner.clone());
                                 name_tmp = None;
                             }
                         } else if let BaseElem::FuncElem(_) = base_e {
@@ -453,12 +454,12 @@ impl ExprParser {
                         } else {
                             // name tmp is not none
                             rlist.push(base_e.clone()); // contents of name_tmp -> base_e
-                            rlist.push(inner);
+                            rlist.push(inner.clone());
                             name_tmp = None;
                         }
                     } else {
                         //name tmp is none
-                        rlist.push(inner);
+                        rlist.push(inner.clone());
                         flag = false;
                         name_tmp = None;
                     }
@@ -472,7 +473,8 @@ impl ExprParser {
                 rlist.push(e);
             }
         }
-        return Ok(rlist);
+        self.code_list = rlist;
+        return Ok(());
     }
 }
 
