@@ -1,6 +1,7 @@
 use crate::abs::ast::*;
 use crate::parser::core_parser::*;
 
+use crate::token::func::FuncBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
@@ -28,25 +29,25 @@ impl ExprParser {
         }
     }
 
-    pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
-        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
-        let code_list = self.code2vec(&code_list_data);
-        match code_list {
-            Ok(mut v) => {
-                for i in &mut v {
-                    match i.resolve_self() {
-                        Ok(_) => { /* pass */ }
-                        //Err(e) => return Err(e)
-                        Err(_) => { /* pass */ }
-                    }
-                }
-                return Ok(v);
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-    }
+    // pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
+    //     let code_list_data = self.code2_vec_pre_proc_func(&self.code);
+    //     let code_list = self.code2vec(&code_list_data);
+    //     match code_list {
+    //         Ok(mut v) => {
+    //             for i in &mut v {
+    //                 match i.resolve_self() {
+    //                     Ok(_) => { /* pass */ }
+    //                     //Err(e) => return Err(e)
+    //                     Err(_) => { /* pass */ }
+    //                 }
+    //             }
+    //             return Ok(v);
+    //         }
+    //         Err(e) => {
+    //             return Err(e);
+    //         }
+    //     }
+    // }
 
     pub fn create_parser_from_vec(
         code_list: Vec<BaseElem>,
@@ -142,7 +143,7 @@ impl ExprParser {
                             group.push(v.contents);
                             rlist.push(BaseElem::StringElem(StringBranch {
                                 contents: group.clone(),
-                                depth: self.get_depth(),
+                                depth: self.depth,
                             }));
                             group.clear();
                             open_flag = false;
@@ -205,8 +206,8 @@ impl ExprParser {
                     } else if depth == 0 {
                         rlist.push(elemtype(ASTAreaBranch::new(
                             Some(group.clone()),
-                            self.get_depth(),
-                            self.get_loopdepth(),
+                            self.depth,
+                            self.loopdepth,
                         )));
                         group.clear();
                     } else {
@@ -273,10 +274,6 @@ impl ExprParser {
             if let Err(e) = self.grouoping_operator_unit2(ope.to_string()) {
                 return Err(e);
             }
-            // rlist = match self.grouoping_operator_unit(rlist, ope.to_string()) {
-            //     Ok(v) => v,
-            //     Err(e) => return Err(e),
-            // }
         }
         return Ok(());
     }
@@ -518,54 +515,92 @@ impl ExprParser {
         self.code_list = rlist;
         return Ok(());
     }
-}
+    ///
+    /// TODO: Word以外について`()`が付与され呼ばれたときに
+    /// 関数として認識できるようにする必要がある
+    /// 例えば以下のような場合について
+    /// ```lichen
+    /// funcA()() // 関数を返却するような関数
+    /// a[]()     // 関数を保持しているリスト
+    /// ```
+    fn grouping_functioncall<T>(&self, codelist: Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
+        let mut flag: bool = false;
+        let mut name_tmp: Option<BaseElem> = None;
+        let mut rlist: Vec<BaseElem> = Vec::new();
 
-impl Parser<'_> for ExprParser {
-    /// the function that groups token
-    fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
-        // -----    macro   -----
-        /// # err_proc
-        /// errorがあればErr()を返却、なければ値を返す
-        macro_rules! err_proc {
-            ($grouping_func:expr) => {
-                match $grouping_func {
-                    Ok(r) => r,
-                    Err(e) => return Err(e),
+        for inner in codelist {
+            if let BaseElem::WordElem(ref wb) = inner {
+                // Case WordElem
+                if flag {
+                    if let Some(e) = name_tmp {
+                        rlist.push(e);
+                    }
                 }
-            };
+                name_tmp = Some(inner);
+                flag = true;
+            } else if let BaseElem::FuncElem(ref fb) = inner {
+                // Case FuncElem
+                if flag {
+                    if let Some(e) = name_tmp {
+                        rlist.push(e);
+                    }
+                }
+                name_tmp = Some(inner);
+                flag = true;
+            } else if let BaseElem::ParenBlockElem(ref pbb) = inner {
+                // Case ParenBlockElem
+                if flag {
+                    if let Some(ref base_e) = name_tmp {
+                        if let BaseElem::WordElem(ref wb) = base_e {
+                            if <Self as Parser>::CONTROL_STATEMENT.contains(&(&wb.contents as &str))
+                            {
+                                rlist.push(BaseElem::FuncElem(FuncBranch {
+                                    name: Box::new(base_e.clone()),
+                                    contents: pbb.clone(),
+                                    depth: self.depth,
+                                    loopdepth: self.loopdepth,
+                                }));
+                                name_tmp = None;
+                                flag = false;
+                            } else {
+                                // name tmp is not none
+                                rlist.push(base_e.clone()); // contents of name_tmp -> base_e
+                                rlist.push(inner);
+                                name_tmp = None;
+                            }
+                        } else if let BaseElem::FuncElem(_) = base_e {
+                            rlist.push(BaseElem::FuncElem(FuncBranch {
+                                name: Box::new(base_e.clone()),
+                                contents: pbb.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                            name_tmp = None;
+                            flag = false;
+                        } else {
+                            // name tmp is not none
+                            rlist.push(base_e.clone()); // contents of name_tmp -> base_e
+                            rlist.push(inner);
+                            name_tmp = None;
+                        }
+                    } else {
+                        //name tmp is none
+                        rlist.push(inner);
+                        flag = false;
+                        name_tmp = None;
+                    }
+                }
+            } else {
+                // pass
+            }
         }
-        // ----- start code -----
-        let mut code_list;
-        code_list = err_proc!(self.grouping_quotation(code.to_vec()));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::BlockElem,
-            Self::BLOCK_BRACE_OPEN,  // {
-            Self::BLOCK_BRACE_CLOSE  // }
-        ));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::ListBlockElem,
-            Self::BLOCK_LIST_OPEN,  // [
-            Self::BLOCK_LIST_CLOSE  // ]
-        ));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::ParenBlockElem,
-            Self::BLOCK_PAREN_OPEN,  // (
-            Self::BLOCK_PAREN_CLOSE  // )
-        ));
-        code_list = err_proc!(self.grouoping_operator(code_list));
-        code_list =
-            err_proc!(self.grouping_word(code_list, vec![' ', '\t', '\n'], vec![',', ';', ':']));
-        return Ok(code_list);
-    }
-
-    fn get_depth(&self) -> isize {
-        self.depth
-    }
-
-    fn get_loopdepth(&self) -> isize {
-        self.loopdepth
+        if flag {
+            if let Some(e) = name_tmp {
+                rlist.push(e);
+            }
+        }
+        return Ok(rlist);
     }
 }
+
+impl Parser<'_> for ExprParser {}

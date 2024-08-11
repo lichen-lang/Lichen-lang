@@ -22,25 +22,25 @@ impl StateParser {
         }
     }
 
-    pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
-        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
-        let code_list = self.code2vec(&code_list_data);
-        match code_list {
-            Ok(mut v) => {
-                for i in &mut v {
-                    match i.resolve_self() {
-                        Ok(_) => { /* pass */ }
-                        //Err(e) => return Err(e)
-                        Err(_) => { /* pass */ }
-                    }
-                }
-                return Ok(v);
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-    }
+    // pub fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
+    //     let code_list_data = self.code2_vec_pre_proc_func(&self.code);
+    //     let code_list = self.code2vec(&code_list_data);
+    //     match code_list {
+    //         Ok(mut v) => {
+    //             for i in &mut v {
+    //                 match i.resolve_self() {
+    //                     Ok(_) => { /* pass */ }
+    //                     //Err(e) => return Err(e)
+    //                     Err(_) => { /* pass */ }
+    //                 }
+    //             }
+    //             return Ok(v);
+    //         }
+    //         Err(e) => {
+    //             return Err(e);
+    //         }
+    //     }
+    // }
 
     pub fn create_parser_from_vec(
         code_list: Vec<BaseElem>,
@@ -89,7 +89,7 @@ impl StateParser {
                             group.push(v.contents);
                             rlist.push(BaseElem::StringElem(StringBranch {
                                 contents: group.clone(),
-                                depth: self.get_depth(),
+                                depth: self.depth,
                             }));
                             group.clear();
                             open_flag = false;
@@ -155,8 +155,8 @@ impl StateParser {
                     } else if depth == 0 {
                         rlist.push(elemtype(ASTAreaBranch::new(
                             Some(group.clone()),
-                            self.get_depth(),
-                            self.get_loopdepth(),
+                            self.depth,
+                            self.loopdepth,
                         )));
                         group.clear();
                     } else {
@@ -266,50 +266,4 @@ impl StateParser {
     }
 }
 
-impl Parser<'_> for StateParser {
-    fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
-        // -----    macro   -----
-        /// # err_proc
-        /// errorがあればErr()を返却、なければ値を返す
-        macro_rules! err_proc {
-            ($grouping_func:expr) => {
-                match $grouping_func {
-                    Ok(r) => r,
-                    Err(e) => return Err(e),
-                }
-            };
-        }
-        // ----- start code -----
-        let mut code_list;
-        code_list = err_proc!(self.grouping_quotation(code.to_vec()));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::BlockElem,
-            Self::BLOCK_BRACE_OPEN,  // {
-            Self::BLOCK_BRACE_CLOSE  // }
-        ));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::ListBlockElem,
-            Self::BLOCK_LIST_OPEN,  // [
-            Self::BLOCK_LIST_CLOSE  // ]
-        ));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::ParenBlockElem,
-            Self::BLOCK_PAREN_OPEN,  // (
-            Self::BLOCK_PAREN_CLOSE  // )
-        ));
-        code_list =
-            err_proc!(self.grouping_word(code_list, vec![' ', '\t', '\n'], vec![',', ';', ':']));
-        return Ok(code_list);
-    }
-
-    fn get_depth(&self) -> isize {
-        self.depth
-    }
-
-    fn get_loopdepth(&self) -> isize {
-        self.loopdepth
-    }
-}
+impl Parser<'_> for StateParser {}
