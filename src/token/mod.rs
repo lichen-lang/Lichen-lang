@@ -2,10 +2,12 @@
 pub mod block;
 pub mod func;
 pub mod list_block;
-pub mod operation;
+pub mod operator;
 pub mod paren_block;
 pub mod syntax;
 pub mod syntax_box;
+
+pub mod decvalue;
 
 // structures without ASTAreaBranch trait b
 pub mod string;

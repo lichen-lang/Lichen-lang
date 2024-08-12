@@ -1,9 +1,14 @@
 use crate::token::{
-    block::BlockBranch, func::FuncBranch, list_block::ListBlockBranch,
+    block::BlockBranch, func::FuncBranch, list_block::ListBlockBranch, operator::OperatorBranch,
     paren_block::ParenBlockBranch, string::StringBranch, syntax::SyntaxBranch,
     syntax_box::SyntaxBoxBranch, unknown::UnKnownBranch, word::WordBranch,
 };
 
+use crate::errors::parser_errors::ParserError;
+
+/// # BaseElem
+/// 抽象的なtoken
+/// プログラムの要素を表現できる
 #[derive(Clone)]
 pub enum BaseElem {
     BlockElem(BlockBranch),
@@ -15,6 +20,7 @@ pub enum BaseElem {
     // without ASTAreaBranch trait structures
     StringElem(StringBranch),
     WordElem(WordBranch),
+    OpeElem(OperatorBranch),
     UnKnownElem(UnKnownBranch),
 }
 
@@ -30,10 +36,11 @@ impl BaseElem {
             BaseElem::SyntaxElem(e) => e.show(),
             BaseElem::SyntaxBoxElem(e) => e.show(),
             BaseElem::FuncElem(e) => e.show(),
+            BaseElem::OpeElem(e) => e.show(),
         }
     }
 
-    pub fn resolve_self(&mut self) -> Result<&str, String> {
+    pub fn resolve_self(&mut self) -> Result<(), ParserError> {
         match self {
             // recursive analysis elements
             BaseElem::BlockElem(e) => return e.resolve_self(),
@@ -44,13 +51,17 @@ impl BaseElem {
             BaseElem::FuncElem(e) => return e.resolve_self(),
 
             // unrecursive analysis elements
-            BaseElem::StringElem(_) => return Ok("Ok"),
-            BaseElem::WordElem(_) => return Ok("Ok"),
-            BaseElem::UnKnownElem(_) => return Ok("Ok"),
+            BaseElem::StringElem(_) => return Ok(()),
+            BaseElem::WordElem(_) => return Ok(()),
+            BaseElem::OpeElem(_) => return Ok(()),
+            BaseElem::UnKnownElem(_) => return Ok(()),
         }
     }
 }
 
+/// #  ASTBranch
+/// このtraitを実装している構造体は
+/// - 自分自身の構造をわかりやすく出力できる
 pub trait ASTBranch {
     fn show(&self);
 }
@@ -60,5 +71,9 @@ pub trait ASTBranch {
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
 pub trait ASTAreaBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self;
-    fn resolve_self(&mut self) -> Result<&str, String>;
+    // fn resolve_self(&mut self) -> Result<&str, String>;
+}
+
+pub trait RecursiveAnalysisElements {
+    fn resolve_self(&mut self) -> Result<(), ParserError>;
 }
