@@ -1,6 +1,6 @@
 use crate::abs::ast::*;
+use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::*;
-use crate::parser::parser_errors::ParserError;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
@@ -13,6 +13,15 @@ pub struct StateParser {
 }
 
 impl StateParser {
+    pub fn new(code: String, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: code,
+            code_list: Vec::new(),
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
+
     pub fn create_parser_from_vec(
         code_list: Vec<BaseElem>,
         depth: isize,
@@ -26,21 +35,7 @@ impl StateParser {
         }
     }
 
-    pub fn resolve2(&mut self) -> Result<(), ParserError> {
-        self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec2() {
-            return Err(e);
-        } else {
-            for i in &mut self.code_list {
-                if let Err(e) = i.resolve_self() {
-                    return Err(e);
-                }
-            }
-            return Ok(());
-        }
-    }
-
-    fn grouping_quotation2(&mut self) -> Result<(), ParserError> {
+    fn grouping_quotation(&mut self) -> Result<(), ParserError> {
         let mut open_flag = false;
         let mut escape_flag = false;
         let mut rlist = Vec::new();
@@ -60,7 +55,7 @@ impl StateParser {
                             group.push(v.contents);
                             rlist.push(BaseElem::StringElem(StringBranch {
                                 contents: group.clone(),
-                                depth: self.get_depth(),
+                                depth: self.depth,
                             }));
                             group.clear();
                             open_flag = false;
@@ -95,7 +90,7 @@ impl StateParser {
         return Ok(());
     }
 
-    fn grouping_elements2<T>(
+    fn grouping_elements<T>(
         &mut self,
         elemtype: fn(T) -> BaseElem,
         open_char: char,
@@ -126,8 +121,8 @@ impl StateParser {
                     } else if depth == 0 {
                         rlist.push(elemtype(ASTAreaBranch::new(
                             Some(group.clone()),
-                            self.get_depth(),
-                            self.get_loopdepth(),
+                            self.depth,
+                            self.loopdepth,
                         )));
                         group.clear();
                     } else {
@@ -159,7 +154,7 @@ impl StateParser {
         return Ok(());
     }
 
-    fn grouping_words2(&mut self) -> Result<(), ParserError> {
+    fn grouping_words(&mut self) -> Result<(), ParserError> {
         let mut rlist: Vec<BaseElem> = Vec::new();
         let mut group: String = String::new();
 
@@ -207,7 +202,7 @@ impl StateParser {
         return Ok(());
     }
 
-    pub fn code2vec2(&mut self) -> Result<(), ParserError> {
+    pub fn code2vec(&mut self) -> Result<(), ParserError> {
         // --- macro ---
         macro_rules! err_proc {
             ($a:expr) => {
@@ -216,19 +211,19 @@ impl StateParser {
                 }
             };
         }
-        err_proc!(self.grouping_quotation2());
-        err_proc!(self.grouping_words2());
-        err_proc!(self.grouping_elements2(
+        err_proc!(self.grouping_quotation());
+        err_proc!(self.grouping_words());
+        err_proc!(self.grouping_elements(
             BaseElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
         ));
-        err_proc!(self.grouping_elements2(
+        err_proc!(self.grouping_elements(
             BaseElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
         ));
-        err_proc!(self.grouping_elements2(
+        err_proc!(self.grouping_elements(
             BaseElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
@@ -238,83 +233,17 @@ impl StateParser {
 }
 
 impl Parser<'_> for StateParser {
-    fn new(code: String, depth: isize, loopdepth: isize) -> Self {
-        Self {
-            code: code,
-            code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
-    fn resolve(&self) -> Result<Vec<BaseElem>, &str> {
-        let code_list_data = self.code2_vec_pre_proc_func(&self.code);
-        let code_list = self.code2vec(&code_list_data);
-        match code_list {
-            Ok(mut v) => {
-                for i in &mut v {
-                    match i.resolve_self() {
-                        Ok(_) => { /* pass */ }
-                        //Err(e) => return Err(e)
-                        Err(_) => { /* pass */ }
-                    }
+    fn resolve(&mut self) -> Result<(), ParserError> {
+        self.code_list = self.code2_vec_pre_proc_func(&self.code);
+        if let Err(e) = self.code2vec() {
+            return Err(e);
+        } else {
+            for i in &mut self.code_list {
+                if let Err(e) = i.resolve_self() {
+                    return Err(e);
                 }
-                return Ok(v);
             }
-            Err(e) => {
-                return Err(e);
-            }
+            return Ok(());
         }
-    }
-
-    fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
-        // -----    macro   -----
-        /// # err_proc
-        /// errorがあればErr()を返却、なければ値を返す
-        macro_rules! err_proc {
-            ($grouping_func:expr) => {
-                match $grouping_func {
-                    Ok(r) => r,
-                    Err(e) => return Err(e),
-                }
-            };
-        }
-        // ----- start code -----
-        let mut code_list;
-        code_list = err_proc!(self.grouping_quotation(code.to_vec()));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::BlockElem,
-            Self::BLOCK_BRACE_OPEN,  // {
-            Self::BLOCK_BRACE_CLOSE  // }
-        ));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::ListBlockElem,
-            Self::BLOCK_LIST_OPEN,  // [
-            Self::BLOCK_LIST_CLOSE  // ]
-        ));
-        code_list = err_proc!(self.grouping_elements(
-            code_list,
-            BaseElem::ParenBlockElem,
-            Self::BLOCK_PAREN_OPEN,  // (
-            Self::BLOCK_PAREN_CLOSE  // )
-        ));
-        code_list =
-            err_proc!(self.grouping_word(code_list, vec![' ', '\t', '\n'], vec![',', ';', ':']));
-        return Ok(code_list);
-    }
-
-    fn get_depth(&self) -> isize {
-        self.depth
-    }
-
-    fn get_loopdepth(&self) -> isize {
-        self.loopdepth
-    }
-
-    // grouping functions
-    fn grouping_syntaxbox(&self, codelist: Vec<BaseElem>) -> Result<Vec<BaseElem>, &str> {
-        todo!()
     }
 }

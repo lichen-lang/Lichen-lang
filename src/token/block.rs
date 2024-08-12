@@ -1,6 +1,6 @@
 use crate::abs::ast::*;
 
-use crate::parser::parser_errors::ParserError;
+use crate::errors::parser_errors::ParserError;
 use crate::parser::state_parser::*;
 
 /// # BlockBranch
@@ -20,7 +20,7 @@ impl RecursiveAnalysisElements for BlockBranch {
             // let parser = StateParser::new(String::from(""), self.depth + 1, self.loopdepth);
             let mut parser =
                 StateParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
-            match parser.code2vec2() {
+            match parser.code2vec() {
                 Ok(_) => {
                     let mut rlist = parser.code_list;
                     for i in &mut rlist {

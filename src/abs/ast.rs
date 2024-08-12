@@ -4,7 +4,7 @@ use crate::token::{
     syntax_box::SyntaxBoxBranch, unknown::UnKnownBranch, word::WordBranch,
 };
 
-use crate::parser::parser_errors::ParserError;
+use crate::errors::parser_errors::ParserError;
 
 /// # BaseElem
 /// 抽象的なtoken
