@@ -3,73 +3,69 @@ use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
 use crate::token::unknown::UnKnownBranch;
 
+pub enum Prio {
+    Left,
+    Right,
+    Prefix,
+}
+
+pub struct Ope<'a> {
+    pub opestr: &'a str,
+    pub priority_direction: Prio,
+    pub priority: i32,
+}
+
+/// macro for Parser trait
+macro_rules! def_ope {
+    ($name:ident,$string:expr,$prio_direction:path,$prio:expr) => {
+        const $name: &'a Ope<'a> = &Ope {
+            opestr: $string,
+            priority_direction: $prio_direction,
+            priority: $prio,
+        };
+    };
+}
 /// # Parser trait
 /// パーサのコア実装
 pub trait Parser<'a> {
     // operators
-    const OR: &'a str = "||";
-    const AND: &'a str = "&&";
-    const EQ: &'a str = "==";
-    const NE: &'a str = "!=";
-    const LT: &'a str = "<";
-    const LE: &'a str = "<=";
-    const GT: &'a str = ">";
-    const GE: &'a str = ">=";
-    const ADD: &'a str = "+";
-    const SUB: &'a str = "-";
-    const MUL: &'a str = "*";
-    const DIV: &'a str = "/";
-    const MOD: &'a str = "%";
-    const DOT: &'a str = "@";
+    // - left priority
+    //   - priority -3
+    def_ope!(OR, "||", Prio::Left, -3);
+    //   - priority -2
+    def_ope!(AND, "&&", Prio::Left, -2);
+    //   - priority 0
+    def_ope!(EQ, "==", Prio::Left, 0);
+    def_ope!(NE, "!=", Prio::Left, 0);
+    def_ope!(LT, "<", Prio::Left, 0);
+    def_ope!(LE, "<=", Prio::Left, 0);
+    def_ope!(GT, ">", Prio::Left, 0);
+    def_ope!(GE, ">=", Prio::Left, 0);
+    //   - priority 1
+    def_ope!(ADD, "+", Prio::Left, 1);
+    def_ope!(SUB, "-", Prio::Left, 1);
+    def_ope!(MUL, "*", Prio::Left, 2);
+    def_ope!(DIV, "/", Prio::Left, 2);
+    def_ope!(MOD, "%", Prio::Left, 2);
+    def_ope!(DOT, "@", Prio::Left, 2);
 
-    const ASSIGNMENT: &'a str = "=";
-    const ADDEQ: &'a str = "+=";
-    const SUBEQ: &'a str = "-=";
-    const MULEQ: &'a str = "*=";
-    const DIVEQ: &'a str = "/=";
-    const MODEQ: &'a str = "%=";
+    // - right priority
+    //   - priority -4
+    def_ope!(ASSIGNMENT, "=", Prio::Right, -4);
+    def_ope!(ADDEQ, "+=", Prio::Right, -4);
+    def_ope!(SUBEQ, "-=", Prio::Right, -4);
+    def_ope!(MULEQ, "*=", Prio::Right, -4);
+    def_ope!(DIVEQ, "/=", Prio::Right, -4);
+    def_ope!(MODEQ, "%=", Prio::Right, -4);
+    //   - priority -3
+    def_ope!(POW, "**", Prio::Right, 3);
 
-    const POW: &'a str = "**";
-    const NOT: &'a str = "!";
-
-    const LEFT_PRIORITY_LIST: [(&'a str, isize); 14] = [
-        (Self::OR, -3),  // ||
-        (Self::AND, -2), // &&
-        // PRIORITY 0
-        (Self::EQ, 0), // ==
-        (Self::NE, 0), // !=
-        (Self::LT, 0), // <
-        (Self::LE, 0), // <=
-        (Self::GT, 0), // >
-        (Self::GE, 0), // >=
-        // PRIORITY 1
-        (Self::ADD, 1), // +
-        (Self::SUB, 1), // -
-        // PRIORITY 2
-        (Self::MUL, 2), // *
-        (Self::DIV, 2), // /
-        (Self::MOD, 2), // %
-        (Self::DOT, 2), // @
-    ];
-    const RIGHT_PRIORITY_LIST: [(&'a str, isize); 7] = [
-        // PRIORITY -4
-        (Self::ASSIGNMENT, -4), // =
-        // <<< DO NOT USE >>>
-        (Self::ADDEQ, -4), // +=
-        (Self::SUBEQ, -4), // -=
-        (Self::MULEQ, -4), // *=
-        (Self::DIVEQ, -4), // /=
-        (Self::MODEQ, -4), // %=
-        // <<< ^^^^^^^^^^ >>>
-        (Self::POW, 3), // **
-    ];
-    const PREFIX_PRIORITY_LIST: [(&'a str, isize); 1] = [
-        // PRIORITY -1
-        (Self::NOT, -1), // !
-    ];
+    // - prefix priority
+    //   - priority -1
+    def_ope!(NOT, "!", Prio::Prefix, -1);
 
     /// 演算子を文字列として長いものからの順番で並べたもの
-    const LENGTH_ORDER_OPE_LIST: [&'a str; 22] = [
+    const LENGTH_ORDER_OPE_LIST: [&'a Ope<'a>; 22] = [
         // length 2
         Self::OR,    // ||
         Self::AND,   // &&

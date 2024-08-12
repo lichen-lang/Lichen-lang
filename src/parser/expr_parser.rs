@@ -237,7 +237,7 @@ impl ExprParser {
 
     fn grouoping_operator2(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            if let Err(e) = self.grouoping_operator_unit2(ope.to_string()) {
+            if let Err(e) = self.grouoping_operator_unit2(ope.opestr.to_string()) {
                 return Err(e);
             }
         }
@@ -475,6 +475,8 @@ impl ExprParser {
         self.code_list = rlist;
         return Ok(());
     }
+
+    fn resolve_operation(&mut self) {}
 }
 
 impl Parser<'_> for ExprParser {
