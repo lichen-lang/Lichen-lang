@@ -10,7 +10,7 @@ use crate::token::paren_block::ParenBlockBranch;
 #[derive(Clone)]
 pub struct FuncBranch {
     pub name: Box<BaseElem>,
-    pub contents: ParenBlockBranch,
+    pub contents: Vec<Vec<BaseElem>>,
     pub depth: isize,
     pub loopdepth: isize,
 }
