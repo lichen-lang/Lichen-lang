@@ -4,7 +4,7 @@ use crate::parser::core_parser::*;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
-pub struct StateParser {
+pub struct StmtParser {
     // TODO: 一時的にpublicにしているだけ
     pub code: String,
     pub code_list: Vec<BaseElem>,
@@ -12,7 +12,7 @@ pub struct StateParser {
     pub loopdepth: isize,
 }
 
-impl StateParser {
+impl StmtParser {
     pub fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: code,
@@ -232,7 +232,7 @@ impl StateParser {
     }
 }
 
-impl Parser<'_> for StateParser {
+impl Parser<'_> for StmtParser {
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code_list = self.code2_vec_pre_proc_func(&self.code);
         if let Err(e) = self.code2vec() {

@@ -9,7 +9,7 @@ mod token;
 mod tests {
 
     use crate::parser::core_parser::Parser;
-    use crate::parser::stmt_parser::StateParser;
+    use crate::parser::stmt_parser::StmtParser;
 
     use crate::parser::expr_parser;
 

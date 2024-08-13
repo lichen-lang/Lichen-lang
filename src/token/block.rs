@@ -19,7 +19,7 @@ impl RecursiveAnalysisElements for BlockBranch {
         if let Some(a) = &self.contents {
             // let parser = StateParser::new(String::from(""), self.depth + 1, self.loopdepth);
             let mut parser =
-                StateParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
+                StmtParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
             match parser.code2vec() {
                 Ok(_) => {
                     let mut rlist = parser.code_list;
