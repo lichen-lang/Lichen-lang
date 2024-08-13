@@ -25,6 +25,7 @@ macro_rules! def_ope {
         };
     };
 }
+
 /// # Parser trait
 /// パーサのコア実装
 pub trait Parser<'a> {
