@@ -57,5 +57,5 @@ func(10,1) + 2 * x
 ```
 
 ```bash
-cargo test --package lichen-lang --lib -- tests::expr_test00 --exact --show-output
+cargo test --package lichen-lang --lib -- tests::expr_test01 --exact --show-output
 ```

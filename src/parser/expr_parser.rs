@@ -217,6 +217,7 @@ impl ExprParser {
             };
         }
         err_proc!(self.grouping_quotation());
+        // grouping_elements
         err_proc!(self.grouping_elements(
             BaseElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
@@ -232,21 +233,23 @@ impl ExprParser {
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
         ));
-        err_proc!(self.grouoping_operator2());
+        // end of grouping_elements
+        err_proc!(self.grouoping_operator());
         err_proc!(self.grouping_words());
+        err_proc!(self.resolve_operation());
         return Ok(());
     }
 
-    fn grouoping_operator2(&mut self) -> Result<(), ParserError> {
+    fn grouoping_operator(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            if let Err(e) = self.grouoping_operator_unit2(ope.opestr.to_string()) {
+            if let Err(e) = self.grouoping_operator_unit(ope.opestr.to_string()) {
                 return Err(e);
             }
         }
         return Ok(());
     }
 
-    fn grouoping_operator_unit2(&mut self, ope: String) -> Result<(), ParserError> {
+    fn grouoping_operator_unit(&mut self, ope: String) -> Result<(), ParserError> {
         let mut group: String = String::new();
         let mut rlist: Vec<BaseElem> = Vec::new();
 

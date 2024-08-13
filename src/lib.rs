@@ -24,6 +24,7 @@ mod tests {
     fn expr_test00() {
         let code = "(10 + 1) + 2 * x";
         let string_code: String = String::from(code);
+        println!("test case -> {}", code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
 
         if let Err(_) = e_parser.resolve() {
@@ -41,6 +42,7 @@ mod tests {
         let string_code: String = String::from(code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
 
+        println!("test case -> {}", code);
         if let Err(_) = e_parser.resolve() {
             println!("ParseError occured");
         } else {
