@@ -15,7 +15,7 @@ mod tests {
 
     #[test]
     fn test02() {
-        println!("{}", "@".repeat(5));
+        println!("{}hello{}", " ".repeat(4), "@".repeat(4));
     }
 
     // expr tests
