@@ -56,6 +56,8 @@ impl ExprParser {
                     if !group.is_empty() {
                         rlist.push(BaseElem::WordElem(WordBranch {
                             contents: group.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
                         }));
                         group.clear();
                     }
@@ -65,6 +67,8 @@ impl ExprParser {
                     if !group.is_empty() {
                         rlist.push(BaseElem::WordElem(WordBranch {
                             contents: group.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
                         }));
                         group.clear();
                     }
@@ -76,6 +80,8 @@ impl ExprParser {
                 if !group.is_empty() {
                     rlist.push(BaseElem::WordElem(WordBranch {
                         contents: group.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
                     }));
                     group.clear();
                 }
@@ -85,6 +91,8 @@ impl ExprParser {
         if !group.is_empty() {
             rlist.push(BaseElem::WordElem(WordBranch {
                 contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
             }));
             group.clear();
         }

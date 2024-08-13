@@ -1,5 +1,7 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
+use crate::parser::core_parser::Parser;
+use crate::parser::expr_parser::ExprParser;
 use crate::token::paren_block::ParenBlockBranch;
 
 /// # FuncBranch
@@ -17,16 +19,16 @@ pub struct FuncBranch {
 
 impl ASTBranch for FuncBranch {
     fn show(&self) {
-        println!("func name");
+        println!("{}func name", " ".repeat(self.depth as usize * 4));
         self.name.show();
-        println!("(");
+        println!("{}(", " ".repeat(self.depth as usize * 4));
         for (i, j) in self.contents.iter().enumerate() {
-            print!("arg{}\n", i);
+            print!("{}arg{}\n", " ".repeat(self.depth as usize * 4), i);
             for k in j {
                 k.show();
             }
         }
-        println!(")");
+        println!("{})", " ".repeat(self.depth as usize * 4));
     }
 }
 
@@ -35,12 +37,19 @@ impl RecursiveAnalysisElements for FuncBranch {
         if let Err(e) = self.name.resolve_self() {
             return Err(e);
         } // 呼び出し元の自己解決
+          // 引数の解決
         for i in &mut self.contents {
-            for j in i {
-                if let Err(e) = j.resolve_self() {
-                    return Err(e);
-                } // 呼び出し元の自己解決
+            let mut parser =
+                ExprParser::create_parser_from_vec(i.to_vec(), self.depth, self.loopdepth);
+            if let Err(e) = parser.code2vec() {
+                return Err(e);
             }
+            for inner in &mut parser.code_list {
+                if let Err(e) = inner.resolve_self() {
+                    return Err(e);
+                }
+            }
+            *i = parser.code_list;
         }
         Ok(())
     }

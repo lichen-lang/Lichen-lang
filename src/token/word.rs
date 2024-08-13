@@ -6,10 +6,16 @@ use crate::abs::ast::*;
 #[derive(Clone)]
 pub struct WordBranch {
     pub contents: String,
+    pub depth: isize,
+    pub loopdepth: isize,
 }
 
 impl ASTBranch for WordBranch {
     fn show(&self) {
-        println!("Word {}", self.contents)
+        println!(
+            "{}Word {}",
+            " ".repeat(self.depth as usize * 4),
+            self.contents
+        )
     }
 }

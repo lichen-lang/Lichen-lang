@@ -46,7 +46,7 @@ impl RecursiveAnalysisElements for ParenBlockBranch {
 impl ASTBranch for ParenBlockBranch {
     fn show(&self) {
         println!(
-            "{}Paren depth{} (",
+            "{}Paren depth{}\n(",
             " ".repeat(self.depth as usize),
             self.depth
         );
