@@ -14,7 +14,7 @@ mod tests {
     use crate::parser::expr_parser;
 
     #[test]
-    fn test02() {
+    fn test00() {
         println!("{}hello{}", " ".repeat(4), "@".repeat(4));
     }
 
