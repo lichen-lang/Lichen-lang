@@ -146,7 +146,9 @@ pub trait Parser<'a> {
 
     // fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str>;
 
+    fn new(code: String, depth: isize, loopdepth: isize) -> Self;
     fn resolve(&mut self) -> Result<(), ParserError>;
+    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self;
 
     fn code2_vec_pre_proc_func(&self, code: &String) -> Vec<BaseElem> {
         return code

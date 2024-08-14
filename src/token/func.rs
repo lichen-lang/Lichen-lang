@@ -2,7 +2,6 @@ use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::Parser;
 use crate::parser::expr_parser::ExprParser;
-use crate::token::paren_block::ParenBlockBranch;
 
 /// # FuncBranch
 /// 関数呼び出しのトークン

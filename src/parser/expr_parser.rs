@@ -22,28 +22,6 @@ pub struct ExprParser {
 }
 
 impl ExprParser {
-    pub fn new(code: String, depth: isize, loopdepth: isize) -> Self {
-        Self {
-            code: code,
-            code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
-    pub fn create_parser_from_vec(
-        code_list: Vec<BaseElem>,
-        depth: isize,
-        loopdepth: isize,
-    ) -> Self {
-        Self {
-            code: String::new(),
-            code_list: code_list,
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
     fn grouping_words(&mut self) -> Result<(), ParserError> {
         let mut rlist: Vec<BaseElem> = Vec::new();
         let mut group: String = String::new();
@@ -567,6 +545,24 @@ impl ExprParser {
 }
 
 impl Parser<'_> for ExprParser {
+    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: String::new(),
+            code_list: code_list,
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
+
+    fn new(code: String, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: code,
+            code_list: Vec::new(),
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
+
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code_list = self.code2_vec_pre_proc_func(&self.code);
         if let Err(e) = self.code2vec() {

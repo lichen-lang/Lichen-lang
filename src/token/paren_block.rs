@@ -1,5 +1,6 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
+use crate::parser::core_parser::Parser;
 use crate::parser::expr_parser::ExprParser;
 
 /// #ParenBlockBranch
@@ -55,7 +56,7 @@ impl ASTBranch for ParenBlockBranch {
                 i.show();
             }
         }
-        println!(")");
+        println!("{})", " ".repeat(self.depth as usize),);
     }
 }
 

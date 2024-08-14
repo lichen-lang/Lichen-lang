@@ -13,28 +13,6 @@ pub struct StmtParser {
 }
 
 impl StmtParser {
-    pub fn new(code: String, depth: isize, loopdepth: isize) -> Self {
-        Self {
-            code: code,
-            code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
-    pub fn create_parser_from_vec(
-        code_list: Vec<BaseElem>,
-        depth: isize,
-        loopdepth: isize,
-    ) -> Self {
-        Self {
-            code: String::new(),
-            code_list: code_list,
-            depth: depth,
-            loopdepth: loopdepth,
-        }
-    }
-
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
         let mut open_flag = false;
         let mut escape_flag = false;
@@ -241,6 +219,23 @@ impl StmtParser {
 }
 
 impl Parser<'_> for StmtParser {
+    fn new(code: String, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: code,
+            code_list: Vec::new(),
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
+
+    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
+        Self {
+            code: String::new(),
+            code_list: code_list,
+            depth: depth,
+            loopdepth: loopdepth,
+        }
+    }
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code_list = self.code2_vec_pre_proc_func(&self.code);
         if let Err(e) = self.code2vec() {
