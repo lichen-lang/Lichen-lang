@@ -69,6 +69,15 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test02() {
+        let mut a = vec![0, 1, 2];
+        let mut b = vec![3, 4, 5];
+
+        a.extend(b);
+        println!("{:?}", a);
+    }
+
     // expr tests
 
     #[test]
@@ -86,7 +95,7 @@ mod tests {
         //     }
         // }
 
-        let code = "!a&& !b";
+        let code = " !a&& !b";
         let string_code: String = String::from(code);
         println!("test case -> \"{}\"", code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);

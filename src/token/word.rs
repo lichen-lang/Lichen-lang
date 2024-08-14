@@ -13,14 +13,14 @@ pub struct WordBranch {
 impl ASTBranch for WordBranch {
     fn show(&self) {
         println!(
-            "{}Word {}",
+            "{}Word \"{}\"",
             " ".repeat(self.depth as usize * 4),
             self.contents
         )
     }
     fn get_show_as_string(&self) -> String {
         format!(
-            "{}Word {}",
+            "{}Word \"{}\"",
             " ".repeat(self.depth as usize * 4),
             self.contents
         )

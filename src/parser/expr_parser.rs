@@ -40,6 +40,7 @@ impl ExprParser {
         }
         let mut rlist: Vec<BaseElem> = Vec::new();
         let mut group: String = String::new();
+        let ope_str = Self::LENGTH_ORDER_OPE_LIST.map(|a| a.opestr).join("");
 
         for inner in &self.code_list {
             if let BaseElem::UnKnownElem(ref e) = inner {
@@ -50,7 +51,7 @@ impl ExprParser {
                         add_rlist!(rlist, group);
                         group.clear();
                     }
-                } else if Self::EXCLUDE_WORDS.contains(&e.contents)
+                } else if Self::EXCLUDE_WORDS.contains(&e.contents) || ope_str.contains(e.contents)
                 // inner in split
                 {
                     if !group.is_empty() {
@@ -219,8 +220,8 @@ impl ExprParser {
             Self::BLOCK_PAREN_CLOSE, // )
         ));
         // end of grouping_elements
-        err_proc!(self.grouoping_operator());
         err_proc!(self.grouping_words());
+        err_proc!(self.grouoping_operator());
         err_proc!(self.resolve_operation());
         return Ok(());
     }
@@ -244,7 +245,6 @@ impl ExprParser {
                 // 未解決の場合
                 group.push(e.contents);
                 if group.len() < ope_size {
-                    continue;
                 } else if ope_size == group.len() {
                     if group == ope {
                         rlist.push(BaseElem::OpeElem(OperatorBranch {
@@ -259,6 +259,7 @@ impl ExprParser {
                             .collect();
                         rlist.extend(grouup_tmp);
                     }
+                    group.clear();
                 } else {
                     // ope_size < group.len()
                     // rlist += group
@@ -267,8 +268,8 @@ impl ExprParser {
                         .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
                         .collect();
                     rlist.extend(grouup_tmp);
+                    group.clear();
                 }
-                group.clear();
             } else {
                 // 既にtokenが割り当てられているとき
                 if group.len() < ope_size {
@@ -521,17 +522,6 @@ impl ExprParser {
 
     fn resolve_operation(&mut self) -> Result<(), ParserError> {
         let operation_index = self.find_min_priority_index();
-        // test
-        // if let Ok(i) = operation_index {
-        //     if let Some(j) = i {
-        //         println!("{}", j);
-        //         self.code_list[j].show();
-        //     } else {
-        //         println!("None")
-        //     }
-        // } else {
-        //     println!("Err");
-        // }
         match operation_index {
             Ok(v) => {
                 if let Some(s) = v {
