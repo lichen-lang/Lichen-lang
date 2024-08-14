@@ -21,6 +21,23 @@ pub struct ExprParser {
 
 impl ExprParser {
     fn grouping_words(&mut self) -> Result<(), ParserError> {
+        // macro
+        macro_rules! add_rlist {
+            ($rlist:expr,$group:expr) => {
+                if let Ok(_) = self.find_ope_priority(&$group) {
+                    $rlist.push(BaseElem::OpeElem(OperatorBranch {
+                        ope: $group.clone(),
+                        depth: self.depth,
+                    }))
+                } else {
+                    $rlist.push(BaseElem::WordElem(WordBranch {
+                        contents: $group.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
+                }
+            };
+        }
         let mut rlist: Vec<BaseElem> = Vec::new();
         let mut group: String = String::new();
 
@@ -30,36 +47,14 @@ impl ExprParser {
                 // inner in split
                 {
                     if !group.is_empty() {
-                        if let Ok(_) = self.find_ope_priority(&group) {
-                            rlist.push(BaseElem::OpeElem(OperatorBranch {
-                                ope: group.clone(),
-                                depth: self.depth,
-                            }))
-                        } else {
-                            rlist.push(BaseElem::WordElem(WordBranch {
-                                contents: group.clone(),
-                                depth: self.depth,
-                                loopdepth: self.loopdepth,
-                            }));
-                        }
+                        add_rlist!(rlist, group);
                         group.clear();
                     }
                 } else if Self::EXCLUDE_WORDS.contains(&e.contents)
                 // inner in split
                 {
                     if !group.is_empty() {
-                        if let Ok(_) = self.find_ope_priority(&group) {
-                            rlist.push(BaseElem::OpeElem(OperatorBranch {
-                                ope: group.clone(),
-                                depth: self.depth,
-                            }))
-                        } else {
-                            rlist.push(BaseElem::WordElem(WordBranch {
-                                contents: group.clone(),
-                                depth: self.depth,
-                                loopdepth: self.loopdepth,
-                            }));
-                        }
+                        add_rlist!(rlist, group);
                         group.clear();
                     }
                     rlist.push(inner.clone());
@@ -68,36 +63,14 @@ impl ExprParser {
                 }
             } else {
                 if !group.is_empty() {
-                    if let Ok(_) = self.find_ope_priority(&group) {
-                        rlist.push(BaseElem::OpeElem(OperatorBranch {
-                            ope: group.clone(),
-                            depth: self.depth,
-                        }))
-                    } else {
-                        rlist.push(BaseElem::WordElem(WordBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    }
+                    add_rlist!(rlist, group);
                     group.clear();
                 }
                 rlist.push(inner.clone());
             }
         }
         if !group.is_empty() {
-            if let Ok(_) = self.find_ope_priority(&group) {
-                rlist.push(BaseElem::OpeElem(OperatorBranch {
-                    ope: group.clone(),
-                    depth: self.depth,
-                }))
-            } else {
-                rlist.push(BaseElem::WordElem(WordBranch {
-                    contents: group.clone(),
-                    depth: self.depth,
-                    loopdepth: self.loopdepth,
-                }));
-            }
+            add_rlist!(rlist, group);
             group.clear();
         }
         self.code_list = rlist;
