@@ -1,5 +1,3 @@
-use std::i32;
-
 use crate::abs::ast::*;
 use crate::parser::core_parser::*;
 
@@ -32,22 +30,36 @@ impl ExprParser {
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(BaseElem::WordElem(WordBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
+                        if let Ok(_) = self.find_ope_priority(&group) {
+                            rlist.push(BaseElem::OpeElem(OperatorBranch {
+                                ope: group.clone(),
+                                depth: self.depth,
+                            }))
+                        } else {
+                            rlist.push(BaseElem::WordElem(WordBranch {
+                                contents: group.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                        }
                         group.clear();
                     }
                 } else if Self::EXCLUDE_WORDS.contains(&e.contents)
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(BaseElem::WordElem(WordBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
+                        if let Ok(_) = self.find_ope_priority(&group) {
+                            rlist.push(BaseElem::OpeElem(OperatorBranch {
+                                ope: group.clone(),
+                                depth: self.depth,
+                            }))
+                        } else {
+                            rlist.push(BaseElem::WordElem(WordBranch {
+                                contents: group.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                        }
                         group.clear();
                     }
                     rlist.push(inner.clone());
@@ -56,22 +68,36 @@ impl ExprParser {
                 }
             } else {
                 if !group.is_empty() {
-                    rlist.push(BaseElem::WordElem(WordBranch {
-                        contents: group.clone(),
-                        depth: self.depth,
-                        loopdepth: self.loopdepth,
-                    }));
+                    if let Ok(_) = self.find_ope_priority(&group) {
+                        rlist.push(BaseElem::OpeElem(OperatorBranch {
+                            ope: group.clone(),
+                            depth: self.depth,
+                        }))
+                    } else {
+                        rlist.push(BaseElem::WordElem(WordBranch {
+                            contents: group.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    }
                     group.clear();
                 }
                 rlist.push(inner.clone());
             }
         }
         if !group.is_empty() {
-            rlist.push(BaseElem::WordElem(WordBranch {
-                contents: group.clone(),
-                depth: self.depth,
-                loopdepth: self.loopdepth,
-            }));
+            if let Ok(_) = self.find_ope_priority(&group) {
+                rlist.push(BaseElem::OpeElem(OperatorBranch {
+                    ope: group.clone(),
+                    depth: self.depth,
+                }))
+            } else {
+                rlist.push(BaseElem::WordElem(WordBranch {
+                    contents: group.clone(),
+                    depth: self.depth,
+                    loopdepth: self.loopdepth,
+                }));
+            }
             group.clear();
         }
         self.code_list = rlist;
@@ -480,7 +506,10 @@ impl ExprParser {
         let mut priority_tmp: i32 = i32::MAX;
         let mut index_tmp = None;
         for (index, inner) in self.code_list.iter().enumerate() {
+            inner.show();
             if let BaseElem::OpeElem(ope) = inner {
+                println!("演算子発見");
+                ope.show();
                 let ope_contents = &ope.ope;
                 if let Ok(ope_info) = self.find_ope_priority(ope_contents) {
                     if index < 1
@@ -489,7 +518,7 @@ impl ExprParser {
                         index_tmp = Some(index);
                         priority_tmp = 4; // unsafe
                     } else if let BaseElem::OpeElem(pre_elem) = &self.code_list[index - 1] {
-                        // pass
+                        continue;
                     } else {
                         if ope_info.priority < priority_tmp {
                             index_tmp = Some(index);
@@ -506,7 +535,7 @@ impl ExprParser {
                         } else
                         // priority > priority_tmp
                         {
-                            // pass
+                            continue;
                         }
                     }
                 } else {
@@ -514,7 +543,7 @@ impl ExprParser {
                     return Err(ParserError::OperationError);
                 }
             } else {
-                // pass
+                continue;
             }
         }
         return Ok(index_tmp);
@@ -522,6 +551,17 @@ impl ExprParser {
 
     fn resolve_operation(&mut self) -> Result<(), ParserError> {
         let operation_index = self.find_min_priority_index();
+        // test
+        if let Ok(i) = operation_index {
+            if let Some(j) = i {
+                println!("{}", j);
+                self.code_list[j].show();
+            } else {
+                println!("None")
+            }
+        } else {
+            println!("Err");
+        }
         match operation_index {
             Ok(v) => {
                 if let Some(s) = v {

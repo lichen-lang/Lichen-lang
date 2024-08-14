@@ -22,7 +22,20 @@ mod tests {
 
     #[test]
     fn expr_test00() {
-        let code = "(10 + 1) + 2 * x";
+        // let code = "(10 + 1) + 2 * x";
+        // let string_code: String = String::from(code);
+        // println!("test case -> {}", code);
+        // let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
+
+        // if let Err(_) = e_parser.resolve() {
+        //     println!("ParseError occured");
+        // } else {
+        //     for i in e_parser.code_list {
+        //         i.show();
+        //     }
+        // }
+
+        let code = "!a && !b";
         let string_code: String = String::from(code);
         println!("test case -> {}", code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
@@ -30,6 +43,7 @@ mod tests {
         if let Err(_) = e_parser.resolve() {
             println!("ParseError occured");
         } else {
+            println!("------------------------------");
             for i in e_parser.code_list {
                 i.show();
             }
