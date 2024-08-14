@@ -1,8 +1,9 @@
 // modules
-mod abs;
-mod errors;
-mod parser;
-mod token;
+pub mod abs;
+pub mod errors;
+pub mod parser;
+mod test;
+pub mod token;
 
 // test case
 #[cfg(test)]
@@ -10,12 +11,21 @@ mod tests {
 
     use crate::parser::core_parser::Parser;
     use crate::parser::stmt_parser::StmtParser;
+    use crate::test::utils::{combinations, CombinationIter};
 
     use crate::parser::expr_parser;
 
     #[test]
     fn test00() {
         println!("{}hello{}", " ".repeat(4), "@".repeat(4));
+    }
+
+    #[test]
+    fn test01() {
+        let a = vec!["!", "a", "&&", "!", "b"];
+        for i in combinations(a, 2) {
+            println!("{:?}", i.join(""));
+        }
     }
 
     // expr tests
@@ -35,7 +45,7 @@ mod tests {
         //     }
         // }
 
-        let code = "!a && !b";
+        let code = "-10 + 20";
         let string_code: String = String::from(code);
         println!("test case -> {}", code);
         let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
