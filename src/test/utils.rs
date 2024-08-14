@@ -31,7 +31,10 @@ impl<'a, T: 'a> Iterator for CombinationIter<'a, T> {
     }
 }
 
-pub fn combinations<'a>(elements: Vec<&'a str>, r: usize) -> Vec<Vec<&'a str>> {
+pub fn combinations<T>(elements: Vec<T>, r: usize) -> Vec<Vec<T>>
+where
+    T: Clone + Copy,
+{
     if r == 0 {
         return vec![vec![]];
     }

@@ -26,6 +26,10 @@ mod tests {
         for i in combinations(a, 2) {
             println!("{:?}", i.join(""));
         }
+        let a = vec![1, 2, 3];
+        for i in combinations(a, 2) {
+            println!("{:?}", i);
+        }
     }
 
     // expr tests
