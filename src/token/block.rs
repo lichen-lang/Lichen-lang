@@ -66,4 +66,19 @@ impl ASTBranch for BlockBranch {
         }
         println!(")");
     }
+
+    fn get_show_as_string(&self) -> String {
+        let mut show_group = String::new();
+        if let Some(e) = &self.contents {
+            for i in e {
+                show_group = format!("{}{}", show_group, i.get_show_as_string());
+            }
+        }
+        format!(
+            "{}BlockBranch depth{} (\n{}",
+            " ".repeat(self.depth as usize),
+            self.depth,
+            show_group
+        )
+    }
 }

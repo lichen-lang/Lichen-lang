@@ -15,4 +15,12 @@ impl ASTBranch for OperatorBranch {
             self.ope
         );
     }
+
+    fn get_show_as_string(&self) -> String {
+        format!(
+            "{}Operator({})",
+            " ".repeat(self.depth as usize * 4),
+            self.ope
+        )
+    }
 }

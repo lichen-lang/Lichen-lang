@@ -56,7 +56,23 @@ impl ASTBranch for ParenBlockBranch {
                 i.show();
             }
         }
-        println!("{})", " ".repeat(self.depth as usize),);
+        println!("{})", " ".repeat(self.depth as usize));
+    }
+
+    fn get_show_as_string(&self) -> String {
+        let open_section = format!(
+            "{}Paren depth{}\n(",
+            " ".repeat(self.depth as usize),
+            self.depth
+        );
+        let mut group_section = String::new();
+        if let Some(e) = &self.contents {
+            for i in e {
+                group_section = format!("{}{}", group_section, i.get_show_as_string());
+            }
+        }
+        let close_section = format!("{})", " ".repeat(self.depth as usize));
+        format!("{}{}{}", open_section, group_section, close_section)
     }
 }
 

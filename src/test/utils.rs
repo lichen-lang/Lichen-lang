@@ -3,6 +3,8 @@
 //     r: usize,
 // }
 
+use std::{ops::Index, vec};
+
 pub struct CombinationIter<'a, T> {
     iterable: &'a Vec<T>,
     r: usize,
@@ -49,6 +51,24 @@ where
         .collect();
     let without_first = combinations(elements[1..].to_vec(), r);
     return [with_first, without_first].concat();
+}
+
+pub fn insert_space(s: Vec<&str>, n: usize) -> Vec<String> {
+    let position: Vec<usize> = (0..(s.len() + 1)).into_iter().collect();
+    let mut rlist = Vec::new();
+
+    for i in combinations(position, n) {
+        let mut new_str = vec![];
+        let mut last_index: usize = 0;
+        for index in i {
+            new_str.push(s[last_index..index].join(""));
+            new_str.push(" ".to_string());
+            last_index = index;
+        }
+        new_str.push(s[last_index..].join(""));
+        rlist.push(new_str.join(""));
+    }
+    rlist
 }
 
 // fn func() {

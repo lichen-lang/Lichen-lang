@@ -29,6 +29,31 @@ impl ASTBranch for FuncBranch {
         }
         println!("{})", " ".repeat(self.depth as usize * 4));
     }
+
+    fn get_show_as_string(&self) -> String {
+        let function_name_section = format!(
+            "{}func name\n{}",
+            " ".repeat(self.depth as usize * 4),
+            self.name.get_show_as_string()
+        );
+        let paren_open = format!("{}(\n", " ".repeat(self.depth as usize * 4));
+        let mut args_group = String::new();
+        for (i, j) in self.contents.iter().enumerate() {
+            args_group = format!(
+                "{}{}",
+                args_group,
+                format!("{}arg{}\n", " ".repeat(self.depth as usize * 4), i)
+            );
+            for k in j {
+                args_group = format!("{}{}\n", args_group, k.get_show_as_string());
+            }
+        }
+        let paren_close = format!("{})", " ".repeat(self.depth as usize * 4));
+        format!(
+            "{}{}{}{}",
+            function_name_section, paren_open, args_group, paren_close
+        )
+    }
 }
 
 impl RecursiveAnalysisElements for FuncBranch {

@@ -479,10 +479,7 @@ impl ExprParser {
         let mut priority_tmp: i32 = i32::MAX;
         let mut index_tmp = None;
         for (index, inner) in self.code_list.iter().enumerate() {
-            inner.show();
             if let BaseElem::OpeElem(ope) = inner {
-                println!("演算子発見");
-                ope.show();
                 let ope_contents = &ope.ope;
                 if let Ok(ope_info) = self.find_ope_priority(ope_contents) {
                     if index < 1
@@ -525,16 +522,16 @@ impl ExprParser {
     fn resolve_operation(&mut self) -> Result<(), ParserError> {
         let operation_index = self.find_min_priority_index();
         // test
-        if let Ok(i) = operation_index {
-            if let Some(j) = i {
-                println!("{}", j);
-                self.code_list[j].show();
-            } else {
-                println!("None")
-            }
-        } else {
-            println!("Err");
-        }
+        // if let Ok(i) = operation_index {
+        //     if let Some(j) = i {
+        //         println!("{}", j);
+        //         self.code_list[j].show();
+        //     } else {
+        //         println!("None")
+        //     }
+        // } else {
+        //     println!("Err");
+        // }
         match operation_index {
             Ok(v) => {
                 if let Some(s) = v {

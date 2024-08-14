@@ -27,34 +27,48 @@ pub enum BaseElem {
 impl BaseElem {
     pub fn show(&self) {
         match self {
-            BaseElem::BlockElem(e) => e.show(),
-            BaseElem::UnKnownElem(e) => e.show(),
-            BaseElem::StringElem(e) => e.show(),
-            BaseElem::ListBlockElem(e) => e.show(),
-            BaseElem::ParenBlockElem(e) => e.show(),
-            BaseElem::WordElem(e) => e.show(),
-            BaseElem::SyntaxElem(e) => e.show(),
-            BaseElem::SyntaxBoxElem(e) => e.show(),
-            BaseElem::FuncElem(e) => e.show(),
-            BaseElem::OpeElem(e) => e.show(),
+            Self::BlockElem(e) => e.show(),
+            Self::UnKnownElem(e) => e.show(),
+            Self::StringElem(e) => e.show(),
+            Self::ListBlockElem(e) => e.show(),
+            Self::ParenBlockElem(e) => e.show(),
+            Self::WordElem(e) => e.show(),
+            Self::SyntaxElem(e) => e.show(),
+            Self::SyntaxBoxElem(e) => e.show(),
+            Self::FuncElem(e) => e.show(),
+            Self::OpeElem(e) => e.show(),
         }
     }
 
+    pub fn get_show_as_string(&self) -> String {
+        match self {
+            Self::BlockElem(e) => e.get_show_as_string(),
+            Self::UnKnownElem(e) => e.get_show_as_string(),
+            Self::StringElem(e) => e.get_show_as_string(),
+            Self::ListBlockElem(e) => e.get_show_as_string(),
+            Self::ParenBlockElem(e) => e.get_show_as_string(),
+            Self::WordElem(e) => e.get_show_as_string(),
+            Self::SyntaxElem(e) => e.get_show_as_string(),
+            Self::SyntaxBoxElem(e) => e.get_show_as_string(),
+            Self::FuncElem(e) => e.get_show_as_string(),
+            Self::OpeElem(e) => e.get_show_as_string(),
+        }
+    }
     pub fn resolve_self(&mut self) -> Result<(), ParserError> {
         match self {
             // recursive analysis elements
-            BaseElem::BlockElem(e) => return e.resolve_self(),
-            BaseElem::ListBlockElem(e) => return e.resolve_self(),
-            BaseElem::ParenBlockElem(e) => return e.resolve_self(),
-            BaseElem::SyntaxElem(e) => return e.resolve_self(),
-            BaseElem::SyntaxBoxElem(e) => return e.resolve_self(),
-            BaseElem::FuncElem(e) => return e.resolve_self(),
+            Self::BlockElem(e) => return e.resolve_self(),
+            Self::ListBlockElem(e) => return e.resolve_self(),
+            Self::ParenBlockElem(e) => return e.resolve_self(),
+            Self::SyntaxElem(e) => return e.resolve_self(),
+            Self::SyntaxBoxElem(e) => return e.resolve_self(),
+            Self::FuncElem(e) => return e.resolve_self(),
 
             // unrecursive analysis elements
-            BaseElem::StringElem(_) => return Ok(()),
-            BaseElem::WordElem(_) => return Ok(()),
-            BaseElem::OpeElem(_) => return Ok(()),
-            BaseElem::UnKnownElem(_) => return Ok(()),
+            Self::StringElem(_) => return Ok(()),
+            Self::WordElem(_) => return Ok(()),
+            Self::OpeElem(_) => return Ok(()),
+            Self::UnKnownElem(_) => return Ok(()),
         }
     }
 }
@@ -64,6 +78,7 @@ impl BaseElem {
 /// - 自分自身の構造をわかりやすく出力できる
 pub trait ASTBranch {
     fn show(&self);
+    fn get_show_as_string(&self) -> String;
 }
 
 /// # ASTAreaBranch

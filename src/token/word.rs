@@ -18,4 +18,11 @@ impl ASTBranch for WordBranch {
             self.contents
         )
     }
+    fn get_show_as_string(&self) -> String {
+        format!(
+            "{}Word {}",
+            " ".repeat(self.depth as usize * 4),
+            self.contents
+        )
+    }
 }
