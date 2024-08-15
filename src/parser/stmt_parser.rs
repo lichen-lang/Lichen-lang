@@ -24,38 +24,27 @@ impl StmtParser {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else {
-                    if v.contents == Self::DOUBLE_QUOTATION
-                    // '"'
-                    // is quochar
-                    {
-                        if open_flag {
-                            group.push(v.contents);
-                            rlist.push(BaseElem::StringElem(StringBranch {
-                                contents: group.clone(),
-                                depth: self.depth,
-                            }));
-                            group.clear();
-                            open_flag = false;
-                        } else {
-                            group.push(v.contents);
-                            open_flag = true;
-                        }
+                } else if v.contents == Self::DOUBLE_QUOTATION
+                // '"'
+                // is quochar
+                {
+                    if open_flag {
+                        group.push(v.contents);
+                        rlist.push(BaseElem::StringElem(StringBranch {
+                            contents: group.clone(),
+                            depth: self.depth,
+                        }));
+                        group.clear();
+                        open_flag = false;
                     } else {
-                        if open_flag {
-                            if v.contents == Self::ESCAPECHAR
-                            // '\'
-                            // is escape
-                            {
-                                escape_flag = true;
-                            } else {
-                                escape_flag = false;
-                            }
-                            group.push(v.contents);
-                        } else {
-                            rlist.push(inner.clone());
-                        }
+                        group.push(v.contents);
+                        open_flag = true;
                     }
+                } else if open_flag {
+                    escape_flag = v.contents == Self::ESCAPECHAR;
+                    group.push(v.contents);
+                } else {
+                    rlist.push(inner.clone());
                 }
             } else {
                 rlist.push(inner.clone());
