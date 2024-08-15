@@ -9,6 +9,18 @@ pub struct OperatorBranch {
 
 impl ASTBranch for OperatorBranch {
     fn show(&self) {
-        println!("Operator {}({})", self.depth, self.ope);
+        println!(
+            "{}Operator({})",
+            " ".repeat(self.depth as usize * 4),
+            self.ope
+        );
+    }
+
+    fn get_show_as_string(&self) -> String {
+        format!(
+            "{}Operator({})",
+            " ".repeat(self.depth as usize * 4),
+            self.ope
+        )
     }
 }

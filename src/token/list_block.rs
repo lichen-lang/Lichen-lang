@@ -25,6 +25,10 @@ impl ASTBranch for ListBlockBranch {
         }
         println!(")");
     }
+
+    fn get_show_as_string(&self) -> String {
+        todo!();
+    }
 }
 
 impl ASTAreaBranch for ListBlockBranch {

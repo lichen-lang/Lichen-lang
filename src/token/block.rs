@@ -1,7 +1,8 @@
 use crate::abs::ast::*;
 
 use crate::errors::parser_errors::ParserError;
-use crate::parser::state_parser::*;
+use crate::parser::core_parser::Parser;
+use crate::parser::stmt_parser::*;
 
 /// # BlockBranch
 /// ブロックを格納するデータstruct
@@ -19,7 +20,7 @@ impl RecursiveAnalysisElements for BlockBranch {
         if let Some(a) = &self.contents {
             // let parser = StateParser::new(String::from(""), self.depth + 1, self.loopdepth);
             let mut parser =
-                StateParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
+                StmtParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
             match parser.code2vec() {
                 Ok(_) => {
                     let mut rlist = parser.code_list;
@@ -64,5 +65,20 @@ impl ASTBranch for BlockBranch {
             }
         }
         println!(")");
+    }
+
+    fn get_show_as_string(&self) -> String {
+        let mut show_group = String::new();
+        if let Some(e) = &self.contents {
+            for i in e {
+                show_group = format!("{}{}", show_group, i.get_show_as_string());
+            }
+        }
+        format!(
+            "{}BlockBranch depth{} (\n{}",
+            " ".repeat(self.depth as usize),
+            self.depth,
+            show_group
+        )
     }
 }
