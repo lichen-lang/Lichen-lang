@@ -7,7 +7,6 @@ mod tests {
     use crate::utils::utils::insert_space;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
-    // use crate::test::utils::{combinations, insert_space, CombinationIter};
 
     #[test]
     fn test00() {
@@ -22,7 +21,7 @@ mod tests {
     #[test]
     fn test02() {
         let mut a = vec![0, 1, 2];
-        let mut b = vec![3, 4, 5];
+        let b = vec![3, 4, 5];
 
         a.extend(b);
         println!("{:?}", a);
@@ -109,7 +108,7 @@ mod tests {
                     ast_string = format!("{}{}", ast_string, i.get_show_as_string())
                 }
                 // println!("{}", ast_string);
-                if let Some(pre_str) = &str_tmp {
+                if let Some(_) = &str_tmp {
                     assert!(ans_ast_string == ast_string);
                     if ans_ast_string == ast_string {
                         println!("Ok");

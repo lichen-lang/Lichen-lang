@@ -3,7 +3,7 @@
 //     r: usize,
 // }
 
-use std::{ops::Index, vec};
+use std::vec;
 
 pub struct CombinationIter<'a, T> {
     iterable: &'a Vec<T>,
@@ -70,11 +70,3 @@ pub fn insert_space(s: Vec<&str>, n: usize) -> Vec<String> {
     }
     rlist
 }
-
-// fn func() {
-//     let mut a = vec!["hello", "world", "Tom"];
-//     let iter_example = CombinationIter::new(&a, 2);
-//     for i in iter_example {
-//         println!("{}", i)
-//     }
-// }
