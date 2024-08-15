@@ -14,18 +14,18 @@ impl Parser<'_> for CommaParser {
     fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: String::new(),
-            code_list: code_list,
-            depth: depth,
-            loopdepth: loopdepth,
+            code_list,
+            depth,
+            loopdepth,
         }
     }
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
-            code: code,
+            code,
             code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
+            depth,
+            loopdepth,
         }
     }
 

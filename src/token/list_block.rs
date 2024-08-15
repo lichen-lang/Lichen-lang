@@ -34,9 +34,9 @@ impl ASTBranch for ListBlockBranch {
 impl ASTAreaBranch for ListBlockBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents: contents,
-            depth: depth,
-            loopdepth: loopdepth,
+            contents,
+            depth,
+            loopdepth,
         }
     }
 }

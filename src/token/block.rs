@@ -44,9 +44,9 @@ impl RecursiveAnalysisElements for BlockBranch {
 impl ASTAreaBranch for BlockBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents: contents,
-            depth: depth,
-            loopdepth: loopdepth,
+            contents,
+            depth,
+            loopdepth,
         }
     }
 }

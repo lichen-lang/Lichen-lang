@@ -89,34 +89,26 @@ impl ExprParser {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else {
-                    if v.contents == '"'
-                    // is quochar
-                    {
-                        if open_flag {
-                            group.push(v.contents);
-                            rlist.push(BaseElem::StringElem(StringBranch {
-                                contents: group.clone(),
-                                depth: self.depth,
-                            }));
-                            group.clear();
-                            open_flag = false;
-                        } else {
-                            group.push(v.contents);
-                            open_flag = true;
-                        }
+                } else if v.contents == '"'
+                // is quochar
+                {
+                    if open_flag {
+                        group.push(v.contents);
+                        rlist.push(BaseElem::StringElem(StringBranch {
+                            contents: group.clone(),
+                            depth: self.depth,
+                        }));
+                        group.clear();
+                        open_flag = false;
                     } else {
-                        if open_flag {
-                            if v.contents == '\\' {
-                                escape_flag = true;
-                            } else {
-                                escape_flag = false;
-                            }
-                            group.push(v.contents);
-                        } else {
-                            rlist.push(inner.clone());
-                        }
+                        group.push(v.contents);
+                        open_flag = true;
                     }
+                } else if open_flag {
+                    escape_flag = v.contents == '\\';
+                    group.push(v.contents);
+                } else {
+                    rlist.push(inner.clone());
                 }
             } else {
                 rlist.push(inner.clone());
@@ -482,7 +474,7 @@ impl ExprParser {
                     {
                         index_tmp = Some(index);
                         priority_tmp = 4; // unsafe
-                    } else if let BaseElem::OpeElem(pre_elem) = &self.code_list[index - 1] {
+                    } else if let BaseElem::OpeElem(_) = &self.code_list[index - 1] {
                         continue;
                     } else {
                         if ope_info.priority < priority_tmp {
@@ -542,18 +534,18 @@ impl Parser<'_> for ExprParser {
     fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: String::new(),
-            code_list: code_list,
-            depth: depth,
-            loopdepth: loopdepth,
+            code_list,
+            depth,
+            loopdepth,
         }
     }
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
-            code: code,
+            code,
             code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
+            depth,
+            loopdepth,
         }
     }
 

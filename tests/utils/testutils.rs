@@ -14,7 +14,7 @@ pub struct CombinationIter<'a, T> {
 impl<'a, T> CombinationIter<'a, T> {
     pub fn new(iterable: &'a Vec<T>, a: usize) -> Self {
         Self {
-            iterable: iterable,
+            iterable,
             r: a,
             n: 0,
         }
@@ -29,7 +29,7 @@ impl<'a, T: 'a> Iterator for CombinationIter<'a, T> {
         if self.n - 1 < self.iterable.len() {
             return Some(&self.iterable[self.n - 1]);
         }
-        return None;
+        None
     }
 }
 
