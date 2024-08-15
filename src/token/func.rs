@@ -5,9 +5,6 @@ use crate::parser::expr_parser::ExprParser;
 
 /// # FuncBranch
 /// 関数呼び出しのトークン
-/// ```
-/// f(args)
-/// ```
 #[derive(Clone)]
 pub struct FuncBranch {
     pub name: Box<BaseElem>,
