@@ -29,7 +29,7 @@ impl Parser<'_> for CommaParser {
         }
     }
 
-    fn code2_vec_pre_proc_func(&self, code: &String) -> Vec<BaseElem> {
+    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<BaseElem> {
         todo!()
     }
 

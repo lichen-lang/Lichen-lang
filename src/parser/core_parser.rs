@@ -150,7 +150,7 @@ pub trait Parser<'a> {
     fn resolve(&mut self) -> Result<(), ParserError>;
     fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self;
 
-    fn code2_vec_pre_proc_func(&self, code: &String) -> Vec<BaseElem> {
+    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<BaseElem> {
         return code
             .chars()
             .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))

@@ -75,7 +75,7 @@ impl ExprParser {
             group.clear();
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
@@ -126,7 +126,7 @@ impl ExprParser {
             return Err(ParserError::QuotationNotClosed);
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_elements<T>(
@@ -190,7 +190,7 @@ impl ExprParser {
             return Err(ParserError::BraceNotClosed);
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
@@ -223,7 +223,7 @@ impl ExprParser {
         err_proc!(self.grouping_words());
         err_proc!(self.grouoping_operator());
         err_proc!(self.resolve_operation());
-        return Ok(());
+        Ok(())
     }
 
     fn grouoping_operator(&mut self) -> Result<(), ParserError> {
@@ -232,7 +232,7 @@ impl ExprParser {
                 return Err(e);
             }
         }
-        return Ok(());
+        Ok(())
     }
 
     fn grouoping_operator_unit(&mut self, ope: String) -> Result<(), ParserError> {
@@ -306,7 +306,7 @@ impl ExprParser {
             }
         } //end of "for inner in codelist"
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_syntaxbox(&mut self) -> Result<(), ParserError> {
@@ -377,7 +377,7 @@ impl ExprParser {
             }));
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     ///
@@ -517,7 +517,7 @@ impl ExprParser {
                 continue;
             }
         }
-        return Ok(index_tmp);
+        Ok(index_tmp)
     }
 
     fn resolve_operation(&mut self) -> Result<(), ParserError> {
@@ -534,12 +534,12 @@ impl ExprParser {
                         depth: self.depth,
                         loopdepth: self.loopdepth,
                     })];
-                    return Ok(());
+                    Ok(())
                 } else {
-                    return Ok(());
+                    Ok(())
                 }
             }
-            Err(e) => return Err(e),
+            Err(e) => Err(e),
         }
     }
 }
@@ -566,14 +566,14 @@ impl Parser<'_> for ExprParser {
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code_list = self.code2_vec_pre_proc_func(&self.code);
         if let Err(e) = self.code2vec() {
-            return Err(e);
+            Err(e)
         } else {
             for i in &mut self.code_list {
                 if let Err(e) = i.resolve_self() {
                     return Err(e);
                 }
             }
-            return Ok(());
+            Ok(())
         }
     }
 }

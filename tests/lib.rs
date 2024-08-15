@@ -4,7 +4,7 @@ mod utils;
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::utils::insert_space;
+    use crate::utils::testutils::insert_space;
     use colored::*;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
@@ -37,7 +37,7 @@ mod tests {
         println!("test case -> \"{}\"", code);
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        if let Err(_) = e_parser.resolve() {
+        if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
             println!("------------------------------");
@@ -54,7 +54,7 @@ mod tests {
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
         println!("test case -> {}", code);
-        if let Err(_) = e_parser.resolve() {
+        if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
             for i in e_parser.code_list {
@@ -76,9 +76,9 @@ mod tests {
             let mut ast_string = String::new();
             let mut ans_ast_string = String::new();
             let mut e_parser = ExprParser::new(test_case.join("").to_string(), 0, 0);
-            if let Err(_) = e_parser.resolve() {
+            if e_parser.resolve().is_err() {
                 println!("unexpected ParseError occured");
-                assert!(false);
+                panic!()
             } else {
                 for i in e_parser.code_list {
                     ans_ast_string = format!("{}{}", ans_ast_string, i.get_show_as_string())
@@ -88,10 +88,10 @@ mod tests {
 
             // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
             for code in insert_space(test_case, 2) {
-                let string_code: String = String::from(code.clone());
+                let string_code: String = code.clone();
                 let mut e_parser_unit = ExprParser::new(string_code, 0, 0);
 
-                if let Err(_) = e_parser_unit.resolve() {
+                if e_parser_unit.resolve().is_err() {
                     println!("ParseError occured");
                 } else {
                     ast_string.clear();
@@ -99,19 +99,15 @@ mod tests {
                         ast_string = format!("{}{}", ast_string, i.get_show_as_string())
                     }
                     if ans_ast_string == ast_string {
-                        println!(
-                            "{} -> {}",
-                            format!("test case -> \"{}\"", code),
-                            "Ok".green()
-                        );
+                        println!("test case -> \"{}\" -> {}", code, "Ok".green());
                     } else {
                         // Error !
                         println!(
-                            "{} -> {}",
-                            format!("test case -> \"{}\"", code),
+                            "test case -> \"{}\" -> {}",
+                            code,
                             format!("{}{}", "Error!", ast_string).red()
                         );
-                        assert!(false);
+                        panic!();
                     }
                 }
             }
