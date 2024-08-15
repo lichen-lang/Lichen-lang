@@ -1,10 +1,11 @@
+extern crate colored;
 extern crate lichen_lang;
-
 mod utils;
 
 #[cfg(test)]
 mod tests {
     use crate::utils::utils::insert_space;
+    use colored::*;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
 
@@ -111,9 +112,9 @@ mod tests {
                 if let Some(_) = &str_tmp {
                     assert!(ans_ast_string == ast_string);
                     if ans_ast_string == ast_string {
-                        println!("Ok");
+                        println!("{}", "Ok".green());
                     } else {
-                        println!("Error!\n{}", ast_string);
+                        println!("{}", format!("{}{}", "Error!", ast_string).red());
                     }
                 } else {
                     str_tmp = Some(ast_string.clone());

@@ -6,7 +6,14 @@
 
 - state_parser
 
-- ASTの構造
+- ASTの構造チェック
+
+### unit test00
+
+expr_parserが正常に動作するかを確かめるテスト
+```bash
+cargo test --package lichen-lang --test lib -- tests::unit_test00 --exact --show-output
+```
 
 ### expr test 00
 `test case`
@@ -15,7 +22,7 @@
 ```
 
 ```bash
-cargo test --package lichen-lang --lib -- tests::expr_test00 --exact --show-output
+cargo test --package lichen-lang --test lib -- tests::expr_test00 --exact --show-output 
 ```
 
 ### expr test 01
@@ -25,5 +32,5 @@ func(10,1) + 2 * x
 ```
 
 ```bash
-cargo test --package lichen-lang --lib -- tests::expr_test01 --exact --show-output
+cargo test --package lichen-lang --test lib -- tests::expr_test01 --exact --show-output
 ```
