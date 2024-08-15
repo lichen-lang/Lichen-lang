@@ -2,7 +2,7 @@
 name = "lichen-lang"
 version = "0.1.0"
 authors = ["Tom0427"]
-description = "Programming language that can be compiled into wasm"
+description = "Programming language"
 edition = "2021"
 license = "MIT"
 [dependencies]

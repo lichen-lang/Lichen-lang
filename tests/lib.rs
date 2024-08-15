@@ -32,19 +32,6 @@ mod tests {
 
     #[test]
     fn expr_test00() {
-        // let code = "(10 + 1) + 2 * x";
-        // let string_code: String = String::from(code);
-        // println!("test case -> {}", code);
-        // let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
-
-        // if let Err(_) = e_parser.resolve() {
-        //     println!("ParseError occured");
-        // } else {
-        //     for i in e_parser.code_list {
-        //         i.show();
-        //     }
-        // }
-
         let code = " !a&& !b";
         let string_code: String = String::from(code);
         println!("test case -> \"{}\"", code);
@@ -78,46 +65,63 @@ mod tests {
 
     #[test]
     fn unit_test00() {
-        let a = vec!["!", "a", "&&", "!", "b"];
-        let mut str_tmp: Option<String> = None;
+        let test_cases = vec![
+            vec!["!", "a", "&&", "!", "b"],
+            vec!["-", "10", "+", "20"],
+            vec!["a", "**", "b", "**", "c"],
+            vec!["a", "+", "b", "+", "c"],
+        ];
 
-        let mut ast_string = String::new();
-        let mut ans_ast_string = String::new();
-        let mut e_parser = ExprParser::new("!a&&!b".to_string(), 0, 0);
-        if let Err(_) = e_parser.resolve() {
-            println!("ParseError occured");
-        } else {
-            for i in e_parser.code_list {
-                ans_ast_string = format!("{}{}", ans_ast_string, i.get_show_as_string())
-            }
-            println!("{}", ans_ast_string);
-            str_tmp = Some(ans_ast_string.clone());
-        }
+        for test_case in test_cases {
+            let mut str_tmp: Option<String> = None;
 
-        // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
-        for code in insert_space(a, 2) {
-            let string_code: String = String::from(code.clone());
-            println!("test case -> \"{}\"", code);
-            let mut e_parser = ExprParser::new(string_code, 0, 0);
-
+            let mut ast_string = String::new();
+            let mut ans_ast_string = String::new();
+            let mut e_parser = ExprParser::new(test_case.join("").to_string(), 0, 0);
             if let Err(_) = e_parser.resolve() {
-                println!("ParseError occured");
+                println!("unexpected ParseError occured");
+                assert!(false);
             } else {
-                // println!("------------------------------");
-                ast_string.clear();
                 for i in e_parser.code_list {
-                    ast_string = format!("{}{}", ast_string, i.get_show_as_string())
+                    ans_ast_string = format!("{}{}", ans_ast_string, i.get_show_as_string())
                 }
-                // println!("{}", ast_string);
-                if let Some(_) = &str_tmp {
-                    assert!(ans_ast_string == ast_string);
-                    if ans_ast_string == ast_string {
-                        println!("{}", "Ok".green());
-                    } else {
-                        println!("{}", format!("{}{}", "Error!", ast_string).red());
-                    }
+                println!("{}", ans_ast_string);
+                str_tmp = Some(ans_ast_string.clone());
+            }
+
+            // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
+            for code in insert_space(test_case, 2) {
+                let string_code: String = String::from(code.clone());
+                // println!("test case -> \"{}\"", code);
+                let mut e_parser = ExprParser::new(string_code, 0, 0);
+
+                if let Err(_) = e_parser.resolve() {
+                    println!("ParseError occured");
                 } else {
-                    str_tmp = Some(ast_string.clone());
+                    // println!("------------------------------");
+                    ast_string.clear();
+                    for i in e_parser.code_list {
+                        ast_string = format!("{}{}", ast_string, i.get_show_as_string())
+                    }
+                    // println!("{}", ast_string);
+                    if let Some(_) = &str_tmp {
+                        if ans_ast_string == ast_string {
+                            println!(
+                                "{} -> {}",
+                                format!("test case -> \"{}\"", code),
+                                "Ok".green()
+                            );
+                        } else {
+                            println!(
+                                "{} -> {}",
+                                format!("test case -> \"{}\"", code),
+                                format!("{}{}", "Error!", ast_string).red()
+                            );
+                            assert!(false);
+                        }
+                    } else {
+                        str_tmp = Some(ast_string.clone());
+                    }
                 }
             }
         }
