@@ -65,7 +65,7 @@ impl StmtParser {
             return Err(ParserError::QuotationNotClosed);
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_elements<T>(
@@ -129,7 +129,7 @@ impl StmtParser {
             return Err(ParserError::BraceNotClosed);
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_words(&mut self) -> Result<(), ParserError> {
@@ -185,36 +185,28 @@ impl StmtParser {
             group.clear();
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        // --- macro ---
-        macro_rules! err_proc {
-            ($a:expr) => {
-                if let Err(e) = $a {
-                    return Err(e);
-                }
-            };
-        }
-        err_proc!(self.grouping_quotation());
-        err_proc!(self.grouping_words());
-        err_proc!(self.grouping_elements(
+        self.grouping_quotation()?;
+        self.grouping_words()?;
+        self.grouping_elements(
             BaseElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
-        ));
-        err_proc!(self.grouping_elements(
+        )?;
+        self.grouping_elements(
             BaseElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
-        ));
-        err_proc!(self.grouping_elements(
+        )?;
+        self.grouping_elements(
             BaseElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
-        ));
-        return Ok(());
+        )?;
+        Ok(())
     }
 }
 
@@ -239,14 +231,12 @@ impl Parser<'_> for StmtParser {
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code_list = self.code2_vec_pre_proc_func(&self.code);
         if let Err(e) = self.code2vec() {
-            return Err(e);
+            Err(e)
         } else {
             for i in &mut self.code_list {
-                if let Err(e) = i.resolve_self() {
-                    return Err(e);
-                }
+                i.resolve_self()?;
             }
-            return Ok(());
+            Ok(())
         }
     }
 }

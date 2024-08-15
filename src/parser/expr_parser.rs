@@ -195,42 +195,36 @@ impl ExprParser {
 
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
         // --- macro ---
-        macro_rules! err_proc {
-            ($a:expr) => {
-                if let Err(e) = $a {
-                    return Err(e);
-                }
-            };
-        }
-        err_proc!(self.grouping_quotation());
+        self.grouping_quotation()?;
         // grouping_elements
-        err_proc!(self.grouping_elements(
+        self.grouping_elements(
             BaseElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
-        ));
-        err_proc!(self.grouping_elements(
+        )?;
+        self.grouping_elements(
             BaseElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
-        ));
-        err_proc!(self.grouping_elements(
+        )?;
+        self.grouping_elements(
             BaseElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
-        ));
+        )?;
         // end of grouping_elements
-        err_proc!(self.grouping_words());
-        err_proc!(self.grouoping_operator());
-        err_proc!(self.resolve_operation());
+        self.grouping_words()?;
+        self.grouoping_operator()?;
+        self.resolve_operation()?;
         Ok(())
     }
 
     fn grouoping_operator(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            if let Err(e) = self.grouoping_operator_unit(ope.opestr.to_string()) {
-                return Err(e);
-            }
+            // if let Err(e) = self.grouoping_operator_unit(ope.opestr.to_string()) {
+            //     return Err(e);
+            // }
+            self.grouoping_operator_unit(ope.opestr.to_string())?;
         }
         Ok(())
     }
@@ -569,9 +563,7 @@ impl Parser<'_> for ExprParser {
             Err(e)
         } else {
             for i in &mut self.code_list {
-                if let Err(e) = i.resolve_self() {
-                    return Err(e);
-                }
+                i.resolve_self()?;
             }
             Ok(())
         }

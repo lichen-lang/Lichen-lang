@@ -55,20 +55,15 @@ impl ASTBranch for FuncBranch {
 
 impl RecursiveAnalysisElements for FuncBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        if let Err(e) = self.name.resolve_self() {
-            return Err(e);
-        } // 呼び出し元の自己解決
-          // 引数の解決
+        self.name.resolve_self()?;
+        // 呼び出し元の自己解決
+        // 引数の解決
         for i in &mut self.contents {
             let mut parser =
                 ExprParser::create_parser_from_vec(i.to_vec(), self.depth, self.loopdepth);
-            if let Err(e) = parser.code2vec() {
-                return Err(e);
-            }
+            parser.code2vec()?;
             for inner in &mut parser.code_list {
-                if let Err(e) = inner.resolve_self() {
-                    return Err(e);
-                }
+                inner.resolve_self()?;
             }
             *i = parser.code_list;
         }

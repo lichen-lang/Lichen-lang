@@ -14,9 +14,21 @@ mod tests {
         println!("{}hello{}", " ".repeat(4), "@".repeat(4));
     }
 
+    fn func00() -> Result<i32, i32> {
+        Err(42)
+    }
+
+    fn func01() -> Result<i32, i32> {
+        Err(func00()?)
+    }
+
     #[test]
     fn test01() {
-        //
+        let a = func01();
+        match a {
+            Ok(a) => println!("OK {}", a),
+            Err(e) => println!("ERR {}", e),
+        }
     }
 
     #[test]

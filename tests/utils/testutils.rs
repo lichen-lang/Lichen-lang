@@ -50,11 +50,11 @@ where
         .map(|a| [first_element.clone(), a.clone()].concat())
         .collect();
     let without_first = combinations(elements[1..].to_vec(), r);
-    return [with_first, without_first].concat();
+    [with_first, without_first].concat()
 }
 
 pub fn insert_space(s: Vec<&str>, n: usize) -> Vec<String> {
-    let position: Vec<usize> = (0..(s.len() + 1)).into_iter().collect();
+    let position: Vec<usize> = (0..(s.len() + 1)).collect();
     let mut rlist = Vec::new();
 
     for i in combinations(position, n) {
