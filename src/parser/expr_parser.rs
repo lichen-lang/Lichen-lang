@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::abs::ast::*;
 use crate::parser::core_parser::*;
 
@@ -218,53 +220,66 @@ impl ExprParser {
         let mut group: String = String::new();
         let mut rlist: Vec<BaseElem> = Vec::new();
 
-        let ope_size = ope.len();
+        let ope_size: usize = ope.len();
         for inner in &self.code_list {
             if let BaseElem::UnKnownElem(e) = inner {
                 // 未解決の場合
                 group.push(e.contents);
-                if group.len() < ope_size {
-                } else if ope_size == group.len() {
-                    if group == ope {
-                        rlist.push(BaseElem::OpeElem(OperatorBranch {
-                            ope: group.clone(),
-                            depth: self.depth,
-                        }))
-                    } else {
+                match group.len().cmp(&ope_size) {
+                    Ordering::Less => {}
+                    Ordering::Equal => {
+                        if group == ope {
+                            rlist.push(BaseElem::OpeElem(OperatorBranch {
+                                ope: group.clone(),
+                                depth: self.depth,
+                            }))
+                        } else {
+                            // rlist += group
+                            let grouup_tmp: Vec<BaseElem> = group
+                                .chars()
+                                .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                                .collect();
+                            rlist.extend(grouup_tmp);
+                        }
+                        group.clear();
+                    }
+                    Ordering::Greater => {
+                        // ope_size < group.len()
                         // rlist += group
                         let grouup_tmp: Vec<BaseElem> = group
                             .chars()
                             .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
                             .collect();
                         rlist.extend(grouup_tmp);
+                        group.clear();
                     }
-                    group.clear();
-                } else {
-                    // ope_size < group.len()
-                    // rlist += group
-                    let grouup_tmp: Vec<BaseElem> = group
-                        .chars()
-                        .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
-                        .collect();
-                    rlist.extend(grouup_tmp);
-                    group.clear();
                 }
             } else {
                 // 既にtokenが割り当てられているとき
-                if group.len() < ope_size {
-                    // rlist += group
-                    let grouup_tmp: Vec<BaseElem> = group
-                        .chars()
-                        .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
-                        .collect();
-                    rlist.extend(grouup_tmp);
-                } else if ope_size == group.len() {
-                    if group == ope {
-                        rlist.push(BaseElem::OpeElem(OperatorBranch {
-                            ope: group.clone(),
-                            depth: self.depth,
-                        }))
-                    } else {
+                match group.len().cmp(&ope_size) {
+                    Ordering::Less => {
+                        let grouup_tmp: Vec<BaseElem> = group
+                            .chars()
+                            .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                            .collect();
+                        rlist.extend(grouup_tmp);
+                    }
+                    Ordering::Equal => {
+                        if group == ope {
+                            rlist.push(BaseElem::OpeElem(OperatorBranch {
+                                ope: group.clone(),
+                                depth: self.depth,
+                            }))
+                        } else {
+                            // rlist += group
+                            let grouup_tmp: Vec<BaseElem> = group
+                                .chars()
+                                .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+                                .collect();
+                            rlist.extend(grouup_tmp);
+                        }
+                    }
+                    Ordering::Greater => {
                         // rlist += group
                         let grouup_tmp: Vec<BaseElem> = group
                             .chars()
@@ -272,13 +287,6 @@ impl ExprParser {
                             .collect();
                         rlist.extend(grouup_tmp);
                     }
-                } else {
-                    // rlist += group
-                    let grouup_tmp: Vec<BaseElem> = group
-                        .chars()
-                        .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
-                        .collect();
-                    rlist.extend(grouup_tmp);
                 }
                 group.clear();
                 rlist.push(inner.clone());
@@ -298,7 +306,7 @@ impl ExprParser {
             if let BaseElem::SyntaxElem(ref e) = inner {
                 if Self::SYNTAX_WORDS_HEADS.contains(&e.name.as_str()) {
                     flag = true;
-                    name = e.name.clone();
+                    name.clone_from(&e.name);
                     group.push(e.clone());
                 } else if e.name == "elif" {
                     if flag {
