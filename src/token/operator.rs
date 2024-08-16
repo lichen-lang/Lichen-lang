@@ -1,7 +1,8 @@
 use crate::abs::ast::*;
 /// #OperatorBranch
 /// 全ての演算子
-#[derive(Clone)]
+#[cfg(debug_assertions)]
+#[derive(Clone, Debug)]
 pub struct OperatorBranch {
     pub ope: String,
     pub depth: isize,

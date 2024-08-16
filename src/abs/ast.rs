@@ -9,7 +9,8 @@ use crate::errors::parser_errors::ParserError;
 /// # BaseElem
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
-#[derive(Clone)]
+#[cfg(debug_assertions)]
+#[derive(Clone, Debug)]
 pub enum BaseElem {
     BlockElem(BlockBranch),
     ListBlockElem(ListBlockBranch),

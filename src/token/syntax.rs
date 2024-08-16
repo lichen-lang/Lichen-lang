@@ -8,7 +8,8 @@ use crate::token::{block::BlockBranch, paren_block::ParenBlockBranch};
 /// `()`で格納されているデータに関しては`ParenBlockBranch`をnormalで呼び出す
 /// `{}`で格納されているデータに関しては`BlockBranch`のパーサに丸投げする。
 /// 当然、全てのブロックが何かで満たされるわけではないので注意
-#[derive(Clone)]
+#[cfg(debug_assertions)]
+#[derive(Clone, Debug)]
 pub struct SyntaxBranch {
     pub name: String,
     pub expr: Option<ParenBlockBranch>,

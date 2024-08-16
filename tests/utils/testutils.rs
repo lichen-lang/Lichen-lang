@@ -1,38 +1,3 @@
-// struct CombinationIter<T> {
-//     iterable: Vec<T>,
-//     r: usize,
-// }
-
-use std::vec;
-
-pub struct CombinationIter<'a, T> {
-    iterable: &'a Vec<T>,
-    r: usize,
-    n: usize,
-}
-
-impl<'a, T> CombinationIter<'a, T> {
-    pub fn new(iterable: &'a Vec<T>, a: usize) -> Self {
-        Self {
-            iterable,
-            r: a,
-            n: 0,
-        }
-    }
-}
-
-impl<'a, T: 'a> Iterator for CombinationIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.n += 1;
-        if self.n - 1 < self.iterable.len() {
-            return Some(&self.iterable[self.n - 1]);
-        }
-        None
-    }
-}
-
 pub fn combinations<T>(elements: Vec<T>, r: usize) -> Vec<Vec<T>>
 where
     T: Clone + Copy,

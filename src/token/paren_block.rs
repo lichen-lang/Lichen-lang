@@ -11,7 +11,8 @@ use crate::parser::expr_parser::ExprParser;
 /// - タイプ宣言を解析する必要がある場合２ ex) (T, T)
 /// があり個別に呼び出すパーサを実装する必要がある。
 /// 実装する
-#[derive(Clone)]
+#[cfg(debug_assertions)]
+#[derive(Clone, Debug)]
 pub struct ParenBlockBranch {
     pub contents: Option<Vec<BaseElem>>,
     pub depth: isize,

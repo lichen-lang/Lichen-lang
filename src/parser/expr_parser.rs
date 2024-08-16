@@ -308,14 +308,14 @@ impl ExprParser {
                     flag = true;
                     name.clone_from(&e.name);
                     group.push(e.clone());
-                } else if e.name == "elif" {
+                } else if e.name == Self::SYNTAX_ELIF {
                     if flag {
                         group.push(e.clone());
                     } else {
                         return Err(ParserError::GroupingSyntaxBoxError);
                         // TODO:
                     }
-                } else if e.name == "else" {
+                } else if e.name == Self::SYNTAX_ELSE {
                     if flag {
                         group.push(e.clone());
                         rlist.push(BaseElem::SyntaxBoxElem(SyntaxBoxBranch {

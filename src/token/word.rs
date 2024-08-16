@@ -3,7 +3,9 @@ use crate::abs::ast::*;
 /// # WordBranch
 /// 単語を格納するためのstruct
 /// ASTAreaBranchを実装しないため`resolve_self`メソッドを持たない
-#[derive(Clone)]
+
+#[cfg(debug_assertions)]
+#[derive(Clone, Debug)]
 pub struct WordBranch {
     pub contents: String,
     pub depth: isize,
