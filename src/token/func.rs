@@ -19,7 +19,7 @@ impl ASTBranch for FuncBranch {
         self.name.show();
         println!("{}(", " ".repeat(self.depth as usize * 4));
         for (i, j) in self.contents.iter().enumerate() {
-            print!("{}arg{}\n", " ".repeat(self.depth as usize * 4), i);
+            println!("{}arg{}", " ".repeat(self.depth as usize * 4), i);
             for k in j {
                 k.show();
             }
@@ -37,9 +37,10 @@ impl ASTBranch for FuncBranch {
         let mut args_group = String::new();
         for (i, j) in self.contents.iter().enumerate() {
             args_group = format!(
-                "{}{}",
+                "{}{}arg{}\n",
                 args_group,
-                format!("{}arg{}\n", " ".repeat(self.depth as usize * 4), i)
+                " ".repeat(self.depth as usize * 4),
+                i
             );
             for k in j {
                 args_group = format!("{}{}\n", args_group, k.get_show_as_string());
