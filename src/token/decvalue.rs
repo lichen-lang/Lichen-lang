@@ -1,6 +1,5 @@
 use crate::abs::ast::BaseElem;
 
-#[cfg(debug_assertions)]
 #[derive(Clone, Debug)]
 struct DecValueBranch {
     pub valuename: String, // TODO:ここはいずれ、パターンにしたい

@@ -4,7 +4,6 @@ use crate::errors::parser_errors::ParserError;
 /// #ListBlockBranch
 /// listを格納するためのデータstruct
 /// 中では式を解析するパーサを呼び出す必要がある
-#[cfg(debug_assertions)]
 #[derive(Clone, Debug)]
 pub struct ListBlockBranch {
     pub contents: Option<Vec<BaseElem>>,

@@ -2,7 +2,6 @@ use crate::abs::ast::*;
 
 /// # UnKnownBranch
 ///未定トークンが以下のstructに分類される
-#[cfg(debug_assertions)]
 #[derive(Clone, Debug)]
 pub struct UnKnownBranch {
     pub contents: char,

@@ -8,7 +8,6 @@ use crate::parser::stmt_parser::*;
 /// ブロックを格納するデータstruct
 /// 内部では文を解析するパーサを呼び出す必要がある
 ///
-#[cfg(debug_assertions)]
 #[derive(Clone, Debug)]
 pub struct BlockBranch {
     pub contents: Option<Vec<BaseElem>>,

@@ -3,7 +3,6 @@ use crate::abs::ast::*;
 /// # WordBranch
 /// 単語を格納するためのstruct
 /// ASTAreaBranchを実装しないため`resolve_self`メソッドを持たない
-#[cfg(debug_assertions)]
 #[derive(Clone, Debug)]
 pub struct StringBranch {
     pub contents: String,

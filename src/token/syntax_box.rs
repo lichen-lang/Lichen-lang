@@ -4,7 +4,6 @@ use crate::token::syntax::SyntaxBranch;
 
 /// # SyntaxBoxBranch
 /// まとまった文法として解釈される`if elif else` `while else` `for else`などの文法をまとめる
-#[cfg(debug_assertions)]
 #[derive(Clone, Debug)]
 pub struct SyntaxBoxBranch {
     pub name: String,
