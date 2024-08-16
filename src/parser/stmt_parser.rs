@@ -73,44 +73,38 @@ impl StmtParser {
         for inner in &self.code_list {
             if let BaseElem::UnKnownElem(ref b) = inner {
                 if b.contents == open_char {
-                    if depth > 0 {
-                        group.push(inner.clone());
-                    } else if depth == 0 {
-                        // pass
-                    } else {
-                        return Err(ParserError::Uncategorized);
+                    match depth {
+                        0 => {}
+                        1.. => group.push(inner.clone()),
+                        _ => return Err(ParserError::Uncategorized),
                     }
                     depth += 1;
                 } else if b.contents == close_char {
                     depth -= 1;
-                    if depth > 0 {
-                        group.push(inner.clone());
-                    } else if depth == 0 {
-                        rlist.push(elemtype(ASTAreaBranch::new(
-                            Some(group.clone()),
-                            self.depth,
-                            self.loopdepth,
-                        )));
-                        group.clear();
-                    } else {
-                        return Err(ParserError::Uncategorized);
+                    match depth {
+                        0 => {
+                            rlist.push(elemtype(ASTAreaBranch::new(
+                                Some(group.clone()),
+                                self.depth,
+                                self.loopdepth,
+                            )));
+                            group.clear();
+                        }
+                        1.. => group.push(inner.clone()),
+                        _ => return Err(ParserError::Uncategorized),
                     }
                 } else {
-                    if depth > 0 {
-                        group.push(inner.clone());
-                    } else if depth == 0 {
-                        rlist.push(inner.clone());
-                    } else {
-                        return Err(ParserError::Uncategorized);
+                    match depth {
+                        0 => rlist.push(inner.clone()),
+                        1.. => group.push(inner.clone()),
+                        _ => return Err(ParserError::Uncategorized),
                     }
                 }
             } else {
-                if depth > 0 {
-                    group.push(inner.clone());
-                } else if depth == 0 {
-                    rlist.push(inner.clone());
-                } else {
-                    return Err(ParserError::BraceNotClosed);
+                match depth {
+                    0 => rlist.push(inner.clone()),
+                    1.. => group.push(inner.clone()),
+                    _ => return Err(ParserError::BraceNotClosed),
                 }
             }
         }
