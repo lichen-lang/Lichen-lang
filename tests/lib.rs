@@ -113,28 +113,30 @@ mod tests {
                 println!("{}", ans_ast_string);
             }
 
-            // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
-            for code in insert_space(test_case, 2) {
-                let string_code: String = code.clone();
-                let mut e_parser_unit = ExprParser::new(string_code, 0, 0);
+            for n in 1..test_case.len() - 1 {
+                // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
+                for code in insert_space(test_case.clone(), n) {
+                    let string_code: String = code.clone();
+                    let mut e_parser_unit = ExprParser::new(string_code, 0, 0);
 
-                if e_parser_unit.resolve().is_err() {
-                    println!("ParseError occured");
-                } else {
-                    ast_string.clear();
-                    for i in e_parser_unit.code_list {
-                        ast_string = format!("{}{}", ast_string, i.get_show_as_string())
-                    }
-                    if ans_ast_string == ast_string {
-                        println!("test case -> \"{}\" -> {}", code, "Ok".green());
+                    if e_parser_unit.resolve().is_err() {
+                        println!("ParseError occured");
                     } else {
-                        // Error !
-                        println!(
-                            "test case -> \"{}\" -> {}",
-                            code,
-                            format!("{}{}", "Error!", ast_string).red()
-                        );
-                        panic!();
+                        ast_string.clear();
+                        for i in e_parser_unit.code_list {
+                            ast_string = format!("{}{}", ast_string, i.get_show_as_string())
+                        }
+                        if ans_ast_string == ast_string {
+                            println!("test case -> \"{}\" -> {}", code, "Ok".green());
+                        } else {
+                            // Error !
+                            println!(
+                                "test case -> \"{}\" -> {}",
+                                code,
+                                format!("{}{}", "Error!", ast_string).red()
+                            );
+                            panic!();
+                        }
                     }
                 }
             }

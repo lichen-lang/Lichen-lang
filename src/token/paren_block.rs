@@ -44,11 +44,7 @@ impl RecursiveAnalysisElements for ParenBlockBranch {
 
 impl ASTBranch for ParenBlockBranch {
     fn show(&self) {
-        println!(
-            "{}Paren depth{}\n(",
-            " ".repeat(self.depth as usize),
-            self.depth
-        );
+        println!("{}Paren\n(", " ".repeat(self.depth as usize));
         if let Some(e) = &self.contents {
             for i in e {
                 i.show();
@@ -58,11 +54,7 @@ impl ASTBranch for ParenBlockBranch {
     }
 
     fn get_show_as_string(&self) -> String {
-        let open_section = format!(
-            "{}Paren depth{}\n(",
-            " ".repeat(self.depth as usize),
-            self.depth
-        );
+        let open_section = format!("{}Paren\n(", " ".repeat(self.depth as usize));
         let mut group_section = String::new();
         if let Some(e) = &self.contents {
             for i in e {
