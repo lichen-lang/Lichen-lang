@@ -154,6 +154,7 @@ impl ExprParser {
                                 self.depth,
                                 self.loopdepth,
                             )));
+                            group.clear();
                         }
                         1.. => group.push(inner.clone()),
                         _ => return Err(ParserError::Uncategorized),
