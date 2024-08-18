@@ -86,7 +86,6 @@ pub trait ASTBranch {
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
 pub trait ASTAreaBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self;
-    // fn resolve_self(&mut self) -> Result<&str, String>;
 }
 
 pub trait RecursiveAnalysisElements {
