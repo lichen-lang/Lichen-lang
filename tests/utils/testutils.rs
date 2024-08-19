@@ -1,38 +1,3 @@
-// struct CombinationIter<T> {
-//     iterable: Vec<T>,
-//     r: usize,
-// }
-
-use std::vec;
-
-pub struct CombinationIter<'a, T> {
-    iterable: &'a Vec<T>,
-    r: usize,
-    n: usize,
-}
-
-impl<'a, T> CombinationIter<'a, T> {
-    pub fn new(iterable: &'a Vec<T>, a: usize) -> Self {
-        Self {
-            iterable: iterable,
-            r: a,
-            n: 0,
-        }
-    }
-}
-
-impl<'a, T: 'a> Iterator for CombinationIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.n += 1;
-        if self.n - 1 < self.iterable.len() {
-            return Some(&self.iterable[self.n - 1]);
-        }
-        return None;
-    }
-}
-
 pub fn combinations<T>(elements: Vec<T>, r: usize) -> Vec<Vec<T>>
 where
     T: Clone + Copy,
@@ -50,11 +15,11 @@ where
         .map(|a| [first_element.clone(), a.clone()].concat())
         .collect();
     let without_first = combinations(elements[1..].to_vec(), r);
-    return [with_first, without_first].concat();
+    [with_first, without_first].concat()
 }
 
 pub fn insert_space(s: Vec<&str>, n: usize) -> Vec<String> {
-    let position: Vec<usize> = (0..(s.len() + 1)).into_iter().collect();
+    let position: Vec<usize> = (0..(s.len() + 1)).collect();
     let mut rlist = Vec::new();
 
     for i in combinations(position, n) {

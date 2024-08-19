@@ -1,10 +1,11 @@
+extern crate colored;
 extern crate lichen_lang;
-
 mod utils;
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::utils::insert_space;
+    use crate::utils::testutils::insert_space;
+    use colored::*;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
 
@@ -13,9 +14,21 @@ mod tests {
         println!("{}hello{}", " ".repeat(4), "@".repeat(4));
     }
 
+    fn func00() -> Result<i32, i32> {
+        Err(42)
+    }
+
+    fn func01() -> Result<i32, i32> {
+        Err(func00()?)
+    }
+
     #[test]
     fn test01() {
-        //
+        let a = func01();
+        match a {
+            Ok(a) => println!("OK {}", a),
+            Err(e) => println!("ERR {}", e),
+        }
     }
 
     #[test]
@@ -31,25 +44,12 @@ mod tests {
 
     #[test]
     fn expr_test00() {
-        // let code = "(10 + 1) + 2 * x";
-        // let string_code: String = String::from(code);
-        // println!("test case -> {}", code);
-        // let mut e_parser = expr_parser::ExprParser::new(string_code, 0, 0);
-
-        // if let Err(_) = e_parser.resolve() {
-        //     println!("ParseError occured");
-        // } else {
-        //     for i in e_parser.code_list {
-        //         i.show();
-        //     }
-        // }
-
         let code = " !a&& !b";
         let string_code: String = String::from(code);
-        println!("test case -> \"{}\"", code);
+        println!("test case -> \"{}\"", code.cyan());
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        if let Err(_) = e_parser.resolve() {
+        if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
             println!("------------------------------");
@@ -61,14 +61,15 @@ mod tests {
 
     #[test]
     fn expr_test01() {
-        let code = "func(10, 1) + 2 * x";
+        let code = "func00(10, 123 + func01(a,b,c)) + 2 * x";
         let string_code: String = String::from(code);
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        println!("test case -> {}", code);
-        if let Err(_) = e_parser.resolve() {
+        println!("test case -> {}", code.cyan());
+        if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
+            // println!("{:#?}", e_parser.code_list);
             for i in e_parser.code_list {
                 i.show();
             }
@@ -76,47 +77,69 @@ mod tests {
     }
 
     #[test]
-    fn unit_test00() {
-        let a = vec!["!", "a", "&&", "!", "b"];
-        let mut str_tmp: Option<String> = None;
+    fn expr_test02() {
+        let code = "(10+ 1) + 2 * x";
+        let string_code: String = String::from(code);
+        let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        let mut ast_string = String::new();
-        let mut ans_ast_string = String::new();
-        let mut e_parser = ExprParser::new("!a&&!b".to_string(), 0, 0);
-        if let Err(_) = e_parser.resolve() {
+        println!("test case -> {}", code);
+        if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
-            for i in e_parser.code_list {
-                ans_ast_string = format!("{}{}", ans_ast_string, i.get_show_as_string())
-            }
-            println!("{}", ans_ast_string);
-            str_tmp = Some(ans_ast_string.clone());
+            println!("{:#?}", e_parser.code_list);
         }
+    }
 
-        // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
-        for code in insert_space(a, 2) {
-            let string_code: String = String::from(code.clone());
-            println!("test case -> \"{}\"", code);
-            let mut e_parser = ExprParser::new(string_code, 0, 0);
+    #[test]
+    fn unit_test00() {
+        let test_cases = vec![
+            vec!["!", "a", "&&", "!", "b"],  // !a&&!bs
+            vec!["-", "10", "+", "20"],      // -10+20
+            vec!["a", "**", "b", "**", "c"], // a**b**c
+            vec!["a", "+", "b", "+", "c"],   // a+b+c
+            vec!["(", "a", "+", "bc", ")", "+", "(", "cde", "-", "defg", ")"], // (a+bc)+(cde-defg)
+            vec!["func", "(", "10", ",", "1", ")", "+", "2", "*", "x"], // func(10,1)+2*x
+        ];
 
-            if let Err(_) = e_parser.resolve() {
-                println!("ParseError occured");
+        for test_case in test_cases {
+            let mut ast_string = String::new();
+            let mut ans_ast_string = String::new();
+            let mut e_parser = ExprParser::new(test_case.join("").to_string(), 0, 0);
+            if e_parser.resolve().is_err() {
+                println!("unexpected ParseError occured");
+                panic!()
             } else {
-                // println!("------------------------------");
-                ast_string.clear();
                 for i in e_parser.code_list {
-                    ast_string = format!("{}{}", ast_string, i.get_show_as_string())
+                    ans_ast_string = format!("{}{}", ans_ast_string, i.get_show_as_string())
                 }
-                // println!("{}", ast_string);
-                if let Some(_) = &str_tmp {
-                    assert!(ans_ast_string == ast_string);
-                    if ans_ast_string == ast_string {
-                        println!("Ok");
+                println!("{}", ans_ast_string);
+            }
+
+            for n in 1..test_case.len() - 1 {
+                // 同じように解釈されるべき文字列が同じように解釈されなかった場合Error!を出す
+                for code in insert_space(test_case.clone(), n) {
+                    let string_code: String = code.clone();
+                    let mut e_parser_unit = ExprParser::new(string_code, 0, 0);
+
+                    if e_parser_unit.resolve().is_err() {
+                        println!("ParseError occured");
                     } else {
-                        println!("Error!\n{}", ast_string);
+                        ast_string.clear();
+                        for i in e_parser_unit.code_list {
+                            ast_string = format!("{}{}", ast_string, i.get_show_as_string())
+                        }
+                        if ans_ast_string == ast_string {
+                            println!("test case -> \"{}\" -> {}", code, "Ok".green());
+                        } else {
+                            // Error !
+                            println!(
+                                "test case -> \"{}\" -> {}",
+                                code,
+                                format!("{}{}", "Error!", ast_string).red()
+                            );
+                            panic!();
+                        }
                     }
-                } else {
-                    str_tmp = Some(ast_string.clone());
                 }
             }
         }

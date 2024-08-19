@@ -8,7 +8,7 @@ use crate::parser::stmt_parser::*;
 /// ブロックを格納するデータstruct
 /// 内部では文を解析するパーサを呼び出す必要がある
 ///
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BlockBranch {
     pub contents: Option<Vec<BaseElem>>,
     pub depth: isize,
@@ -18,26 +18,24 @@ pub struct BlockBranch {
 impl RecursiveAnalysisElements for BlockBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
         if let Some(a) = &self.contents {
-            // let parser = StateParser::new(String::from(""), self.depth + 1, self.loopdepth);
             let mut parser =
                 StmtParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
             match parser.code2vec() {
                 Ok(_) => {
                     let mut rlist = parser.code_list;
                     for i in &mut rlist {
-                        if let Err(e) = i.resolve_self() {
-                            return Err(e);
-                        }
+                        // if let Err(e) = i.resolve_self() {
+                        //     return Err(e);
+                        // }
+                        i.resolve_self()?;
                     }
                     self.contents = Some(rlist);
-                    return Ok(());
+                    Ok(())
                 }
-                Err(e) => {
-                    return Err(e);
-                }
+                Err(e) => Err(e),
             }
         } else {
-            return Ok(());
+            Ok(())
         }
     }
 }
@@ -45,9 +43,9 @@ impl RecursiveAnalysisElements for BlockBranch {
 impl ASTAreaBranch for BlockBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents: contents,
-            depth: depth,
-            loopdepth: loopdepth,
+            contents,
+            depth,
+            loopdepth,
         }
     }
 }

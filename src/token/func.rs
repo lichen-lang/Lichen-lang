@@ -1,17 +1,18 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
+use crate::parser::comma_parser::CommaParser;
 use crate::parser::core_parser::Parser;
 use crate::parser::expr_parser::ExprParser;
 
+use super::paren_block::ParenBlockBranch;
+
 /// # FuncBranch
 /// 関数呼び出しのトークン
-/// ```
-/// f(args)
-/// ```
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FuncBranch {
     pub name: Box<BaseElem>,
-    pub contents: Vec<Vec<BaseElem>>,
+    pub contents: ParenBlockBranch,
+    pub out_code_list: Vec<Vec<BaseElem>>, // args
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -21,8 +22,8 @@ impl ASTBranch for FuncBranch {
         println!("{}func name", " ".repeat(self.depth as usize * 4));
         self.name.show();
         println!("{}(", " ".repeat(self.depth as usize * 4));
-        for (i, j) in self.contents.iter().enumerate() {
-            print!("{}arg{}\n", " ".repeat(self.depth as usize * 4), i);
+        for (i, j) in self.out_code_list.iter().enumerate() {
+            println!("{}arg{}", " ".repeat(self.depth as usize * 4), i);
             for k in j {
                 k.show();
             }
@@ -38,11 +39,12 @@ impl ASTBranch for FuncBranch {
         );
         let paren_open = format!("{}(\n", " ".repeat(self.depth as usize * 4));
         let mut args_group = String::new();
-        for (i, j) in self.contents.iter().enumerate() {
+        for (i, j) in self.out_code_list.iter().enumerate() {
             args_group = format!(
-                "{}{}",
+                "{}{}arg{}\n",
                 args_group,
-                format!("{}arg{}\n", " ".repeat(self.depth as usize * 4), i)
+                " ".repeat(self.depth as usize * 4),
+                i
             );
             for k in j {
                 args_group = format!("{}{}\n", args_group, k.get_show_as_string());
@@ -58,20 +60,30 @@ impl ASTBranch for FuncBranch {
 
 impl RecursiveAnalysisElements for FuncBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        if let Err(e) = self.name.resolve_self() {
-            return Err(e);
-        } // 呼び出し元の自己解決
-          // 引数の解決
-        for i in &mut self.contents {
-            let mut parser =
-                ExprParser::create_parser_from_vec(i.to_vec(), self.depth, self.loopdepth);
-            if let Err(e) = parser.code2vec() {
-                return Err(e);
+        self.name.resolve_self()?;
+        // 呼び出し元の自己解決
+        // 引数の解決
+        if let ParenBlockBranch {
+            contents: Some(v),
+            depth,
+            loopdepth,
+        } = self.contents.clone()
+        {
+            let mut comma_parser = CommaParser::create_parser_from_vec(v, depth, loopdepth);
+            if let BaseElem::OpeElem(_) = &*self.name {
+                // もし、関数の名前が演算子だった場合、 `self.out_code_list`に対しては処理をしない
+                // pass
+            } else {
+                comma_parser.resolve()?;
+                self.out_code_list = comma_parser.out_code_list;
             }
+        }
+        for i in &mut self.out_code_list {
+            let mut parser =
+                ExprParser::create_parser_from_vec(i.to_vec(), self.depth + 1, self.loopdepth);
+            parser.code2vec()?;
             for inner in &mut parser.code_list {
-                if let Err(e) = inner.resolve_self() {
-                    return Err(e);
-                }
+                inner.resolve_self()?;
             }
             *i = parser.code_list;
         }

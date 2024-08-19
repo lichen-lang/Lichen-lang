@@ -1,5 +1,6 @@
 use crate::abs::ast::BaseElem;
 
+#[derive(Clone, Debug)]
 struct DecValueBranch {
     pub valuename: String, // TODO:ここはいずれ、パターンにしたい
     pub contents: Vec<BaseElem>,

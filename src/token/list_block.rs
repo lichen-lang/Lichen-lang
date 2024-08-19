@@ -4,7 +4,7 @@ use crate::errors::parser_errors::ParserError;
 /// #ListBlockBranch
 /// listを格納するためのデータstruct
 /// 中では式を解析するパーサを呼び出す必要がある
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ListBlockBranch {
     pub contents: Option<Vec<BaseElem>>,
     pub depth: isize,
@@ -34,9 +34,9 @@ impl ASTBranch for ListBlockBranch {
 impl ASTAreaBranch for ListBlockBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents: contents,
-            depth: depth,
-            loopdepth: loopdepth,
+            contents,
+            depth,
+            loopdepth,
         }
     }
 }

@@ -9,7 +9,7 @@ use crate::errors::parser_errors::ParserError;
 /// # BaseElem
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum BaseElem {
     BlockElem(BlockBranch),
     ListBlockElem(ListBlockBranch),
@@ -57,18 +57,18 @@ impl BaseElem {
     pub fn resolve_self(&mut self) -> Result<(), ParserError> {
         match self {
             // recursive analysis elements
-            Self::BlockElem(e) => return e.resolve_self(),
-            Self::ListBlockElem(e) => return e.resolve_self(),
-            Self::ParenBlockElem(e) => return e.resolve_self(),
-            Self::SyntaxElem(e) => return e.resolve_self(),
-            Self::SyntaxBoxElem(e) => return e.resolve_self(),
-            Self::FuncElem(e) => return e.resolve_self(),
+            Self::BlockElem(e) => e.resolve_self(),
+            Self::ListBlockElem(e) => e.resolve_self(),
+            Self::ParenBlockElem(e) => e.resolve_self(),
+            Self::SyntaxElem(e) => e.resolve_self(),
+            Self::SyntaxBoxElem(e) => e.resolve_self(),
+            Self::FuncElem(e) => e.resolve_self(),
 
             // unrecursive analysis elements
-            Self::StringElem(_) => return Ok(()),
-            Self::WordElem(_) => return Ok(()),
-            Self::OpeElem(_) => return Ok(()),
-            Self::UnKnownElem(_) => return Ok(()),
+            Self::StringElem(_) => Ok(()),
+            Self::WordElem(_) => Ok(()),
+            Self::OpeElem(_) => Ok(()),
+            Self::UnKnownElem(_) => Ok(()),
         }
     }
 }
@@ -86,7 +86,6 @@ pub trait ASTBranch {
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
 pub trait ASTAreaBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self;
-    // fn resolve_self(&mut self) -> Result<&str, String>;
 }
 
 pub trait RecursiveAnalysisElements {

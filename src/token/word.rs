@@ -3,7 +3,8 @@ use crate::abs::ast::*;
 /// # WordBranch
 /// 単語を格納するためのstruct
 /// ASTAreaBranchを実装しないため`resolve_self`メソッドを持たない
-#[derive(Clone)]
+
+#[derive(Clone, Debug)]
 pub struct WordBranch {
     pub contents: String,
     pub depth: isize,
@@ -18,6 +19,7 @@ impl ASTBranch for WordBranch {
             self.contents
         )
     }
+
     fn get_show_as_string(&self) -> String {
         format!(
             "{}Word \"{}\"",

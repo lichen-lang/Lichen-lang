@@ -11,7 +11,7 @@ use crate::parser::expr_parser::ExprParser;
 /// - タイプ宣言を解析する必要がある場合２ ex) (T, T)
 /// があり個別に呼び出すパーサを実装する必要がある。
 /// 実装する
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ParenBlockBranch {
     pub contents: Option<Vec<BaseElem>>,
     pub depth: isize,
@@ -28,9 +28,7 @@ impl RecursiveAnalysisElements for ParenBlockBranch {
                 Ok(_) => {
                     let mut rlist = parser.code_list;
                     for i in &mut rlist {
-                        if let Err(e) = i.resolve_self() {
-                            return Err(e);
-                        }
+                        i.resolve_self()?
                     }
                     self.contents = Some(rlist);
                     return Ok(());
@@ -46,11 +44,7 @@ impl RecursiveAnalysisElements for ParenBlockBranch {
 
 impl ASTBranch for ParenBlockBranch {
     fn show(&self) {
-        println!(
-            "{}Paren depth{}\n(",
-            " ".repeat(self.depth as usize),
-            self.depth
-        );
+        println!("{}Paren\n(", " ".repeat(self.depth as usize));
         if let Some(e) = &self.contents {
             for i in e {
                 i.show();
@@ -60,11 +54,7 @@ impl ASTBranch for ParenBlockBranch {
     }
 
     fn get_show_as_string(&self) -> String {
-        let open_section = format!(
-            "{}Paren depth{}\n(",
-            " ".repeat(self.depth as usize),
-            self.depth
-        );
+        let open_section = format!("{}Paren\n(", " ".repeat(self.depth as usize));
         let mut group_section = String::new();
         if let Some(e) = &self.contents {
             for i in e {
@@ -79,9 +69,9 @@ impl ASTBranch for ParenBlockBranch {
 impl ASTAreaBranch for ParenBlockBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents: contents,
-            depth: depth,
-            loopdepth: loopdepth,
+            contents,
+            depth,
+            loopdepth,
         }
     }
 }
