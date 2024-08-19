@@ -69,6 +69,7 @@ mod tests {
         if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
+            // println!("{:#?}", e_parser.code_list);
             for i in e_parser.code_list {
                 i.show();
             }
@@ -92,11 +93,11 @@ mod tests {
     #[test]
     fn unit_test00() {
         let test_cases = vec![
-            vec!["!", "a", "&&", "!", "b"],
-            vec!["-", "10", "+", "20"],
-            vec!["a", "**", "b", "**", "c"],
-            vec!["a", "+", "b", "+", "c"],
-            vec!["(", "a", "+", "b", ")", "+", "(", "c", "-", "d", ")"],
+            vec!["!", "a", "&&", "!", "b"],  // !a&&!bs
+            vec!["-", "10", "+", "20"],      // -10+20
+            vec!["a", "**", "b", "**", "c"], // a**b**c
+            vec!["a", "+", "b", "+", "c"],   // a+b+c
+            vec!["(", "a", "+", "bc", ")", "+", "(", "cde", "-", "defg", ")"], // (a+bc)+(cde-defg)
         ];
 
         for test_case in test_cases {
