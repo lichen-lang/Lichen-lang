@@ -563,7 +563,6 @@ impl Parser<'_> for ExprParser {
         if let Err(e) = self.code2vec() {
             Err(e)
         } else {
-            // println!("{:#?}", self.code_list);
             for i in &mut self.code_list {
                 i.resolve_self()?;
             }

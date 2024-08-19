@@ -46,7 +46,7 @@ mod tests {
     fn expr_test00() {
         let code = " !a&& !b";
         let string_code: String = String::from(code);
-        println!("test case -> \"{}\"", code);
+        println!("test case -> \"{}\"", code.cyan());
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
         if e_parser.resolve().is_err() {
@@ -61,11 +61,11 @@ mod tests {
 
     #[test]
     fn expr_test01() {
-        let code = "func(10, 1) + 2 * x";
+        let code = "func00(10, 123 + func01(a,b,c)) + 2 * x";
         let string_code: String = String::from(code);
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        println!("test case -> {}", code);
+        println!("test case -> {}", code.cyan());
         if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
@@ -98,6 +98,7 @@ mod tests {
             vec!["a", "**", "b", "**", "c"], // a**b**c
             vec!["a", "+", "b", "+", "c"],   // a+b+c
             vec!["(", "a", "+", "bc", ")", "+", "(", "cde", "-", "defg", ")"], // (a+bc)+(cde-defg)
+            vec!["func", "(", "10", ",", "1", ")", "+", "2", "*", "x"], // func(10,1)+2*x
         ];
 
         for test_case in test_cases {

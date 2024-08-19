@@ -18,7 +18,6 @@ pub struct BlockBranch {
 impl RecursiveAnalysisElements for BlockBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
         if let Some(a) = &self.contents {
-            // let parser = StateParser::new(String::from(""), self.depth + 1, self.loopdepth);
             let mut parser =
                 StmtParser::create_parser_from_vec(a.to_vec(), self.depth + 1, self.loopdepth);
             match parser.code2vec() {

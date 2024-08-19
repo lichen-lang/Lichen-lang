@@ -6,9 +6,6 @@ use crate::parser::core_parser::Parser;
 
 use crate::token::string::StringBranch;
 
-use super::expr_parser;
-use super::expr_parser::ExprParser;
-
 pub struct CommaParser {
     pub code: String,
     pub code_list: Vec<BaseElem>,
@@ -190,12 +187,6 @@ impl Parser<'_> for CommaParser {
 
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code2vec()?;
-        // for r in &mut self.out_code_list {
-        //     let mut expr_parser =
-        //         ExprParser::create_parser_from_vec(r.to_vec(), self.depth, self.loopdepth);
-        //     expr_parser.resolve()?;
-        //     *r = expr_parser.code_list;
-        // }
         Ok(())
     }
 }
