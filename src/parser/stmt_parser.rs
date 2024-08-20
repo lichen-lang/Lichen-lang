@@ -5,7 +5,6 @@ use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
 pub struct StmtParser {
-    // TODO: 一時的にpublicにしているだけ
     pub code: String,
     pub code_list: Vec<BaseElem>,
     pub depth: isize,

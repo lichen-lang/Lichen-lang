@@ -15,7 +15,6 @@ use crate::token::word::WordBranch;
 use crate::errors::parser_errors::ParserError;
 
 pub struct ExprParser {
-    // TODO: 一時的にpublicにしているだけ
     pub code: String,
     pub code_list: Vec<BaseElem>,
     pub depth: isize,
