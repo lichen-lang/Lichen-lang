@@ -91,6 +91,23 @@ mod tests {
     }
 
     #[test]
+    fn expr_test03() {
+        let code = "tarai(1)(2)(3)";
+        let string_code: String = String::from(code);
+        let mut e_parser = ExprParser::new(string_code, 0, 0);
+
+        println!("test case -> {}", code);
+        if e_parser.resolve().is_err() {
+            println!("ParseError occured");
+        } else {
+            println!("{:#?}", e_parser.code_list);
+            for i in e_parser.code_list {
+                i.show();
+            }
+        }
+    }
+
+    #[test]
     fn unit_test00() {
         let test_cases = vec![
             vec!["!", "a", "&&", "!", "b"],  // !a&&!bs
