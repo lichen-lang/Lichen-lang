@@ -21,7 +21,7 @@ cargo test --package lichen-lang --test lib -- tests::expr_test00 --exact --show
 ### expr test 01
 `test case`
 ```
-func(10,1) + 2 * x
+func00(10, 123 + func01(a,b,c)) + 2 * x
 ```
 
 ```bash

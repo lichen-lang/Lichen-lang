@@ -202,7 +202,9 @@ impl ExprParser {
         )?;
         // end of grouping_elements
         self.grouping_words()?;
-        self.grouping_functioncall()?;
+        while self.contain_callable() {
+            self.grouping_functioncall()?;
+        }
         self.grouoping_operator()?;
         self.resolve_operation()?;
         Ok(())
@@ -210,9 +212,6 @@ impl ExprParser {
 
     fn grouoping_operator(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            // if let Err(e) = self.grouoping_operator_unit(ope.opestr.to_string()) {
-            //     return Err(e);
-            // }
             self.grouoping_operator_unit(ope.opestr.to_string())?;
         }
         Ok(())
@@ -367,6 +366,36 @@ impl ExprParser {
         }
         self.code_list = rlist;
         Ok(())
+    }
+
+    fn contain_callable(&self) -> bool {
+        let mut flag = false;
+        let mut name_tmp: Option<&BaseElem> = None;
+
+        for inner in &self.code_list {
+            match inner {
+                BaseElem::WordElem(_) | BaseElem::FuncElem(_) => {
+                    name_tmp = Some(inner);
+                    flag = true;
+                }
+                BaseElem::ParenBlockElem(_) => {
+                    if let Some(BaseElem::WordElem(v)) = name_tmp {
+                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                            return true;
+                        }
+                    }
+                }
+                _ => {
+                    if flag {
+                        flag = false;
+                        name_tmp = None;
+                    } else {
+                        //pass
+                    }
+                }
+            }
+        }
+        false
     }
 
     //
