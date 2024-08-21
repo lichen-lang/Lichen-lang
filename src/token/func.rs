@@ -82,9 +82,7 @@ impl RecursiveAnalysisElements for FuncBranch {
             let mut parser =
                 ExprParser::create_parser_from_vec(i.to_vec(), self.depth + 1, self.loopdepth);
             parser.code2vec()?;
-            for inner in &mut parser.code_list {
-                inner.resolve_self()?;
-            }
+            parser.resolve()?;
             *i = parser.code_list;
         }
         Ok(())

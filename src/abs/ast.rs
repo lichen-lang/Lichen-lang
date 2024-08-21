@@ -1,7 +1,7 @@
 use crate::token::{
-    block::BlockBranch, func::FuncBranch, list_block::ListBlockBranch, operator::OperatorBranch,
-    paren_block::ParenBlockBranch, string::StringBranch, syntax::SyntaxBranch,
-    syntax_box::SyntaxBoxBranch, unknown::UnKnownBranch, word::WordBranch,
+    block::BlockBranch, func::FuncBranch, list::ListBranch, list_block::ListBlockBranch,
+    operator::OperatorBranch, paren_block::ParenBlockBranch, string::StringBranch,
+    syntax::SyntaxBranch, syntax_box::SyntaxBoxBranch, unknown::UnKnownBranch, word::WordBranch,
 };
 
 use crate::errors::parser_errors::ParserError;
@@ -17,6 +17,7 @@ pub enum BaseElem {
     SyntaxElem(SyntaxBranch),
     SyntaxBoxElem(SyntaxBoxBranch),
     FuncElem(FuncBranch),
+    ListElem(ListBranch),
     // without ASTAreaBranch trait structures
     StringElem(StringBranch),
     WordElem(WordBranch),
@@ -37,6 +38,7 @@ impl BaseElem {
             Self::SyntaxBoxElem(e) => e.show(),
             Self::FuncElem(e) => e.show(),
             Self::OpeElem(e) => e.show(),
+            Self::ListElem(e) => e.show(),
         }
     }
 
@@ -52,6 +54,7 @@ impl BaseElem {
             Self::SyntaxBoxElem(e) => e.get_show_as_string(),
             Self::FuncElem(e) => e.get_show_as_string(),
             Self::OpeElem(e) => e.get_show_as_string(),
+            Self::ListElem(e) => e.get_show_as_string(),
         }
     }
     pub fn resolve_self(&mut self) -> Result<(), ParserError> {
@@ -63,6 +66,7 @@ impl BaseElem {
             Self::SyntaxElem(e) => e.resolve_self(),
             Self::SyntaxBoxElem(e) => e.resolve_self(),
             Self::FuncElem(e) => e.resolve_self(),
+            Self::ListElem(e) => e.resolve_self(),
 
             // unrecursive analysis elements
             Self::StringElem(_) => Ok(()),

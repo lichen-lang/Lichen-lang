@@ -37,6 +37,17 @@ debug trait test
 ```bash
 cargo test --package lichen-lang --test lib -- tests::expr_test02 --exact --show-output
 ```
+
+### expr test 03
+
+```
+tarai[1][2][3]
+```
+
+```bash
+cargo test --package lichen-lang --test lib -- tests::expr_test03 --exact --show-output
+```
+
 ### unit test00
 
 expr_parserが正常に動作するかを確かめるテスト

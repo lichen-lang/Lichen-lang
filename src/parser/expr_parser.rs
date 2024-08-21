@@ -5,6 +5,7 @@ use crate::parser::core_parser::*;
 
 use crate::errors::parser_errors::ParserError;
 use crate::token::func::FuncBranch;
+use crate::token::list::ListBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
@@ -203,6 +204,10 @@ impl ExprParser {
         self.grouping_words()?;
         while self.contain_callable() {
             self.grouping_functioncall()?;
+        }
+        while self.contain_subscriptable() {
+            println!("hellooooooooooooooooooooooooooooooooooo");
+            self.grouping_subscription()?;
         }
         self.grouoping_operator()?;
         self.resolve_operation()?;
@@ -451,6 +456,111 @@ impl ExprParser {
                             name: Box::new(BaseElem::FuncElem(fb.clone())),
                             contents: v.clone(),
                             out_code_list: Vec::new(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                        name_tmp = None;
+                    } else {
+                        // 1
+                        if let Some(ref s) = name_tmp {
+                            rlist.push(s.clone());
+                        }
+                        rlist.push(inner.clone());
+                        name_tmp = None;
+                    }
+                }
+                _ => {
+                    if let Some(ref s) = name_tmp {
+                        rlist.push(s.clone());
+                        rlist.push(inner.clone());
+                        name_tmp = None;
+                    } else {
+                        rlist.push(inner.clone());
+                    }
+                }
+            }
+        }
+        if let Some(ref s) = name_tmp {
+            rlist.push(s.clone());
+        }
+        self.code_list = rlist;
+        Ok(())
+    }
+
+    fn contain_subscriptable(&self) -> bool {
+        let mut flag = false;
+        let mut name_tmp: Option<&BaseElem> = None;
+
+        for inner in &self.code_list {
+            match inner {
+                BaseElem::WordElem(_) | BaseElem::FuncElem(_) => {
+                    name_tmp = Some(inner);
+                    flag = true;
+                }
+                BaseElem::ListBlockElem(_) => {
+                    if let Some(BaseElem::WordElem(v)) = name_tmp {
+                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                            return true;
+                        }
+                    } else if let Some(BaseElem::FuncElem(_v)) = name_tmp {
+                        return true;
+                    } else {
+                        name_tmp = None;
+                        flag = false;
+                    }
+                }
+                _ => {
+                    if flag {
+                        flag = false;
+                        name_tmp = None;
+                    } else {
+                        //pass
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    fn grouping_subscription(&mut self) -> Result<(), ParserError> {
+        let mut name_tmp: Option<BaseElem> = None;
+        let mut rlist: Vec<BaseElem> = Vec::new();
+
+        for inner in &self.code_list {
+            match inner {
+                BaseElem::WordElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
+                    }
+                    name_tmp = Some(inner.clone());
+                }
+                BaseElem::FuncElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
+                    }
+                    name_tmp = Some(inner.clone());
+                }
+                BaseElem::ListBlockElem(v) => {
+                    if let Some(BaseElem::WordElem(ref wd)) = name_tmp {
+                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                            rlist.push(BaseElem::ListElem(ListBranch {
+                                name: Box::new(BaseElem::WordElem(wd.clone())),
+                                contents: v.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                        } else {
+                            // 1
+                            if let Some(ref s) = name_tmp {
+                                rlist.push(s.clone());
+                            }
+                            rlist.push(inner.clone());
+                        }
+                        name_tmp = None;
+                    } else if let Some(BaseElem::FuncElem(ref fb)) = name_tmp {
+                        rlist.push(BaseElem::ListElem(ListBranch {
+                            name: Box::new(BaseElem::FuncElem(fb.clone())),
+                            contents: v.clone(),
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
