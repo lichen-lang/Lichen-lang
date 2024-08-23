@@ -21,6 +21,86 @@ pub struct ExprParser {
     pub loopdepth: isize,
 }
 
+macro_rules! subscriptable_pat {
+    (
+        $self:ident,
+        word: $w:path|
+        callable: $($a:path),+|
+        block: $b:path|
+        call: $e: path|
+        callbranch: $br:ident
+    ) => {{
+    let mut name_tmp: Option<BaseElem> = None;
+    let mut rlist: Vec<BaseElem> = Vec::new();
+        for inner in &$self.code_list {
+            match inner {
+                $(
+                        $a(_v) => {
+                        if let Some(s) = name_tmp {
+                            rlist.push(s);
+                        }
+                        name_tmp = Some(inner.clone());
+                        }
+                ) +
+                $b(v) => {
+                    if let Some($w(ref wd)) = name_tmp {
+                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                            rlist.push(
+                            $br::create_elem(
+                                Box::new($w(wd.clone())),
+                                v.clone(),
+                                $self.depth,
+                                $self.loopdepth,
+                            )
+                            );
+                        } else {
+                            // 1
+                            if let Some(ref s) = name_tmp {
+                                rlist.push(s.clone());
+                            }
+                            rlist.push(inner.clone());
+                        }
+                    }
+                    $(
+                        else if let Some($a(ref fb)) = name_tmp {
+                        rlist.push(
+                            $br::create_elem(
+                                Box::new($a(fb.clone())),
+                                v.clone(),
+                                $self.depth,
+                                $self.loopdepth,
+                            )
+                        );
+                    }
+                    )+
+                    else {
+                        // 1
+                        if let Some(ref s) = name_tmp {
+                            rlist.push(s.clone());
+                        }
+                        rlist.push(inner.clone());
+                    }
+                    name_tmp = None;
+                }
+                _ => {
+                    if let Some(ref s) = name_tmp {
+                        rlist.push(s.clone());
+                        rlist.push(inner.clone());
+                        name_tmp = None;
+                    } else {
+                        rlist.push(inner.clone());
+                    }
+                }
+            }
+        }
+        if let Some(ref s) = name_tmp {
+            rlist.push(s.clone());
+        }
+        $self.code_list = rlist;
+        Ok(())
+    }}
+}
+
 impl ExprParser {
     fn grouping_words(&mut self) -> Result<(), ParserError> {
         // macro
@@ -203,11 +283,11 @@ impl ExprParser {
         // end of grouping_elements
         self.grouping_words()?;
         while self.contain_callable() {
-            self.grouping_functioncall()?;
+            self.grouping_functioncall2()?;
         }
         while self.contain_subscriptable() {
             println!("hellooooooooooooooooooooooooooooooooooo");
-            self.grouping_subscription()?;
+            self.grouping_subscription2()?;
         }
         self.grouoping_operator()?;
         self.resolve_operation()?;
@@ -450,7 +530,6 @@ impl ExprParser {
                             }
                             rlist.push(inner.clone());
                         }
-                        name_tmp = None;
                     } else if let Some(BaseElem::FuncElem(ref fb)) = name_tmp {
                         rlist.push(BaseElem::FuncElem(FuncBranch {
                             name: Box::new(BaseElem::FuncElem(fb.clone())),
@@ -459,15 +538,14 @@ impl ExprParser {
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
-                        name_tmp = None;
                     } else {
                         // 1
                         if let Some(ref s) = name_tmp {
                             rlist.push(s.clone());
                         }
                         rlist.push(inner.clone());
-                        name_tmp = None;
                     }
+                    name_tmp = None;
                 }
                 _ => {
                     if let Some(ref s) = name_tmp {
@@ -540,6 +618,12 @@ impl ExprParser {
                     }
                     name_tmp = Some(inner.clone());
                 }
+                BaseElem::ListElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
+                    }
+                    name_tmp = Some(inner.clone());
+                }
                 BaseElem::ListBlockElem(v) => {
                     if let Some(BaseElem::WordElem(ref wd)) = name_tmp {
                         if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
@@ -556,7 +640,6 @@ impl ExprParser {
                             }
                             rlist.push(inner.clone());
                         }
-                        name_tmp = None;
                     } else if let Some(BaseElem::FuncElem(ref fb)) = name_tmp {
                         rlist.push(BaseElem::ListElem(ListBranch {
                             name: Box::new(BaseElem::FuncElem(fb.clone())),
@@ -564,15 +647,21 @@ impl ExprParser {
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
-                        name_tmp = None;
+                    } else if let Some(BaseElem::ListElem(ref lb)) = name_tmp {
+                        rlist.push(BaseElem::ListElem(ListBranch {
+                            name: Box::new(BaseElem::ListElem(lb.clone())),
+                            contents: v.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
                     } else {
                         // 1
                         if let Some(ref s) = name_tmp {
                             rlist.push(s.clone());
                         }
                         rlist.push(inner.clone());
-                        name_tmp = None;
                     }
+                    name_tmp = None;
                 }
                 _ => {
                     if let Some(ref s) = name_tmp {
@@ -590,6 +679,34 @@ impl ExprParser {
         }
         self.code_list = rlist;
         Ok(())
+    }
+
+    fn grouping_subscription2(&mut self) -> Result<(), ParserError> {
+        // 各々のセクションが表しているもの
+        // word: BaseElem::WordElem
+        // callable : 関数またはリストとして、呼べるもの。この時点では構文解析なので、型的に実際に呼べるかは関係ない
+        // block : ()[]などのブロック
+        // call : 最終的なASTを作るのに必要なインスタンス
+        // callbranch : 上に同じ
+        subscriptable_pat!(
+            self,
+            word: BaseElem::WordElem |
+            callable: BaseElem::WordElem,BaseElem::ListElem, BaseElem::FuncElem |
+            block: BaseElem::ListBlockElem|
+            call: BaseElem::ListElem|
+            callbranch: ListBranch
+        )
+    }
+
+    fn grouping_functioncall2(&mut self) -> Result<(), ParserError> {
+        subscriptable_pat!(
+            self,
+            word: BaseElem::WordElem |
+            callable: BaseElem::WordElem,BaseElem::ListElem, BaseElem::FuncElem |
+            block: BaseElem::ParenBlockElem|
+            call: BaseElem::FuncElem|
+            callbranch: FuncBranch
+        )
     }
 
     fn find_ope_priority(&self, ope: &str) -> Result<&Ope, ()> {

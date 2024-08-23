@@ -19,8 +19,9 @@ pub struct FuncBranch {
 
 impl ASTBranch for FuncBranch {
     fn show(&self) {
-        println!("{}func name", " ".repeat(self.depth as usize * 4));
+        println!("{}func name(", " ".repeat(self.depth as usize * 4));
         self.name.show();
+        println!(")");
         println!("{}(", " ".repeat(self.depth as usize * 4));
         for (i, j) in self.out_code_list.iter().enumerate() {
             println!("{}arg{}", " ".repeat(self.depth as usize * 4), i);
@@ -33,7 +34,7 @@ impl ASTBranch for FuncBranch {
 
     fn get_show_as_string(&self) -> String {
         let function_name_section = format!(
-            "{}func name\n{}",
+            "{}func name\n({})",
             " ".repeat(self.depth as usize * 4),
             self.name.get_show_as_string()
         );
@@ -88,5 +89,22 @@ impl RecursiveAnalysisElements for FuncBranch {
             *i = parser.code_list;
         }
         Ok(())
+    }
+}
+
+impl FuncBranch {
+    pub fn create_elem(
+        name: Box<BaseElem>,
+        contents: ParenBlockBranch,
+        depth: isize,
+        loopdepth: isize,
+    ) -> BaseElem {
+        BaseElem::FuncElem(FuncBranch {
+            name,
+            contents,
+            out_code_list: Vec::new(),
+            depth,
+            loopdepth,
+        })
     }
 }

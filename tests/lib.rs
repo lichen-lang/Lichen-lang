@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn expr_test03() {
-        let code = "tarai[1][2][3]";
+        let code = "tarai(1)(2)(3)";
         let string_code: String = String::from(code);
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
