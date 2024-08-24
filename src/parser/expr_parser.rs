@@ -202,11 +202,7 @@ impl ExprParser {
         )?;
         // end of grouping_elements
         self.grouping_words()?;
-        // while self.contain_callable() {
-        //     self.grouping_functioncall()?;
-        // }
         while self.contain_subscriptable() {
-            println!("hellooooooooooooooooooooooooooooooooooo");
             self.grouping_subscription()?;
         }
         self.grouoping_operator()?;
