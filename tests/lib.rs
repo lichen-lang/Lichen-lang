@@ -176,6 +176,7 @@ mod tests {
             let string_code: String = String::from(code);
             let mut e_parser = ExprParser::new(string_code, 0, 0);
 
+            println!("------------------------------------------");
             println!("test case -> {}", code);
             if e_parser.resolve().is_err() {
                 println!("ParseError occured");
