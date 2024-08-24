@@ -92,7 +92,8 @@ mod tests {
 
     #[test]
     fn expr_test03() {
-        let code = "tarai(1)(2)(3)";
+        let code = "tarai[1][2][3]";
+        // let code = "tarai(1)(2)(3)";
         let string_code: String = String::from(code);
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
@@ -116,6 +117,7 @@ mod tests {
             vec!["a", "+", "b", "+", "c"],   // a+b+c
             vec!["(", "a", "+", "bc", ")", "+", "(", "cde", "-", "defg", ")"], // (a+bc)+(cde-defg)
             vec!["func", "(", "10", ",", "1", ")", "+", "2", "*", "x"], // func(10,1)+2*x
+            vec!["tarai", "(", "1", ")", "(", "2", ")", "(", "3", ")"], // func(10,1)+2*x
         ];
 
         for test_case in test_cases {
@@ -160,5 +162,30 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn unit_test01() {
+        let test_cases = vec![
+            "tarai[1][2][3]",
+            "tarai(1)(2)(3)",
+            "tarai(1)[2](3)",
+            "tarai[1](2)[3]",
+        ];
+        for code in test_cases {
+            let string_code: String = String::from(code);
+            let mut e_parser = ExprParser::new(string_code, 0, 0);
+
+            println!("test case -> {}", code);
+            if e_parser.resolve().is_err() {
+                println!("ParseError occured");
+            } else {
+                println!("{:#?}", e_parser.code_list);
+                for i in e_parser.code_list {
+                    i.show();
+                }
+            }
+        }
+        // let code = "tarai(1)(2)(3)";
     }
 }
