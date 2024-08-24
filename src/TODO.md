@@ -1,10 +1,6 @@
 # TODO
 
-- `ItemBranch`カンマ区切りの要素
-
-- `subscriptable` `callable`のマクロ設計
-
-- `subscriptable` `callable`のパーサー的な定義
+- `ItemBranch`カンマ区切りの要素 -> `FuncElem` の`out_code_list`を消す
 
 - 予約後をまとめて定義する
 
