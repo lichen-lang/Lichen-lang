@@ -93,9 +93,10 @@ pub trait Parser<'a> {
         Self::NOT,        // !
     ];
 
+    const SEMICOLON: char = ';';
     const COMMA: char = ',';
     const SPLIT_CHAR: [char; 3] = [' ', '\t', '\n'];
-    const EXCLUDE_WORDS: [char; 3] = [';', ':', Self::COMMA];
+    const EXCLUDE_WORDS: [char; 3] = [Self::SEMICOLON, ':', Self::COMMA];
 
     const SYNTAX_IF: &'a str = "if";
     const SYNTAX_ELIF: &'a str = "elif";
@@ -124,7 +125,6 @@ pub trait Parser<'a> {
     const FUNCTION: &'a str = "fn";
     const STRUCTURE: &'a str = "struct";
     const ENUMERATION: &'a str = "enum";
-    const SEMICOLON: char = ';';
     const DOUBLE_QUOTATION: char = '"';
     const SINGLE_QUOTATION: char = '\'';
 

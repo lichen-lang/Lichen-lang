@@ -1,40 +1,45 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
+use crate::parser::comma_parser::CommaParser;
+use crate::parser::core_parser::Parser;
+use crate::parser::expr_parser::ExprParser;
 
 /// #ListBlockBranch
 /// listを格納するためのデータstruct
 /// 中では式を解析するパーサを呼び出す必要がある
 #[derive(Clone, Debug)]
 pub struct ListBlockBranch {
-    pub contents: Option<Vec<BaseElem>>,
+    pub contents: Vec<BaseElem>,
+    pub out_code_list: Vec<Vec<BaseElem>>,
     pub depth: isize,
     pub loopdepth: isize,
 }
 
 impl ASTBranch for ListBlockBranch {
     fn show(&self) {
-        println!(
-            "{}List depth{} (",
-            " ".repeat(self.depth as usize),
-            self.depth
-        );
-        if let Some(e) = &self.contents {
-            for i in e {
-                i.show();
-            }
+        println!("{}ListBlock (", " ".repeat(self.depth as usize),);
+        for i in &self.contents {
+            i.show();
         }
         println!(")");
     }
 
     fn get_show_as_string(&self) -> String {
-        todo!();
+        let list_name = format!("{}ListBlock (", " ".repeat(self.depth as usize));
+        let mut contents_group = String::new();
+        for i in &self.contents {
+            contents_group = format!("{}{}", contents_group, i.get_show_as_string());
+        }
+        let close_paren = format!("{})", " ".repeat(self.depth as usize));
+        format!("{}{}{}", list_name, contents_group, close_paren)
     }
 }
 
 impl ASTAreaBranch for ListBlockBranch {
     fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents,
+            contents: if let Some(s) = contents { s } else { vec![] },
+            out_code_list: Vec::new(),
             depth,
             loopdepth,
         }
@@ -43,6 +48,18 @@ impl ASTAreaBranch for ListBlockBranch {
 
 impl RecursiveAnalysisElements for ListBlockBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        todo!()
+        let mut c_parser =
+            CommaParser::create_parser_from_vec(self.contents.clone(), self.depth, self.loopdepth);
+        c_parser.code2vec()?;
+        c_parser.resolve()?;
+        self.out_code_list = c_parser.out_code_list;
+        for code_list in &mut self.out_code_list {
+            let mut e_parser =
+                ExprParser::create_parser_from_vec(code_list.clone(), self.depth, self.loopdepth);
+            e_parser.code2vec()?;
+            e_parser.resolve()?;
+            *code_list = e_parser.code_list;
+        }
+        Ok(())
     }
 }

@@ -21,7 +21,7 @@ cargo test --package lichen-lang --test lib -- tests::expr_test00 --exact --show
 ### expr test 01
 `test case`
 ```
-func(10,1) + 2 * x
+func00(10, 123 + func01(a,b,c)) + 2 * x
 ```
 
 ```bash
@@ -37,9 +37,29 @@ debug trait test
 ```bash
 cargo test --package lichen-lang --test lib -- tests::expr_test02 --exact --show-output
 ```
+
+### expr test 03
+
+```
+tarai[1][2][3]
+```
+
+```bash
+cargo test --package lichen-lang --test lib -- tests::expr_test03 --exact --show-output
+```
+
 ### unit test00
 
-expr_parserが正常に動作するかを確かめるテスト
+expr_parserが正常に動作するかを確かめるテスト00
 ```bash
 cargo test --package lichen-lang --test lib -- tests::unit_test00 --exact --show-output
+```
+
+### unit test01
+
+expr_parserが正常に動作するかを確かめるテスト01
+`callable` `subscriptable`なコードが正常な動作をするかどうかのテスト
+
+```bash
+cargo test --package lichen-lang --test lib -- tests::unit_test01 --exact --show-output
 ```

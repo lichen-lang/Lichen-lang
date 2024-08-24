@@ -3,7 +3,9 @@ use std::cmp::Ordering;
 use crate::abs::ast::*;
 use crate::parser::core_parser::*;
 
+use crate::errors::parser_errors::ParserError;
 use crate::token::func::FuncBranch;
+use crate::token::list::ListBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
@@ -12,10 +14,7 @@ use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
-use crate::errors::parser_errors::ParserError;
-
 pub struct ExprParser {
-    // TODO: 一時的にpublicにしているだけ
     pub code: String,
     pub code_list: Vec<BaseElem>,
     pub depth: isize,
@@ -203,7 +202,9 @@ impl ExprParser {
         )?;
         // end of grouping_elements
         self.grouping_words()?;
-        self.grouping_functioncall()?;
+        while self.contain_subscriptable() {
+            self.grouping_subscription()?;
+        }
         self.grouoping_operator()?;
         self.resolve_operation()?;
         Ok(())
@@ -211,9 +212,6 @@ impl ExprParser {
 
     fn grouoping_operator(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            // if let Err(e) = self.grouoping_operator_unit(ope.opestr.to_string()) {
-            //     return Err(e);
-            // }
             self.grouoping_operator_unit(ope.opestr.to_string())?;
         }
         Ok(())
@@ -378,86 +376,176 @@ impl ExprParser {
     // funcA()() // 関数を返却するような関数
     // a[]()     // 関数を保持しているリスト
     // ```
-    fn grouping_functioncall(&mut self) -> Result<(), ParserError> {
-        let mut flag: bool = false;
+    fn contain_subscriptable(&self) -> bool {
+        let mut flag = false;
+        let mut name_tmp: Option<&BaseElem> = None;
+
+        for inner in &self.code_list {
+            match inner {
+                BaseElem::WordElem(_) | BaseElem::FuncElem(_) | BaseElem::ListElem(_) => {
+                    name_tmp = Some(inner);
+                    flag = true;
+                }
+                BaseElem::ListBlockElem(_) => {
+                    if let Some(BaseElem::WordElem(v)) = name_tmp {
+                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                            return true;
+                        }
+                    } else if let Some(BaseElem::FuncElem(_v)) = name_tmp {
+                        return true;
+                    } else if let Some(BaseElem::ListElem(_v)) = name_tmp {
+                        return true;
+                    } else {
+                        name_tmp = None;
+                        flag = false;
+                    }
+                }
+                BaseElem::ParenBlockElem(_) => {
+                    if let Some(BaseElem::WordElem(v)) = name_tmp {
+                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                            return true;
+                        }
+                    } else if let Some(BaseElem::FuncElem(_v)) = name_tmp {
+                        return true;
+                    } else if let Some(BaseElem::ListElem(_v)) = name_tmp {
+                        return true;
+                    } else {
+                        name_tmp = None;
+                        flag = false;
+                    }
+                }
+                _ => {
+                    if flag {
+                        flag = false;
+                        name_tmp = None;
+                    } else {
+                        //pass
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    fn grouping_subscription(&mut self) -> Result<(), ParserError> {
         let mut name_tmp: Option<BaseElem> = None;
         let mut rlist: Vec<BaseElem> = Vec::new();
 
         for inner in &self.code_list {
-            if let BaseElem::WordElem(ref _wb) = inner {
-                // Case WordElem
-                if flag {
-                    if let Some(e) = name_tmp {
-                        rlist.push(e);
+            match inner {
+                BaseElem::WordElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
                     }
+                    name_tmp = Some(inner.clone());
                 }
-                name_tmp = Some(inner.clone());
-                flag = true;
-            } else if let BaseElem::FuncElem(ref _fb) = inner {
-                // Case FuncElem
-                if flag {
-                    if let Some(e) = name_tmp {
-                        rlist.push(e);
+                BaseElem::FuncElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
                     }
+                    name_tmp = Some(inner.clone());
                 }
-                name_tmp = Some(inner.clone());
-                flag = true;
-            } else if let BaseElem::ParenBlockElem(ref pbb) = inner {
-                // Case ParenBlockElem
-                if flag {
-                    if let Some(ref base_e) = name_tmp {
-                        if let BaseElem::WordElem(ref wb) = base_e {
-                            if !Self::CONTROL_STATEMENT.contains(&(&wb.contents as &str)) {
-                                rlist.push(BaseElem::FuncElem(FuncBranch {
-                                    name: Box::new(base_e.clone()),
-                                    contents: pbb.clone(),
-                                    out_code_list: Vec::new(),
-                                    depth: self.depth,
-                                    loopdepth: self.loopdepth,
-                                }));
-                                name_tmp = None;
-                                flag = false;
-                            } else {
-                                // name tmp is not none
-                                rlist.push(base_e.clone()); // contents of name_tmp -> base_e
-                                rlist.push(inner.clone());
-                                name_tmp = None;
+                BaseElem::ListElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
+                    }
+                    name_tmp = Some(inner.clone());
+                }
+                // [] ()
+                BaseElem::ListBlockElem(v) => {
+                    if let Some(BaseElem::WordElem(ref wd)) = name_tmp {
+                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                            rlist.push(BaseElem::ListElem(ListBranch {
+                                name: Box::new(BaseElem::WordElem(wd.clone())),
+                                contents: v.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                        } else {
+                            // 1
+                            if let Some(ref s) = name_tmp {
+                                rlist.push(s.clone());
                             }
-                        } else if let BaseElem::FuncElem(_) = base_e {
+                            rlist.push(inner.clone());
+                        }
+                    } else if let Some(BaseElem::FuncElem(ref fb)) = name_tmp {
+                        rlist.push(BaseElem::ListElem(ListBranch {
+                            name: Box::new(BaseElem::FuncElem(fb.clone())),
+                            contents: v.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else if let Some(BaseElem::ListElem(ref lb)) = name_tmp {
+                        rlist.push(BaseElem::ListElem(ListBranch {
+                            name: Box::new(BaseElem::ListElem(lb.clone())),
+                            contents: v.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else {
+                        // 1
+                        if let Some(ref s) = name_tmp {
+                            rlist.push(s.clone());
+                        }
+                        rlist.push(inner.clone());
+                    }
+                    name_tmp = None;
+                }
+                BaseElem::ParenBlockElem(v) => {
+                    if let Some(BaseElem::WordElem(ref wd)) = name_tmp {
+                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
                             rlist.push(BaseElem::FuncElem(FuncBranch {
-                                name: Box::new(base_e.clone()),
-                                contents: pbb.clone(),
+                                name: Box::new(BaseElem::WordElem(wd.clone())),
+                                contents: v.clone(),
                                 out_code_list: Vec::new(),
                                 depth: self.depth,
                                 loopdepth: self.loopdepth,
                             }));
-                            name_tmp = None;
-                            flag = false;
                         } else {
-                            // name tmp is not none
-                            rlist.push(base_e.clone()); // contents of name_tmp -> base_e
+                            // 1
+                            if let Some(ref s) = name_tmp {
+                                rlist.push(s.clone());
+                            }
                             rlist.push(inner.clone());
-                            name_tmp = None;
                         }
+                    } else if let Some(BaseElem::FuncElem(ref fb)) = name_tmp {
+                        rlist.push(BaseElem::FuncElem(FuncBranch {
+                            name: Box::new(BaseElem::FuncElem(fb.clone())),
+                            contents: v.clone(),
+                            out_code_list: Vec::new(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else if let Some(BaseElem::ListElem(ref lb)) = name_tmp {
+                        rlist.push(BaseElem::FuncElem(FuncBranch {
+                            name: Box::new(BaseElem::ListElem(lb.clone())),
+                            contents: v.clone(),
+                            out_code_list: Vec::new(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
                     } else {
-                        //name tmp is none
+                        // 1
+                        if let Some(ref s) = name_tmp {
+                            rlist.push(s.clone());
+                        }
                         rlist.push(inner.clone());
-                        flag = false;
-                        name_tmp = None;
                     }
-                } // else (if !flag)
-            } else {
-                if let Some(v) = name_tmp {
-                    rlist.push(v);
+                    name_tmp = None;
                 }
-                rlist.push(inner.clone());
-                name_tmp = None;
+                _ => {
+                    if let Some(ref s) = name_tmp {
+                        rlist.push(s.clone());
+                        rlist.push(inner.clone());
+                        name_tmp = None;
+                    } else {
+                        rlist.push(inner.clone());
+                    }
+                }
             }
         }
-        if flag {
-            if let Some(e) = name_tmp {
-                rlist.push(e);
-            }
+        if let Some(ref s) = name_tmp {
+            rlist.push(s.clone());
         }
         self.code_list = rlist;
         Ok(())
