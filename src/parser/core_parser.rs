@@ -151,12 +151,12 @@ pub trait Parser<'a> {
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self;
     fn resolve(&mut self) -> Result<(), ParserError>;
-    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self;
+    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
 
-    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<BaseElem> {
+    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<ExprElem> {
         return code
             .chars()
-            .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
             .collect();
     }
 }

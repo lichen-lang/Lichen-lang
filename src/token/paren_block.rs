@@ -13,7 +13,7 @@ use crate::parser::expr_parser::ExprParser;
 /// 実装する
 #[derive(Clone, Debug)]
 pub struct ParenBlockBranch {
-    pub contents: Option<Vec<BaseElem>>,
+    pub contents: Option<Vec<ExprElem>>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -67,7 +67,7 @@ impl ASTBranch for ParenBlockBranch {
 }
 
 impl ASTAreaBranch for ParenBlockBranch {
-    fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
+    fn new(contents: Option<Vec<ExprElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents,
             depth,

@@ -10,9 +10,9 @@ use super::paren_block::ParenBlockBranch;
 /// 関数呼び出しのトークン
 #[derive(Clone, Debug)]
 pub struct FuncBranch {
-    pub name: Box<BaseElem>,
+    pub name: Box<ExprElem>,
     pub contents: ParenBlockBranch,
-    pub out_code_list: Vec<Vec<BaseElem>>, // args
+    pub out_code_list: Vec<Vec<ExprElem>>, // args
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -70,7 +70,7 @@ impl RecursiveAnalysisElements for FuncBranch {
         } = self.contents.clone()
         {
             let mut comma_parser = CommaParser::create_parser_from_vec(v, depth, loopdepth);
-            if let BaseElem::OpeElem(_) = &*self.name {
+            if let ExprElem::OpeElem(_) = &*self.name {
                 // もし、関数の名前が演算子だった場合、 `self.out_code_list`に対しては処理をしない
                 // pass
             } else {

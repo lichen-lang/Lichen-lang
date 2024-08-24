@@ -9,8 +9,8 @@ use crate::parser::expr_parser::ExprParser;
 /// 中では式を解析するパーサを呼び出す必要がある
 #[derive(Clone, Debug)]
 pub struct ListBlockBranch {
-    pub contents: Vec<BaseElem>,
-    pub out_code_list: Vec<Vec<BaseElem>>,
+    pub contents: Vec<ExprElem>,
+    pub out_code_list: Vec<Vec<ExprElem>>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -36,7 +36,7 @@ impl ASTBranch for ListBlockBranch {
 }
 
 impl ASTAreaBranch for ListBlockBranch {
-    fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self {
+    fn new(contents: Option<Vec<ExprElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents: if let Some(s) = contents { s } else { vec![] },
             out_code_list: Vec::new(),

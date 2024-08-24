@@ -9,7 +9,7 @@ use super::paren_block::ParenBlockBranch;
 
 #[derive(Clone, Debug)]
 pub struct ListBranch {
-    pub name: Box<BaseElem>,
+    pub name: Box<ExprElem>,
     pub contents: ListBlockBranch,
     pub depth: isize,
     pub loopdepth: isize,

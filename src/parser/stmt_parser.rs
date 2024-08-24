@@ -6,7 +6,7 @@ use crate::token::word::WordBranch;
 
 pub struct StmtParser {
     pub code: String,
-    pub code_list: Vec<BaseElem>,
+    pub code_list: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -19,7 +19,7 @@ impl StmtParser {
         let mut group = String::new();
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref v) = inner {
+            if let ExprElem::UnKnownElem(ref v) = inner {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
@@ -29,7 +29,7 @@ impl StmtParser {
                 {
                     if open_flag {
                         group.push(v.contents);
-                        rlist.push(BaseElem::StringElem(StringBranch {
+                        rlist.push(ExprElem::StringElem(StringBranch {
                             contents: group.clone(),
                             depth: self.depth,
                         }));
@@ -58,19 +58,19 @@ impl StmtParser {
 
     fn grouping_elements<T>(
         &mut self,
-        elemtype: fn(T) -> BaseElem,
+        elemtype: fn(T) -> ExprElem,
         open_char: char,
         close_char: char,
     ) -> Result<(), ParserError>
     where
         T: ASTAreaBranch,
     {
-        let mut rlist: Vec<BaseElem> = Vec::new();
-        let mut group: Vec<BaseElem> = Vec::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
+        let mut group: Vec<ExprElem> = Vec::new();
         let mut depth: isize = 0;
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref b) = inner {
+            if let ExprElem::UnKnownElem(ref b) = inner {
                 if b.contents == open_char {
                     match depth {
                         0 => {}
@@ -115,16 +115,16 @@ impl StmtParser {
     }
 
     fn grouping_words(&mut self) -> Result<(), ParserError> {
-        let mut rlist: Vec<BaseElem> = Vec::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
         let mut group: String = String::new();
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref e) = inner {
+            if let ExprElem::UnKnownElem(ref e) = inner {
                 if Self::SPLIT_CHAR.contains(&e.contents)
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(BaseElem::WordElem(WordBranch {
+                        rlist.push(ExprElem::WordElem(WordBranch {
                             contents: group.clone(),
                             depth: self.depth,
                             loopdepth: self.loopdepth,
@@ -135,7 +135,7 @@ impl StmtParser {
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(BaseElem::WordElem(WordBranch {
+                        rlist.push(ExprElem::WordElem(WordBranch {
                             contents: group.clone(),
                             depth: self.depth,
                             loopdepth: self.loopdepth,
@@ -148,7 +148,7 @@ impl StmtParser {
                 }
             } else {
                 if !group.is_empty() {
-                    rlist.push(BaseElem::WordElem(WordBranch {
+                    rlist.push(ExprElem::WordElem(WordBranch {
                         contents: group.clone(),
                         depth: self.depth,
                         loopdepth: self.loopdepth,
@@ -159,7 +159,7 @@ impl StmtParser {
             }
         }
         if !group.is_empty() {
-            rlist.push(BaseElem::WordElem(WordBranch {
+            rlist.push(ExprElem::WordElem(WordBranch {
                 contents: group.clone(),
                 depth: self.depth,
                 loopdepth: self.loopdepth,
@@ -174,17 +174,17 @@ impl StmtParser {
         self.grouping_quotation()?;
         self.grouping_words()?;
         self.grouping_elements(
-            BaseElem::BlockElem,
+            ExprElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
         )?;
         self.grouping_elements(
-            BaseElem::ListBlockElem,
+            ExprElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
         )?;
         self.grouping_elements(
-            BaseElem::ParenBlockElem,
+            ExprElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
         )?;
@@ -202,7 +202,7 @@ impl Parser<'_> for StmtParser {
         }
     }
 
-    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
+    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: String::new(),
             code_list,

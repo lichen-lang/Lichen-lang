@@ -10,7 +10,7 @@ use crate::errors::parser_errors::ParserError;
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
 #[derive(Clone, Debug)]
-pub enum BaseElem {
+pub enum ExprElem {
     BlockElem(BlockBranch),
     ListBlockElem(ListBlockBranch),
     ParenBlockElem(ParenBlockBranch),
@@ -25,7 +25,7 @@ pub enum BaseElem {
     UnKnownElem(UnKnownBranch),
 }
 
-impl BaseElem {
+impl ExprElem {
     pub fn show(&self) {
         match self {
             Self::BlockElem(e) => e.show(),
@@ -89,7 +89,7 @@ pub trait ASTBranch {
 /// ## resolve_self
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
 pub trait ASTAreaBranch {
-    fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self;
+    fn new(contents: Option<Vec<ExprElem>>, depth: isize, loopdepth: isize) -> Self;
 }
 
 pub trait RecursiveAnalysisElements {
