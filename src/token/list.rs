@@ -51,19 +51,3 @@ impl RecursiveAnalysisElements for ListBranch {
         Ok(())
     }
 }
-
-impl ListBranch {
-    pub fn create_elem(
-        name: Box<BaseElem>,
-        contents: ListBlockBranch,
-        depth: isize,
-        loopdepth: isize,
-    ) -> BaseElem {
-        BaseElem::ListElem(ListBranch {
-            name,
-            contents,
-            depth,
-            loopdepth,
-        })
-    }
-}
