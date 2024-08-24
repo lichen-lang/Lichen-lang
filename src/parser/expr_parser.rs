@@ -22,6 +22,35 @@ pub struct ExprParser {
 }
 
 impl ExprParser {
+    pub fn code2vec(&mut self) -> Result<(), ParserError> {
+        // --- macro ---
+        self.grouping_quotation()?;
+        // grouping_elements
+        self.grouping_elements(
+            BaseElem::BlockElem,
+            Self::BLOCK_BRACE_OPEN,  // {
+            Self::BLOCK_BRACE_CLOSE, // }
+        )?;
+        self.grouping_elements(
+            BaseElem::ListBlockElem,
+            Self::BLOCK_LIST_OPEN,  // [
+            Self::BLOCK_LIST_CLOSE, // ]
+        )?;
+        self.grouping_elements(
+            BaseElem::ParenBlockElem,
+            Self::BLOCK_PAREN_OPEN,  // (
+            Self::BLOCK_PAREN_CLOSE, // )
+        )?;
+        // end of grouping_elements
+        self.grouping_words()?;
+        while self.contain_subscriptable() {
+            self.grouping_subscription()?;
+        }
+        self.grouoping_operator()?;
+        self.resolve_operation()?;
+        Ok(())
+    }
+
     fn grouping_words(&mut self) -> Result<(), ParserError> {
         // macro
         macro_rules! add_rlist {
@@ -178,35 +207,6 @@ impl ExprParser {
             return Err(ParserError::BraceNotClosed);
         }
         self.code_list = rlist;
-        Ok(())
-    }
-
-    pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        // --- macro ---
-        self.grouping_quotation()?;
-        // grouping_elements
-        self.grouping_elements(
-            BaseElem::BlockElem,
-            Self::BLOCK_BRACE_OPEN,  // {
-            Self::BLOCK_BRACE_CLOSE, // }
-        )?;
-        self.grouping_elements(
-            BaseElem::ListBlockElem,
-            Self::BLOCK_LIST_OPEN,  // [
-            Self::BLOCK_LIST_CLOSE, // ]
-        )?;
-        self.grouping_elements(
-            BaseElem::ParenBlockElem,
-            Self::BLOCK_PAREN_OPEN,  // (
-            Self::BLOCK_PAREN_CLOSE, // )
-        )?;
-        // end of grouping_elements
-        self.grouping_words()?;
-        while self.contain_subscriptable() {
-            self.grouping_subscription()?;
-        }
-        self.grouoping_operator()?;
-        self.resolve_operation()?;
         Ok(())
     }
 
