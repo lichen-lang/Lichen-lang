@@ -11,7 +11,7 @@
 ### expr test 00
 `test case`
 ```
-(10 + 1) + 2 * x
+ !a&& !b
 ```
 
 ```bash
@@ -62,4 +62,14 @@ expr_parserが正常に動作するかを確かめるテスト01
 
 ```bash
 cargo test --package lichen-lang --test lib -- tests::unit_test01 --exact --show-output
+```
+
+## テストの走るタイミング
+
+テストはローカル環境で上のコマンドで実行することができる。
+
+developまたは,masterブランチへPRを送ったとき。また、それぞれにマージされたとき以下のテストが実行される。
+
+```bash
+cargo test
 ```

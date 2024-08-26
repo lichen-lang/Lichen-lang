@@ -1,10 +1,8 @@
 # TODO
 
-- `ItemBranch`カンマ区切りの要素
+- `ItemBranch`カンマ区切りの要素 
+  - パース関連のコンパイラ開発者向けエラーの細分化
 
-- `subscriptable` `callable`のマクロ設計
-
-- `subscriptable` `callable`のパーサー的な定義
 
 - 予約後をまとめて定義する
 

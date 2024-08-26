@@ -1,15 +1,15 @@
 use crate::abs::ast::ASTAreaBranch;
-use crate::abs::ast::BaseElem;
+use crate::abs::ast::ExprElem;
 
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::Parser;
 
+use crate::token::item::ItemBranch;
 use crate::token::string::StringBranch;
 
 pub struct CommaParser {
     pub code: String,
-    pub code_list: Vec<BaseElem>,
-    pub out_code_list: Vec<Vec<BaseElem>>,
+    pub code_list: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -21,17 +21,17 @@ impl CommaParser {
         self.grouping_quotation()?;
         // grouping_elements
         self.grouping_elements(
-            BaseElem::BlockElem,
+            ExprElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
         )?;
         self.grouping_elements(
-            BaseElem::ListBlockElem,
+            ExprElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
         )?;
         self.grouping_elements(
-            BaseElem::ParenBlockElem,
+            ExprElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
         )?;
@@ -40,11 +40,17 @@ impl CommaParser {
     }
 
     fn grouping_args(&mut self) -> Result<(), ParserError> {
-        let mut group: Vec<BaseElem> = vec![];
+        let mut group: Vec<ExprElem> = vec![];
+        let mut rlist: Vec<ExprElem> = Vec::new();
+
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(v) = inner {
+            if let ExprElem::UnKnownElem(v) = inner {
                 if v.contents == Self::COMMA {
-                    self.out_code_list.push(group.clone());
+                    rlist.push(ExprElem::ItemElem(ItemBranch {
+                        contents: group.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
                     group.clear();
                 } else {
                     group.push(inner.clone());
@@ -54,8 +60,13 @@ impl CommaParser {
             }
         }
         if !group.is_empty() {
-            self.out_code_list.push(group.clone());
+            rlist.push(ExprElem::ItemElem(ItemBranch {
+                contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
         }
+        self.code_list = rlist;
         Ok(())
     }
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
@@ -65,7 +76,7 @@ impl CommaParser {
         let mut group = String::new();
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref v) = inner {
+            if let ExprElem::UnKnownElem(ref v) = inner {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
@@ -74,7 +85,7 @@ impl CommaParser {
                 {
                     if open_flag {
                         group.push(v.contents);
-                        rlist.push(BaseElem::StringElem(StringBranch {
+                        rlist.push(ExprElem::StringElem(StringBranch {
                             contents: group.clone(),
                             depth: self.depth,
                         }));
@@ -103,19 +114,19 @@ impl CommaParser {
 
     fn grouping_elements<T>(
         &mut self,
-        elemtype: fn(T) -> BaseElem,
+        elemtype: fn(T) -> ExprElem,
         open_char: char,
         close_char: char,
     ) -> Result<(), ParserError>
     where
         T: ASTAreaBranch,
     {
-        let mut rlist: Vec<BaseElem> = Vec::new();
-        let mut group: Vec<BaseElem> = Vec::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
+        let mut group: Vec<ExprElem> = Vec::new();
         let mut depth: isize = 0;
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref b) = inner {
+            if let ExprElem::UnKnownElem(ref b) = inner {
                 if b.contents == open_char {
                     match depth {
                         0 => { /*pass*/ }
@@ -161,11 +172,10 @@ impl CommaParser {
 }
 
 impl Parser<'_> for CommaParser {
-    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
+    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: String::new(),
             code_list,
-            out_code_list: Vec::new(),
             depth,
             loopdepth,
         }
@@ -175,14 +185,9 @@ impl Parser<'_> for CommaParser {
         Self {
             code,
             code_list: Vec::new(),
-            out_code_list: Vec::new(),
             depth,
             loopdepth,
         }
-    }
-
-    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<BaseElem> {
-        todo!()
     }
 
     fn resolve(&mut self) -> Result<(), ParserError> {
