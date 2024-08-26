@@ -388,7 +388,7 @@ impl ExprParser {
                 }
                 ExprElem::ListBlockElem(_) => {
                     if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
                             return true;
                         }
                     } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
@@ -402,7 +402,7 @@ impl ExprParser {
                 }
                 ExprElem::ParenBlockElem(_) => {
                     if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
                             return true;
                         }
                     } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
@@ -455,7 +455,7 @@ impl ExprParser {
                 ExprElem::ListBlockElem(v) => {
                     let list_items = ExprElem::ListBlockElem(v.clone());
                     if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
-                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::ListElem(ListBranch {
                                 name: Box::new(ExprElem::WordElem(wd.clone())),
                                 contents: vec![list_items],
@@ -495,7 +495,7 @@ impl ExprParser {
                 ExprElem::ParenBlockElem(v) => {
                     let function_args = ExprElem::ParenBlockElem(v.clone());
                     if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
-                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::FuncElem(FuncBranch {
                                 name: Box::new(ExprElem::WordElem(wd.clone())),
                                 contents: vec![function_args],
