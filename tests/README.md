@@ -11,7 +11,7 @@
 ### expr test 00
 `test case`
 ```
-(10 + 1) + 2 * x
+ !a&& !b
 ```
 
 ```bash
