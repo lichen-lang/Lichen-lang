@@ -1,3 +1,11 @@
+/// # combinations
+/// function for test
+/// ```rust
+/// let a = vec!["a","b","c", "d", "e"];
+/// let b = combinations(a, 3);
+/// println!("{:?}", b);
+/// // [["a", "b", "c"], ["a", "b", "d"], ["a", "b", "e"], ["a", "c", "d"], ["a", "c", "e"], ["a", "d", "e"], ["b", "c", "d"], ["b", "c", "e"], ["b", "d", "e"], ["c", "d", "e"]]
+/// ```
 pub fn combinations<T>(elements: Vec<T>, r: usize) -> Vec<Vec<T>>
 where
     T: Clone + Copy,
