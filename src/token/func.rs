@@ -35,14 +35,13 @@ impl ASTBranch for FuncBranch {
         );
         let paren_open = format!("{}(\n", " ".repeat(self.depth as usize * 4));
         let mut args_group = String::new();
-        for (i, j) in self.contents.iter().enumerate() {
+        for j in &self.contents {
             args_group = format!(
-                "{}{}arg{}\n",
-                args_group,
+                "{}{}{}\n",
                 " ".repeat(self.depth as usize * 4),
-                i
+                args_group,
+                j.get_show_as_string()
             );
-            args_group = format!("{}{}\n", args_group, j.get_show_as_string());
         }
         let paren_close = format!("{})", " ".repeat(self.depth as usize * 4));
         format!(

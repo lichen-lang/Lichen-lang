@@ -22,7 +22,7 @@ impl ASTBranch for ItemBranch {
     }
 
     fn get_show_as_string(&self) -> String {
-        let mut rstr = format!("{}Item(", " ".repeat(self.depth as usize * 4));
+        let mut rstr = format!("{}Item(\n", " ".repeat(self.depth as usize * 4));
         for i in &self.contents {
             rstr = format!("{}{}", rstr, i.get_show_as_string());
         }
