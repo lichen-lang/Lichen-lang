@@ -11,8 +11,7 @@ use super::paren_block::ParenBlockBranch;
 #[derive(Clone, Debug)]
 pub struct FuncBranch {
     pub name: Box<ExprElem>,
-    pub contents: ParenBlockBranch,
-    pub out_code_list: Vec<Vec<ExprElem>>, // args
+    pub contents: Vec<ExprElem>, // 引数
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -22,11 +21,14 @@ impl ASTBranch for FuncBranch {
         println!("{}func name", " ".repeat(self.depth as usize * 4));
         self.name.show();
         println!("{}(", " ".repeat(self.depth as usize * 4));
-        for (i, j) in self.out_code_list.iter().enumerate() {
-            println!("{}arg{}", " ".repeat(self.depth as usize * 4), i);
-            for k in j {
-                k.show();
-            }
+        // for (i, j) in self.out_code_list.iter().enumerate() {
+        //     println!("{}arg{}", " ".repeat(self.depth as usize * 4), i);
+        //     for k in j {
+        //         k.show();
+        //     }
+        // }
+        for i in &self.contents {
+            i.show();
         }
         println!("{})", " ".repeat(self.depth as usize * 4));
     }
@@ -39,16 +41,14 @@ impl ASTBranch for FuncBranch {
         );
         let paren_open = format!("{}(\n", " ".repeat(self.depth as usize * 4));
         let mut args_group = String::new();
-        for (i, j) in self.out_code_list.iter().enumerate() {
+        for (i, j) in self.contents.iter().enumerate() {
             args_group = format!(
                 "{}{}arg{}\n",
                 args_group,
                 " ".repeat(self.depth as usize * 4),
                 i
             );
-            for k in j {
-                args_group = format!("{}{}\n", args_group, k.get_show_as_string());
-            }
+            args_group = format!("{}{}\n", args_group, j.get_show_as_string());
         }
         let paren_close = format!("{})", " ".repeat(self.depth as usize * 4));
         format!(
@@ -63,29 +63,28 @@ impl RecursiveAnalysisElements for FuncBranch {
         self.name.resolve_self()?;
         // 呼び出し元の自己解決
         // 引数の解決
-        if let ParenBlockBranch {
-            contents: Some(v),
+        if self.contents.is_empty() {
+            // このresolve_self methodが走る時点で長さが1でなければ不正
+            return Err(ParserError::Uncategorized);
+        }
+        let first_elem = &self.contents[0];
+
+        if let ExprElem::OpeElem(_) = &*self.name {
+            //pass
+        } else if let ExprElem::ParenBlockElem(ParenBlockBranch {
+            contents: v,
             depth,
             loopdepth,
-        } = self.contents.clone()
+        }) = first_elem
         {
-            let mut comma_parser = CommaParser::create_parser_from_vec(v, depth, loopdepth);
-            if let ExprElem::OpeElem(_) = &*self.name {
-                // もし、関数の名前が演算子だった場合、 `self.out_code_list`に対しては処理をしない
-                // pass
-            } else {
-                comma_parser.resolve()?;
-                self.out_code_list = comma_parser.out_code_list;
-            }
+            let mut c_parser = CommaParser::create_parser_from_vec(v.to_vec(), *depth, *loopdepth);
+            c_parser.resolve()?;
+            self.contents = c_parser.code_list;
+        } else {
+            return Err(ParserError::Uncategorized);
         }
-        for i in &mut self.out_code_list {
-            let mut parser =
-                ExprParser::create_parser_from_vec(i.to_vec(), self.depth + 1, self.loopdepth);
-            parser.code2vec()?;
-            for inner in &mut parser.code_list {
-                inner.resolve_self()?;
-            }
-            *i = parser.code_list;
+        for inner in &mut self.contents {
+            inner.resolve_self()?;
         }
         Ok(())
     }

@@ -4,12 +4,12 @@ use crate::abs::ast::ExprElem;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::Parser;
 
+use crate::token::item::ItemBranch;
 use crate::token::string::StringBranch;
 
 pub struct CommaParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,
-    pub out_code_list: Vec<Vec<ExprElem>>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -41,10 +41,16 @@ impl CommaParser {
 
     fn grouping_args(&mut self) -> Result<(), ParserError> {
         let mut group: Vec<ExprElem> = vec![];
+        let mut rlist: Vec<ExprElem> = Vec::new();
+
         for inner in &self.code_list {
             if let ExprElem::UnKnownElem(v) = inner {
                 if v.contents == Self::COMMA {
-                    self.out_code_list.push(group.clone());
+                    rlist.push(ExprElem::ItemElem(ItemBranch {
+                        contents: group.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
                     group.clear();
                 } else {
                     group.push(inner.clone());
@@ -54,8 +60,13 @@ impl CommaParser {
             }
         }
         if !group.is_empty() {
-            self.out_code_list.push(group.clone());
+            rlist.push(ExprElem::ItemElem(ItemBranch {
+                contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
         }
+        self.code_list = rlist;
         Ok(())
     }
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
@@ -165,7 +176,6 @@ impl Parser<'_> for CommaParser {
         Self {
             code: String::new(),
             code_list,
-            out_code_list: Vec::new(),
             depth,
             loopdepth,
         }
@@ -175,7 +185,6 @@ impl Parser<'_> for CommaParser {
         Self {
             code,
             code_list: Vec::new(),
-            out_code_list: Vec::new(),
             depth,
             loopdepth,
         }

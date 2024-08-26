@@ -14,16 +14,19 @@ pub struct ItemBranch {
 
 impl ASTBranch for ItemBranch {
     fn show(&self) {
+        println!("{}Item(", " ".repeat(self.depth as usize * 4));
         for i in &self.contents {
             i.show();
         }
+        println!("{})", " ".repeat(self.depth as usize * 4));
     }
 
     fn get_show_as_string(&self) -> String {
-        let mut rstr = String::new();
+        let mut rstr = format!("{}Item(", " ".repeat(self.depth as usize * 4));
         for i in &self.contents {
             rstr = format!("{}{}", rstr, i.get_show_as_string());
         }
+        rstr = format!("{}\n{})", rstr, " ".repeat(self.depth as usize * 4));
         rstr
     }
 }

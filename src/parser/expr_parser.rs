@@ -5,6 +5,7 @@ use crate::parser::core_parser::*;
 
 use crate::errors::parser_errors::ParserError;
 use crate::token::func::FuncBranch;
+use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::paren_block::ParenBlockBranch;
@@ -492,12 +493,12 @@ impl ExprParser {
                     name_tmp = None;
                 }
                 ExprElem::ParenBlockElem(v) => {
+                    let function_args = ExprElem::ParenBlockElem(v.clone());
                     if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
                         if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::FuncElem(FuncBranch {
                                 name: Box::new(ExprElem::WordElem(wd.clone())),
-                                contents: v.clone(),
-                                out_code_list: Vec::new(),
+                                contents: vec![function_args],
                                 depth: self.depth,
                                 loopdepth: self.loopdepth,
                             }));
@@ -511,16 +512,14 @@ impl ExprParser {
                     } else if let Some(ExprElem::FuncElem(ref fb)) = name_tmp {
                         rlist.push(ExprElem::FuncElem(FuncBranch {
                             name: Box::new(ExprElem::FuncElem(fb.clone())),
-                            contents: v.clone(),
-                            out_code_list: Vec::new(),
+                            contents: vec![function_args],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
                     } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
                         rlist.push(ExprElem::FuncElem(FuncBranch {
                             name: Box::new(ExprElem::ListElem(lb.clone())),
-                            contents: v.clone(),
-                            out_code_list: Vec::new(),
+                            contents: vec![function_args],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
@@ -603,17 +602,25 @@ impl ExprParser {
         match operation_index {
             Ok(v) => {
                 if let Some(s) = v {
-                    let arg1 = &self.code_list[..s];
+                    let arg1 = ExprElem::ItemElem(ItemBranch {
+                        contents: self.code_list[..s].to_vec(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    });
                     let name = &self.code_list[s];
-                    let arg2 = &self.code_list[s + 1..];
+                    let arg2 = ExprElem::ItemElem(ItemBranch {
+                        contents: self.code_list[s + 1..].to_vec(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    });
+                    // let function_args = ExprElem::ParenBlockElem(ParenBlockBranch {
+                    //     contents: vec![arg1, arg2],
+                    //     depth: 0,
+                    //     loopdepth: 0,
+                    // });
                     self.code_list = vec![ExprElem::FuncElem(FuncBranch {
                         name: Box::new(name.clone()),
-                        contents: ParenBlockBranch {
-                            contents: None,
-                            depth: 0,
-                            loopdepth: 0,
-                        },
-                        out_code_list: vec![arg1.to_vec(), arg2.to_vec()],
+                        contents: vec![arg1, arg2],
                         depth: self.depth,
                         loopdepth: self.loopdepth,
                     })];

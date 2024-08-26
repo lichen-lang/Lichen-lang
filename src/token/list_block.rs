@@ -10,7 +10,6 @@ use crate::parser::expr_parser::ExprParser;
 #[derive(Clone, Debug)]
 pub struct ListBlockBranch {
     pub contents: Vec<ExprElem>,
-    pub out_code_list: Vec<Vec<ExprElem>>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -39,7 +38,6 @@ impl ASTAreaBranch for ListBlockBranch {
     fn new(contents: Option<Vec<ExprElem>>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents: if let Some(s) = contents { s } else { vec![] },
-            out_code_list: Vec::new(),
             depth,
             loopdepth,
         }
@@ -52,14 +50,11 @@ impl RecursiveAnalysisElements for ListBlockBranch {
             CommaParser::create_parser_from_vec(self.contents.clone(), self.depth, self.loopdepth);
         c_parser.code2vec()?;
         c_parser.resolve()?;
-        self.out_code_list = c_parser.out_code_list;
-        for code_list in &mut self.out_code_list {
-            let mut e_parser =
-                ExprParser::create_parser_from_vec(code_list.clone(), self.depth, self.loopdepth);
-            e_parser.code2vec()?;
-            e_parser.resolve()?;
-            *code_list = e_parser.code_list;
-        }
+        let mut e_parser =
+            ExprParser::create_parser_from_vec(self.contents.clone(), self.depth, self.loopdepth);
+        e_parser.code2vec()?;
+        e_parser.resolve()?;
+        self.contents = e_parser.code_list;
         Ok(())
     }
 }

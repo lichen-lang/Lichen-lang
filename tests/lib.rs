@@ -167,7 +167,9 @@ mod tests {
     #[test]
     fn unit_test01() {
         let test_cases = vec![
+            "a+1*2",
             "tarai[1][2][3]",
+            "f(1,2,g(1,2,3))",
             "tarai(1)(2)(3)",
             "tarai(1)[2](3)",
             "tarai[1](2)[3]",
@@ -178,12 +180,12 @@ mod tests {
 
             println!("------------------------------------------");
             println!("test case -> {}", code);
-            if e_parser.resolve().is_err() {
-                println!("ParseError occured");
-            } else {
-                // println!("{:#?}", e_parser.code_list);
-                for i in e_parser.code_list {
-                    i.show();
+            match e_parser.resolve() {
+                Err(e) => println!("{:?}", e),
+                Ok(_) => {
+                    for i in e_parser.code_list {
+                        i.show();
+                    }
                 }
             }
         }
