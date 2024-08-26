@@ -190,10 +190,6 @@ impl Parser<'_> for CommaParser {
         }
     }
 
-    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<ExprElem> {
-        todo!()
-    }
-
     fn resolve(&mut self) -> Result<(), ParserError> {
         self.code2vec()?;
         Ok(())

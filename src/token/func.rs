@@ -21,12 +21,6 @@ impl ASTBranch for FuncBranch {
         println!("{}func name", " ".repeat(self.depth as usize * 4));
         self.name.show();
         println!("{}(", " ".repeat(self.depth as usize * 4));
-        // for (i, j) in self.out_code_list.iter().enumerate() {
-        //     println!("{}arg{}", " ".repeat(self.depth as usize * 4), i);
-        //     for k in j {
-        //         k.show();
-        //     }
-        // }
         for i in &self.contents {
             i.show();
         }
