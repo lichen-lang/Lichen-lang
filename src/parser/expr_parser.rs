@@ -171,7 +171,7 @@ impl ExprParser {
                     match depth {
                         0 => { /*pass*/ }
                         1.. => group.push(inner.clone()),
-                        _ => return Err(ParserError::Uncategorized),
+                        _ => return Err(ParserError::BraceNotOpened),
                     }
                     depth += 1;
                 } else if b.contents == close_char {
@@ -186,13 +186,13 @@ impl ExprParser {
                             group.clear();
                         }
                         1.. => group.push(inner.clone()),
-                        _ => return Err(ParserError::Uncategorized),
+                        _ => return Err(ParserError::BraceNotOpened),
                     }
                 } else {
                     match depth {
                         0 => rlist.push(inner.clone()),
                         1.. => group.push(inner.clone()),
-                        _ => return Err(ParserError::Uncategorized),
+                        _ => return Err(ParserError::BraceNotOpened),
                     }
                 }
             } else {
