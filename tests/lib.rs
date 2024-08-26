@@ -9,37 +9,6 @@ mod tests {
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
 
-    #[test]
-    fn test00() {
-        println!("{}hello{}", " ".repeat(4), "@".repeat(4));
-    }
-
-    fn func00() -> Result<i32, i32> {
-        Err(42)
-    }
-
-    fn func01() -> Result<i32, i32> {
-        Err(func00()?)
-    }
-
-    #[test]
-    fn test01() {
-        let a = func01();
-        match a {
-            Ok(a) => println!("OK {}", a),
-            Err(e) => println!("ERR {}", e),
-        }
-    }
-
-    #[test]
-    fn test02() {
-        let mut a = vec![0, 1, 2];
-        let b = vec![3, 4, 5];
-
-        a.extend(b);
-        println!("{:?}", a);
-    }
-
     // expr tests
 
     #[test]
