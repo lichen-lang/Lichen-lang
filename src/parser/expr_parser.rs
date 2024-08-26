@@ -8,6 +8,7 @@ use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
 use crate::token::operator::OperatorBranch;
+use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
@@ -43,6 +44,11 @@ impl ExprParser {
         )?;
         // end of grouping_elements
         self.grouping_words()?;
+
+        // grouping syntax
+        self.grouping_syntax()?;
+        self.grouping_syntaxbox()?;
+
         while self.contain_subscriptable() {
             self.grouping_subscription()?;
         }
@@ -179,7 +185,7 @@ impl ExprParser {
                     match depth {
                         0 => {
                             rlist.push(elemtype(ASTAreaBranch::new(
-                                Some(group.clone()),
+                                group.clone(),
                                 self.depth,
                                 self.loopdepth,
                             )));
@@ -297,6 +303,64 @@ impl ExprParser {
         Ok(())
     }
 
+    fn grouping_syntax(&mut self) -> Result<(), ParserError> {
+        let mut name: Option<String> = None;
+        let mut expr: Option<ParenBlockBranch> = None;
+        let mut rlist: Vec<ExprElem> = Vec::new();
+
+        for inner in &self.code_list {
+            if let ExprElem::WordElem(wd) = inner {
+                if Self::SYNTAX_WORDS.contains(&wd.contents.as_str()) {
+                    name = Some(wd.contents.clone());
+                } else {
+                    rlist.push(inner.clone());
+                }
+            } else if let ExprElem::ParenBlockElem(pb) = inner {
+                if name.is_some() {
+                    expr = Some(pb.clone());
+                } else {
+                    rlist.push(inner.clone());
+                }
+            } else if let ExprElem::BlockElem(bl) = inner {
+                if let Some(syntax_name) = name {
+                    if let Some(syntax_expr) = expr {
+                        // another case
+                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
+                            name: syntax_name,
+                            expr: syntax_expr.contents,
+                            contents: bl.contents.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else {
+                        // "else" "loop" case
+                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
+                            name: syntax_name,
+                            expr: Vec::new(),
+                            contents: bl.contents.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    }
+                } else {
+                    // TODO
+                    // error とは限らない
+                    if let Some(syntax_expr) = expr {
+                        rlist.push(ExprElem::ParenBlockElem(syntax_expr));
+                    }
+                    rlist.push(inner.clone());
+                }
+                name = None;
+                expr = None;
+            } else {
+                // name expr をError処理
+                rlist.push(inner.clone());
+            }
+        }
+        self.code_list = rlist;
+        Ok(())
+    }
+
     fn grouping_syntaxbox(&mut self) -> Result<(), ParserError> {
         let mut flag = false;
         let mut name: String = String::new();
@@ -314,7 +378,6 @@ impl ExprParser {
                         group.push(e.clone());
                     } else {
                         return Err(ParserError::GroupingSyntaxBoxError);
-                        // TODO:
                     }
                 } else if e.name == Self::SYNTAX_ELSE {
                     if flag {
@@ -330,7 +393,6 @@ impl ExprParser {
                         flag = false;
                     } else {
                         return Err(ParserError::GroupingSyntaxBoxError);
-                        // TODO:
                     }
                 } else {
                     rlist.push(inner.clone());

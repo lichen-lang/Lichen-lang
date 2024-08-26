@@ -14,11 +14,18 @@ pub struct SyntaxBoxBranch {
 
 impl ASTBranch for SyntaxBoxBranch {
     fn show(&self) {
-        todo!()
+        println!("{}", self.name);
+        for i in &self.contents {
+            i.show();
+        }
     }
 
     fn get_show_as_string(&self) -> String {
-        todo!()
+        let mut syntax_string = String::new();
+        for i in &self.contents {
+            syntax_string = format!("{}{}", syntax_string, i.get_show_as_string());
+        }
+        format!("{}{}", self.name, syntax_string)
     }
 }
 

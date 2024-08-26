@@ -1,6 +1,5 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
-use crate::token::{block::BlockBranch, paren_block::ParenBlockBranch};
 
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct
@@ -11,19 +10,40 @@ use crate::token::{block::BlockBranch, paren_block::ParenBlockBranch};
 #[derive(Clone, Debug)]
 pub struct SyntaxBranch {
     pub name: String,
-    pub expr: Option<ParenBlockBranch>,
-    pub contents: Option<BlockBranch>,
+    pub expr: Vec<ExprElem>,
+    pub contents: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
 
 impl ASTBranch for SyntaxBranch {
     fn show(&self) {
-        todo!()
+        println!("{}", self.name);
+        println!("expr");
+        for i in &self.expr {
+            i.show()
+        }
+        println!("{}{{", " ".repeat(self.depth as usize * 4));
+        for i in &self.contents {
+            i.show()
+        }
+        println!("{}}}", " ".repeat(self.depth as usize * 4));
     }
 
     fn get_show_as_string(&self) -> String {
-        todo!()
+        let mut expr_string = String::new();
+
+        for i in &self.expr {
+            expr_string = format!("{}{}", expr_string, i.get_show_as_string());
+        }
+        expr_string = format!("expr({})", expr_string);
+
+        let mut block_string = format!("{}{{", " ".repeat(self.depth as usize * 4));
+        for i in &self.contents {
+            block_string = format!("{}{}\n", block_string, i.get_show_as_string())
+        }
+        block_string = format!("{}{}}}", block_string, " ".repeat(self.depth as usize * 4));
+        format!("{}{}{}", self.name, expr_string, block_string)
     }
 }
 

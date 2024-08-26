@@ -139,7 +139,7 @@ impl CommaParser {
                     match depth {
                         0 => {
                             rlist.push(elemtype(ASTAreaBranch::new(
-                                Some(group.clone()),
+                                group.clone(),
                                 self.depth,
                                 self.loopdepth,
                             )));
