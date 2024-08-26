@@ -1,8 +1,8 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
+
 use crate::parser::comma_parser::CommaParser;
 use crate::parser::core_parser::Parser;
-use crate::parser::expr_parser::ExprParser;
 
 use super::paren_block::ParenBlockBranch;
 
@@ -65,23 +65,26 @@ impl RecursiveAnalysisElements for FuncBranch {
         // 引数の解決
         if self.contents.is_empty() {
             // このresolve_self methodが走る時点で長さが1でなければ不正
-            return Err(ParserError::Uncategorized);
+            return Err(ParserError::DevError);
         }
         let first_elem = &self.contents[0];
 
         if let ExprElem::OpeElem(_) = &*self.name {
-            //pass
+            // 演算子だった場合はpass
         } else if let ExprElem::ParenBlockElem(ParenBlockBranch {
             contents: v,
             depth,
             loopdepth,
         }) = first_elem
         {
+            if 1 < self.contents.len() {
+                return Err(ParserError::DevError);
+            }
             let mut c_parser = CommaParser::create_parser_from_vec(v.to_vec(), *depth, *loopdepth);
             c_parser.resolve()?;
             self.contents = c_parser.code_list;
         } else {
-            return Err(ParserError::Uncategorized);
+            return Err(ParserError::DevError);
         }
         for inner in &mut self.contents {
             inner.resolve_self()?;

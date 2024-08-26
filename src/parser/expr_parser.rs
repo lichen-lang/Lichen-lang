@@ -8,7 +8,6 @@ use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
 use crate::token::operator::OperatorBranch;
-use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
@@ -454,11 +453,12 @@ impl ExprParser {
                 }
                 // [] ()
                 ExprElem::ListBlockElem(v) => {
+                    let list_items = ExprElem::ListBlockElem(v.clone());
                     if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
                         if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::ListElem(ListBranch {
                                 name: Box::new(ExprElem::WordElem(wd.clone())),
-                                contents: v.clone(),
+                                contents: vec![list_items],
                                 depth: self.depth,
                                 loopdepth: self.loopdepth,
                             }));
@@ -472,14 +472,14 @@ impl ExprParser {
                     } else if let Some(ExprElem::FuncElem(ref fb)) = name_tmp {
                         rlist.push(ExprElem::ListElem(ListBranch {
                             name: Box::new(ExprElem::FuncElem(fb.clone())),
-                            contents: v.clone(),
+                            contents: vec![list_items],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
                     } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
                         rlist.push(ExprElem::ListElem(ListBranch {
                             name: Box::new(ExprElem::ListElem(lb.clone())),
-                            contents: v.clone(),
+                            contents: vec![list_items],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
@@ -613,11 +613,6 @@ impl ExprParser {
                         depth: self.depth,
                         loopdepth: self.loopdepth,
                     });
-                    // let function_args = ExprElem::ParenBlockElem(ParenBlockBranch {
-                    //     contents: vec![arg1, arg2],
-                    //     depth: 0,
-                    //     loopdepth: 0,
-                    // });
                     self.code_list = vec![ExprElem::FuncElem(FuncBranch {
                         name: Box::new(name.clone()),
                         contents: vec![arg1, arg2],

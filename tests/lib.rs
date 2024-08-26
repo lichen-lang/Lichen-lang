@@ -189,6 +189,5 @@ mod tests {
                 }
             }
         }
-        // let code = "tarai(1)(2)(3)";
     }
 }
