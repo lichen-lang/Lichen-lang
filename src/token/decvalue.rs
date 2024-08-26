@@ -1,7 +1,7 @@
 use crate::abs::ast::ExprElem;
 
 #[derive(Clone, Debug)]
-struct DecValueBranch {
+pub struct DecValueBranch {
     pub valuename: String, // TODO:ここはいずれ、パターンにしたい
     pub contents: Vec<ExprElem>,
     pub depth: isize,
