@@ -1,7 +1,8 @@
 # TODO
 
-- `ItemBranch`カンマ区切りの要素 -> `FuncElem` の`out_code_list`を消す
-  - `CommaParser`の構成も変更する必要がある
+- `ItemBranch`カンマ区切りの要素 
+  - パース関連のコンパイラ開発者向けエラーの細分化
+
 
 - 予約後をまとめて定義する
 
