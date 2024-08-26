@@ -16,6 +16,7 @@ impl ASTBranch for SyntaxBoxBranch {
     fn show(&self) {
         todo!()
     }
+
     fn get_show_as_string(&self) -> String {
         todo!()
     }
