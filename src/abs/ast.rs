@@ -1,8 +1,15 @@
-use crate::token::{
-    block::BlockBranch, func::FuncBranch, list::ListBranch, list_block::ListBlockBranch,
-    operator::OperatorBranch, paren_block::ParenBlockBranch, string::StringBranch,
-    syntax::SyntaxBranch, syntax_box::SyntaxBoxBranch, unknown::UnKnownBranch, word::WordBranch,
-};
+use crate::token::block::BlockBranch;
+use crate::token::func::FuncBranch;
+use crate::token::item::ItemBranch;
+use crate::token::list::ListBranch;
+use crate::token::list_block::ListBlockBranch;
+use crate::token::operator::OperatorBranch;
+use crate::token::paren_block::ParenBlockBranch;
+use crate::token::string::StringBranch;
+use crate::token::syntax::SyntaxBranch;
+use crate::token::syntax_box::SyntaxBoxBranch;
+use crate::token::unknown::UnKnownBranch;
+use crate::token::word::WordBranch;
 
 use crate::errors::parser_errors::ParserError;
 
@@ -18,6 +25,7 @@ pub enum ExprElem {
     SyntaxBoxElem(SyntaxBoxBranch),
     FuncElem(FuncBranch),
     ListElem(ListBranch),
+    ItemElem(ItemBranch),
     // without ASTAreaBranch trait structures
     StringElem(StringBranch),
     WordElem(WordBranch),
@@ -37,6 +45,7 @@ impl ExprElem {
             Self::SyntaxElem(e) => e.show(),
             Self::SyntaxBoxElem(e) => e.show(),
             Self::FuncElem(e) => e.show(),
+            Self::ItemElem(e) => e.show(),
             Self::OpeElem(e) => e.show(),
             Self::ListElem(e) => e.show(),
         }
@@ -53,10 +62,12 @@ impl ExprElem {
             Self::SyntaxElem(e) => e.get_show_as_string(),
             Self::SyntaxBoxElem(e) => e.get_show_as_string(),
             Self::FuncElem(e) => e.get_show_as_string(),
+            Self::ItemElem(e) => e.get_show_as_string(),
             Self::OpeElem(e) => e.get_show_as_string(),
             Self::ListElem(e) => e.get_show_as_string(),
         }
     }
+
     pub fn resolve_self(&mut self) -> Result<(), ParserError> {
         match self {
             // recursive analysis elements
@@ -67,6 +78,7 @@ impl ExprElem {
             Self::SyntaxBoxElem(e) => e.resolve_self(),
             Self::FuncElem(e) => e.resolve_self(),
             Self::ListElem(e) => e.resolve_self(),
+            Self::ItemElem(e) => e.resolve_self(),
 
             // unrecursive analysis elements
             Self::StringElem(_) => Ok(()),

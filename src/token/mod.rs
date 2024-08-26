@@ -10,6 +10,8 @@ pub mod syntax_box;
 
 pub mod decvalue;
 
+pub mod item;
+
 // structures without ASTAreaBranch trait b
 pub mod string;
 pub mod unknown;
