@@ -26,7 +26,7 @@ pub enum ExprElem {
     FuncElem(FuncBranch),
     ListElem(ListBranch),
     ItemElem(ItemBranch),
-    // without ASTAreaBranch trait structures
+    // without RecursiveAnalysisElements trait structures
     StringElem(StringBranch),
     WordElem(WordBranch),
     OpeElem(OperatorBranch),
