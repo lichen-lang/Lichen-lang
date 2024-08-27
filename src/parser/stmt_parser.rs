@@ -83,7 +83,7 @@ impl StmtParser {
                     match depth {
                         0 => {
                             rlist.push(elemtype(ASTAreaBranch::new(
-                                Some(group.clone()),
+                                group.clone(),
                                 self.depth,
                                 self.loopdepth,
                             )));
@@ -195,8 +195,8 @@ impl StmtParser {
 impl Parser<'_> for StmtParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
-            code,
-            code_list: Vec::new(),
+            code: code.clone(),
+            code_list: Self::code2_vec_pre_proc_func(&code),
             depth,
             loopdepth,
         }
@@ -210,15 +210,12 @@ impl Parser<'_> for StmtParser {
             loopdepth,
         }
     }
+
     fn resolve(&mut self) -> Result<(), ParserError> {
-        self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec() {
-            Err(e)
-        } else {
-            for i in &mut self.code_list {
-                i.resolve_self()?;
-            }
-            Ok(())
+        self.code2vec()?;
+        for i in &mut self.code_list {
+            i.resolve_self()?;
         }
+        Ok(())
     }
 }

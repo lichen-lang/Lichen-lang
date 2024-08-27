@@ -61,9 +61,9 @@ impl ASTBranch for ParenBlockBranch {
 }
 
 impl ASTAreaBranch for ParenBlockBranch {
-    fn new(contents: Option<Vec<ExprElem>>, depth: isize, loopdepth: isize) -> Self {
+    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
-            contents: contents.unwrap(), ////// TODO
+            contents,
             depth,
             loopdepth,
         }

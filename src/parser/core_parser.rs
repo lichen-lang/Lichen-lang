@@ -140,6 +140,26 @@ pub trait Parser<'a> {
         Self::CONTROL_ASSERT,   // assert
     ];
 
+    const KEYWORDS: [&'a str; 14] = [
+        // Syntax
+        Self::SYNTAX_IF,    // if
+        Self::SYNTAX_ELIF,  // elif
+        Self::SYNTAX_ELSE,  // else
+        Self::SYNTAX_LOOP,  // loop
+        Self::SYNTAX_FOR,   // match
+        Self::SYNTAX_WHILE, // while
+        Self::SYNTAX_MATCH, // match
+        // keyword
+        Self::FUNCTION,    // fn
+        Self::STRUCTURE,   // struct
+        Self::ENUMERATION, // enum
+        // control
+        Self::CONTROL_RETURN,   // return
+        Self::CONTROL_BREAK,    // break
+        Self::CONTROL_CONTINUE, // control
+        Self::CONTROL_ASSERT,   // assert
+    ];
+
     const BLOCK_BRACE_OPEN: char = '{';
     const BLOCK_BRACE_CLOSE: char = '}';
     const BLOCK_PAREN_OPEN: char = '(';
@@ -153,7 +173,7 @@ pub trait Parser<'a> {
     fn resolve(&mut self) -> Result<(), ParserError>;
     fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
 
-    fn code2_vec_pre_proc_func(&self, code: &str) -> Vec<ExprElem> {
+    fn code2_vec_pre_proc_func(code: &str) -> Vec<ExprElem> {
         return code
             .chars()
             .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))

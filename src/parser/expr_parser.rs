@@ -4,10 +4,12 @@ use crate::abs::ast::*;
 use crate::parser::core_parser::*;
 
 use crate::errors::parser_errors::ParserError;
+
 use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
 use crate::token::operator::OperatorBranch;
+use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
@@ -43,6 +45,11 @@ impl ExprParser {
         )?;
         // end of grouping_elements
         self.grouping_words()?;
+
+        // grouping syntax
+        self.grouping_syntax()?;
+        self.grouping_syntaxbox()?;
+
         while self.contain_subscriptable() {
             self.grouping_subscription()?;
         }
@@ -179,7 +186,7 @@ impl ExprParser {
                     match depth {
                         0 => {
                             rlist.push(elemtype(ASTAreaBranch::new(
-                                Some(group.clone()),
+                                group.clone(),
                                 self.depth,
                                 self.loopdepth,
                             )));
@@ -297,6 +304,65 @@ impl ExprParser {
         Ok(())
     }
 
+    fn grouping_syntax(&mut self) -> Result<(), ParserError> {
+        let mut name: Option<String> = None;
+        let mut expr: Option<ParenBlockBranch> = None;
+        let mut rlist: Vec<ExprElem> = Vec::new();
+
+        for inner in &self.code_list {
+            if let ExprElem::WordElem(wd) = inner {
+                if Self::SYNTAX_WORDS.contains(&wd.contents.as_str()) {
+                    name = Some(wd.contents.clone());
+                } else {
+                    rlist.push(inner.clone());
+                }
+            } else if let ExprElem::ParenBlockElem(pb) = inner {
+                if name.is_some() {
+                    expr = Some(pb.clone());
+                } else {
+                    rlist.push(inner.clone());
+                }
+            } else if let ExprElem::BlockElem(bl) = inner {
+                if let Some(syntax_name) = name {
+                    if let Some(syntax_expr) = expr {
+                        // another case
+                        // println!("{:?}", syntax_expr.contents);
+                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
+                            name: syntax_name,
+                            expr: syntax_expr.contents,
+                            contents: bl.contents.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else {
+                        // "else" "loop" case
+                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
+                            name: syntax_name,
+                            expr: Vec::new(),
+                            contents: bl.contents.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    }
+                } else {
+                    // TODO
+                    // error とは限らない
+                    if let Some(syntax_expr) = expr {
+                        rlist.push(ExprElem::ParenBlockElem(syntax_expr));
+                    }
+                    rlist.push(inner.clone());
+                }
+                name = None;
+                expr = None;
+            } else {
+                // name expr をError処理
+                rlist.push(inner.clone());
+            }
+        }
+        self.code_list = rlist;
+        Ok(())
+    }
+
     fn grouping_syntaxbox(&mut self) -> Result<(), ParserError> {
         let mut flag = false;
         let mut name: String = String::new();
@@ -314,7 +380,6 @@ impl ExprParser {
                         group.push(e.clone());
                     } else {
                         return Err(ParserError::GroupingSyntaxBoxError);
-                        // TODO:
                     }
                 } else if e.name == Self::SYNTAX_ELSE {
                     if flag {
@@ -330,7 +395,6 @@ impl ExprParser {
                         flag = false;
                     } else {
                         return Err(ParserError::GroupingSyntaxBoxError);
-                        // TODO:
                     }
                 } else {
                     rlist.push(inner.clone());
@@ -388,7 +452,7 @@ impl ExprParser {
                 }
                 ExprElem::ListBlockElem(_) => {
                     if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
                             return true;
                         }
                     } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
@@ -402,7 +466,7 @@ impl ExprParser {
                 }
                 ExprElem::ParenBlockElem(_) => {
                     if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::CONTROL_STATEMENT.contains(&v.contents.as_str()) {
+                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
                             return true;
                         }
                     } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
@@ -455,7 +519,7 @@ impl ExprParser {
                 ExprElem::ListBlockElem(v) => {
                     let list_items = ExprElem::ListBlockElem(v.clone());
                     if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
-                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::ListElem(ListBranch {
                                 name: Box::new(ExprElem::WordElem(wd.clone())),
                                 contents: vec![list_items],
@@ -495,7 +559,7 @@ impl ExprParser {
                 ExprElem::ParenBlockElem(v) => {
                     let function_args = ExprElem::ParenBlockElem(v.clone());
                     if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
-                        if !Self::CONTROL_STATEMENT.contains(&wd.contents.as_str()) {
+                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::FuncElem(FuncBranch {
                                 name: Box::new(ExprElem::WordElem(wd.clone())),
                                 contents: vec![function_args],
@@ -641,22 +705,18 @@ impl Parser<'_> for ExprParser {
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
-            code,
-            code_list: Vec::new(),
+            code: code.clone(),
+            code_list: Self::code2_vec_pre_proc_func(&code),
             depth,
             loopdepth,
         }
     }
 
     fn resolve(&mut self) -> Result<(), ParserError> {
-        self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec() {
-            Err(e)
-        } else {
-            for i in &mut self.code_list {
-                i.resolve_self()?;
-            }
-            Ok(())
+        self.code2vec()?;
+        for i in &mut self.code_list {
+            i.resolve_self()?;
         }
+        Ok(())
     }
 }
