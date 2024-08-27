@@ -1,5 +1,8 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
+use crate::parser::core_parser::Parser;
+use crate::parser::expr_parser::ExprParser;
+use crate::parser::stmt_parser::StmtParser;
 
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct
@@ -49,6 +52,14 @@ impl ASTBranch for SyntaxBranch {
 
 impl RecursiveAnalysisElements for SyntaxBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        todo!()
+        let mut e_parser =
+            ExprParser::create_parser_from_vec(self.expr.clone(), self.depth, self.loopdepth);
+        e_parser.resolve()?;
+        self.expr = e_parser.code_list;
+        let mut s_parser =
+            StmtParser::create_parser_from_vec(self.contents.clone(), self.depth, self.loopdepth);
+        s_parser.resolve()?;
+        self.contents = s_parser.code_list;
+        Ok(())
     }
 }

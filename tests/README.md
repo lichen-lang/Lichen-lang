@@ -48,6 +48,15 @@ tarai[1][2][3]
 cargo test --package lichen-lang --test lib -- tests::expr_test03 --exact --show-output
 ```
 
+### expr test04
+
+```
+if (0 < x){ 1 } else {0} + 1
+```
+
+```bash
+cargo test --package lichen-lang --test lib -- tests::expr_test04 --exact --show-output
+```
 ### unit test00
 
 expr_parserが正常に動作するかを確かめるテスト00

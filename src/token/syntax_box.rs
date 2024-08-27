@@ -31,6 +31,9 @@ impl ASTBranch for SyntaxBoxBranch {
 
 impl RecursiveAnalysisElements for SyntaxBoxBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        todo!()
+        for inner in &mut self.contents {
+            inner.resolve_self()?;
+        }
+        Ok(())
     }
 }

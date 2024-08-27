@@ -4,6 +4,7 @@ use crate::abs::ast::*;
 use crate::parser::core_parser::*;
 
 use crate::errors::parser_errors::ParserError;
+
 use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
@@ -325,6 +326,7 @@ impl ExprParser {
                 if let Some(syntax_name) = name {
                     if let Some(syntax_expr) = expr {
                         // another case
+                        // println!("{:?}", syntax_expr.contents);
                         rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
                             name: syntax_name,
                             expr: syntax_expr.contents,
@@ -703,22 +705,18 @@ impl Parser<'_> for ExprParser {
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
-            code,
-            code_list: Vec::new(),
+            code: code.clone(),
+            code_list: Self::code2_vec_pre_proc_func(&code),
             depth,
             loopdepth,
         }
     }
 
     fn resolve(&mut self) -> Result<(), ParserError> {
-        self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec() {
-            Err(e)
-        } else {
-            for i in &mut self.code_list {
-                i.resolve_self()?;
-            }
-            Ok(())
+        self.code2vec()?;
+        for i in &mut self.code_list {
+            i.resolve_self()?;
         }
+        Ok(())
     }
 }
