@@ -5,9 +5,8 @@ use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
 pub struct StmtParser {
-    // TODO: 一時的にpublicにしているだけ
     pub code: String,
-    pub code_list: Vec<BaseElem>,
+    pub code_list: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -20,42 +19,31 @@ impl StmtParser {
         let mut group = String::new();
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref v) = inner {
+            if let ExprElem::UnKnownElem(ref v) = inner {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else {
-                    if v.contents == Self::DOUBLE_QUOTATION
-                    // '"'
-                    // is quochar
-                    {
-                        if open_flag {
-                            group.push(v.contents);
-                            rlist.push(BaseElem::StringElem(StringBranch {
-                                contents: group.clone(),
-                                depth: self.depth,
-                            }));
-                            group.clear();
-                            open_flag = false;
-                        } else {
-                            group.push(v.contents);
-                            open_flag = true;
-                        }
+                } else if v.contents == Self::DOUBLE_QUOTATION
+                // '"'
+                // is quochar
+                {
+                    if open_flag {
+                        group.push(v.contents);
+                        rlist.push(ExprElem::StringElem(StringBranch {
+                            contents: group.clone(),
+                            depth: self.depth,
+                        }));
+                        group.clear();
+                        open_flag = false;
                     } else {
-                        if open_flag {
-                            if v.contents == Self::ESCAPECHAR
-                            // '\'
-                            // is escape
-                            {
-                                escape_flag = true;
-                            } else {
-                                escape_flag = false;
-                            }
-                            group.push(v.contents);
-                        } else {
-                            rlist.push(inner.clone());
-                        }
+                        group.push(v.contents);
+                        open_flag = true;
                     }
+                } else if open_flag {
+                    escape_flag = v.contents == Self::ESCAPECHAR;
+                    group.push(v.contents);
+                } else {
+                    rlist.push(inner.clone());
                 }
             } else {
                 rlist.push(inner.clone());
@@ -65,63 +53,57 @@ impl StmtParser {
             return Err(ParserError::QuotationNotClosed);
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_elements<T>(
         &mut self,
-        elemtype: fn(T) -> BaseElem,
+        elemtype: fn(T) -> ExprElem,
         open_char: char,
         close_char: char,
     ) -> Result<(), ParserError>
     where
         T: ASTAreaBranch,
     {
-        let mut rlist: Vec<BaseElem> = Vec::new();
-        let mut group: Vec<BaseElem> = Vec::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
+        let mut group: Vec<ExprElem> = Vec::new();
         let mut depth: isize = 0;
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref b) = inner {
+            if let ExprElem::UnKnownElem(ref b) = inner {
                 if b.contents == open_char {
-                    if depth > 0 {
-                        group.push(inner.clone());
-                    } else if depth == 0 {
-                        // pass
-                    } else {
-                        return Err(ParserError::Uncategorized);
+                    match depth {
+                        0 => {}
+                        1.. => group.push(inner.clone()),
+                        _ => return Err(ParserError::Uncategorized),
                     }
                     depth += 1;
                 } else if b.contents == close_char {
                     depth -= 1;
-                    if depth > 0 {
-                        group.push(inner.clone());
-                    } else if depth == 0 {
-                        rlist.push(elemtype(ASTAreaBranch::new(
-                            Some(group.clone()),
-                            self.depth,
-                            self.loopdepth,
-                        )));
-                        group.clear();
-                    } else {
-                        return Err(ParserError::Uncategorized);
+                    match depth {
+                        0 => {
+                            rlist.push(elemtype(ASTAreaBranch::new(
+                                group.clone(),
+                                self.depth,
+                                self.loopdepth,
+                            )));
+                            group.clear();
+                        }
+                        1.. => group.push(inner.clone()),
+                        _ => return Err(ParserError::Uncategorized),
                     }
                 } else {
-                    if depth > 0 {
-                        group.push(inner.clone());
-                    } else if depth == 0 {
-                        rlist.push(inner.clone());
-                    } else {
-                        return Err(ParserError::Uncategorized);
+                    match depth {
+                        0 => rlist.push(inner.clone()),
+                        1.. => group.push(inner.clone()),
+                        _ => return Err(ParserError::Uncategorized),
                     }
                 }
             } else {
-                if depth > 0 {
-                    group.push(inner.clone());
-                } else if depth == 0 {
-                    rlist.push(inner.clone());
-                } else {
-                    return Err(ParserError::BraceNotClosed);
+                match depth {
+                    0 => rlist.push(inner.clone()),
+                    1.. => group.push(inner.clone()),
+                    _ => return Err(ParserError::BraceNotClosed),
                 }
             }
         }
@@ -129,20 +111,20 @@ impl StmtParser {
             return Err(ParserError::BraceNotClosed);
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     fn grouping_words(&mut self) -> Result<(), ParserError> {
-        let mut rlist: Vec<BaseElem> = Vec::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
         let mut group: String = String::new();
 
         for inner in &self.code_list {
-            if let BaseElem::UnKnownElem(ref e) = inner {
+            if let ExprElem::UnKnownElem(ref e) = inner {
                 if Self::SPLIT_CHAR.contains(&e.contents)
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(BaseElem::WordElem(WordBranch {
+                        rlist.push(ExprElem::WordElem(WordBranch {
                             contents: group.clone(),
                             depth: self.depth,
                             loopdepth: self.loopdepth,
@@ -153,7 +135,7 @@ impl StmtParser {
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(BaseElem::WordElem(WordBranch {
+                        rlist.push(ExprElem::WordElem(WordBranch {
                             contents: group.clone(),
                             depth: self.depth,
                             loopdepth: self.loopdepth,
@@ -166,7 +148,7 @@ impl StmtParser {
                 }
             } else {
                 if !group.is_empty() {
-                    rlist.push(BaseElem::WordElem(WordBranch {
+                    rlist.push(ExprElem::WordElem(WordBranch {
                         contents: group.clone(),
                         depth: self.depth,
                         loopdepth: self.loopdepth,
@@ -177,7 +159,7 @@ impl StmtParser {
             }
         }
         if !group.is_empty() {
-            rlist.push(BaseElem::WordElem(WordBranch {
+            rlist.push(ExprElem::WordElem(WordBranch {
                 contents: group.clone(),
                 depth: self.depth,
                 loopdepth: self.loopdepth,
@@ -185,68 +167,55 @@ impl StmtParser {
             group.clear();
         }
         self.code_list = rlist;
-        return Ok(());
+        Ok(())
     }
 
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        // --- macro ---
-        macro_rules! err_proc {
-            ($a:expr) => {
-                if let Err(e) = $a {
-                    return Err(e);
-                }
-            };
-        }
-        err_proc!(self.grouping_quotation());
-        err_proc!(self.grouping_words());
-        err_proc!(self.grouping_elements(
-            BaseElem::BlockElem,
+        self.grouping_quotation()?;
+        self.grouping_words()?;
+        self.grouping_elements(
+            ExprElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
             Self::BLOCK_BRACE_CLOSE, // }
-        ));
-        err_proc!(self.grouping_elements(
-            BaseElem::ListBlockElem,
+        )?;
+        self.grouping_elements(
+            ExprElem::ListBlockElem,
             Self::BLOCK_LIST_OPEN,  // [
             Self::BLOCK_LIST_CLOSE, // ]
-        ));
-        err_proc!(self.grouping_elements(
-            BaseElem::ParenBlockElem,
+        )?;
+        self.grouping_elements(
+            ExprElem::ParenBlockElem,
             Self::BLOCK_PAREN_OPEN,  // (
             Self::BLOCK_PAREN_CLOSE, // )
-        ));
-        return Ok(());
+        )?;
+        Ok(())
     }
 }
 
 impl Parser<'_> for StmtParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
-            code: code,
-            code_list: Vec::new(),
-            depth: depth,
-            loopdepth: loopdepth,
+            code: code.clone(),
+            code_list: Self::code2_vec_pre_proc_func(&code),
+            depth,
+            loopdepth,
         }
     }
 
-    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self {
+    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: String::new(),
-            code_list: code_list,
-            depth: depth,
-            loopdepth: loopdepth,
+            code_list,
+            depth,
+            loopdepth,
         }
     }
+
     fn resolve(&mut self) -> Result<(), ParserError> {
-        self.code_list = self.code2_vec_pre_proc_func(&self.code);
-        if let Err(e) = self.code2vec() {
-            return Err(e);
-        } else {
-            for i in &mut self.code_list {
-                if let Err(e) = i.resolve_self() {
-                    return Err(e);
-                }
-            }
-            return Ok(());
+        self.code2vec()?;
+        for i in &mut self.code_list {
+            i.resolve_self()?;
         }
+        Ok(())
     }
 }

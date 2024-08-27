@@ -1,8 +1,9 @@
-use crate::abs::ast::BaseElem;
+use crate::abs::ast::ExprElem;
 
-struct DecValueBranch {
+#[derive(Clone, Debug)]
+pub struct DecValueBranch {
     pub valuename: String, // TODO:ここはいずれ、パターンにしたい
-    pub contents: Vec<BaseElem>,
+    pub contents: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
     // flags

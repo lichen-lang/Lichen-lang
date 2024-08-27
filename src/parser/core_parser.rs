@@ -93,8 +93,10 @@ pub trait Parser<'a> {
         Self::NOT,        // !
     ];
 
+    const SEMICOLON: char = ';';
+    const COMMA: char = ',';
     const SPLIT_CHAR: [char; 3] = [' ', '\t', '\n'];
-    const EXCLUDE_WORDS: [char; 3] = [';', ':', ','];
+    const EXCLUDE_WORDS: [char; 3] = [Self::SEMICOLON, ':', Self::COMMA];
 
     const SYNTAX_IF: &'a str = "if";
     const SYNTAX_ELIF: &'a str = "elif";
@@ -121,7 +123,8 @@ pub trait Parser<'a> {
     ];
     const ESCAPECHAR: char = '\\';
     const FUNCTION: &'a str = "fn";
-    const SEMICOLON: char = ';';
+    const STRUCTURE: &'a str = "struct";
+    const ENUMERATION: &'a str = "enum";
     const DOUBLE_QUOTATION: char = '"';
     const SINGLE_QUOTATION: char = '\'';
 
@@ -137,6 +140,26 @@ pub trait Parser<'a> {
         Self::CONTROL_ASSERT,   // assert
     ];
 
+    const KEYWORDS: [&'a str; 14] = [
+        // Syntax
+        Self::SYNTAX_IF,    // if
+        Self::SYNTAX_ELIF,  // elif
+        Self::SYNTAX_ELSE,  // else
+        Self::SYNTAX_LOOP,  // loop
+        Self::SYNTAX_FOR,   // match
+        Self::SYNTAX_WHILE, // while
+        Self::SYNTAX_MATCH, // match
+        // keyword
+        Self::FUNCTION,    // fn
+        Self::STRUCTURE,   // struct
+        Self::ENUMERATION, // enum
+        // control
+        Self::CONTROL_RETURN,   // return
+        Self::CONTROL_BREAK,    // break
+        Self::CONTROL_CONTINUE, // control
+        Self::CONTROL_ASSERT,   // assert
+    ];
+
     const BLOCK_BRACE_OPEN: char = '{';
     const BLOCK_BRACE_CLOSE: char = '}';
     const BLOCK_PAREN_OPEN: char = '(';
@@ -148,12 +171,12 @@ pub trait Parser<'a> {
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self;
     fn resolve(&mut self) -> Result<(), ParserError>;
-    fn create_parser_from_vec(code_list: Vec<BaseElem>, depth: isize, loopdepth: isize) -> Self;
+    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
 
-    fn code2_vec_pre_proc_func(&self, code: &String) -> Vec<BaseElem> {
+    fn code2_vec_pre_proc_func(code: &str) -> Vec<ExprElem> {
         return code
             .chars()
-            .map(|c| BaseElem::UnKnownElem(UnKnownBranch { contents: c }))
+            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
             .collect();
     }
 }

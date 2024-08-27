@@ -1,30 +1,39 @@
-use crate::token::{
-    block::BlockBranch, func::FuncBranch, list_block::ListBlockBranch, operator::OperatorBranch,
-    paren_block::ParenBlockBranch, string::StringBranch, syntax::SyntaxBranch,
-    syntax_box::SyntaxBoxBranch, unknown::UnKnownBranch, word::WordBranch,
-};
+use crate::token::block::BlockBranch;
+use crate::token::func::FuncBranch;
+use crate::token::item::ItemBranch;
+use crate::token::list::ListBranch;
+use crate::token::list_block::ListBlockBranch;
+use crate::token::operator::OperatorBranch;
+use crate::token::paren_block::ParenBlockBranch;
+use crate::token::string::StringBranch;
+use crate::token::syntax::SyntaxBranch;
+use crate::token::syntax_box::SyntaxBoxBranch;
+use crate::token::unknown::UnKnownBranch;
+use crate::token::word::WordBranch;
 
 use crate::errors::parser_errors::ParserError;
 
 /// # BaseElem
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
-#[derive(Clone)]
-pub enum BaseElem {
+#[derive(Clone, Debug)]
+pub enum ExprElem {
     BlockElem(BlockBranch),
     ListBlockElem(ListBlockBranch),
     ParenBlockElem(ParenBlockBranch),
     SyntaxElem(SyntaxBranch),
     SyntaxBoxElem(SyntaxBoxBranch),
     FuncElem(FuncBranch),
-    // without ASTAreaBranch trait structures
+    ListElem(ListBranch),
+    ItemElem(ItemBranch),
+    // without RecursiveAnalysisElements trait structures
     StringElem(StringBranch),
     WordElem(WordBranch),
     OpeElem(OperatorBranch),
     UnKnownElem(UnKnownBranch),
 }
 
-impl BaseElem {
+impl ExprElem {
     pub fn show(&self) {
         match self {
             Self::BlockElem(e) => e.show(),
@@ -36,7 +45,9 @@ impl BaseElem {
             Self::SyntaxElem(e) => e.show(),
             Self::SyntaxBoxElem(e) => e.show(),
             Self::FuncElem(e) => e.show(),
+            Self::ItemElem(e) => e.show(),
             Self::OpeElem(e) => e.show(),
+            Self::ListElem(e) => e.show(),
         }
     }
 
@@ -51,24 +62,29 @@ impl BaseElem {
             Self::SyntaxElem(e) => e.get_show_as_string(),
             Self::SyntaxBoxElem(e) => e.get_show_as_string(),
             Self::FuncElem(e) => e.get_show_as_string(),
+            Self::ItemElem(e) => e.get_show_as_string(),
             Self::OpeElem(e) => e.get_show_as_string(),
+            Self::ListElem(e) => e.get_show_as_string(),
         }
     }
+
     pub fn resolve_self(&mut self) -> Result<(), ParserError> {
         match self {
             // recursive analysis elements
-            Self::BlockElem(e) => return e.resolve_self(),
-            Self::ListBlockElem(e) => return e.resolve_self(),
-            Self::ParenBlockElem(e) => return e.resolve_self(),
-            Self::SyntaxElem(e) => return e.resolve_self(),
-            Self::SyntaxBoxElem(e) => return e.resolve_self(),
-            Self::FuncElem(e) => return e.resolve_self(),
+            Self::BlockElem(e) => e.resolve_self(),
+            Self::ListBlockElem(e) => e.resolve_self(),
+            Self::ParenBlockElem(e) => e.resolve_self(),
+            Self::SyntaxElem(e) => e.resolve_self(),
+            Self::SyntaxBoxElem(e) => e.resolve_self(),
+            Self::FuncElem(e) => e.resolve_self(),
+            Self::ListElem(e) => e.resolve_self(),
+            Self::ItemElem(e) => e.resolve_self(),
 
             // unrecursive analysis elements
-            Self::StringElem(_) => return Ok(()),
-            Self::WordElem(_) => return Ok(()),
-            Self::OpeElem(_) => return Ok(()),
-            Self::UnKnownElem(_) => return Ok(()),
+            Self::StringElem(_) => Ok(()),
+            Self::WordElem(_) => Ok(()),
+            Self::OpeElem(_) => Ok(()),
+            Self::UnKnownElem(_) => Ok(()),
         }
     }
 }
@@ -85,8 +101,7 @@ pub trait ASTBranch {
 /// ## resolve_self
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
 pub trait ASTAreaBranch {
-    fn new(contents: Option<Vec<BaseElem>>, depth: isize, loopdepth: isize) -> Self;
-    // fn resolve_self(&mut self) -> Result<&str, String>;
+    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
 }
 
 pub trait RecursiveAnalysisElements {
