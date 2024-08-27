@@ -1,5 +1,5 @@
 import re
-import pprint
+# import pprint
 
 code = """
 const OR: &'a str = "||";

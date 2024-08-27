@@ -1,6 +1,3 @@
-import itertools
-
-
 def combinations(elements: list[str], r: int) -> list[list[str]]:
     # 組み合わせの要素数が0なら、空リストを返す
     if r == 0:
