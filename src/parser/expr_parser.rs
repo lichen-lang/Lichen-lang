@@ -446,33 +446,28 @@ impl ExprParser {
 
         for inner in &self.code_list {
             match inner {
-                ExprElem::WordElem(_) | ExprElem::FuncElem(_) | ExprElem::ListElem(_) => {
+                ExprElem::WordElem(_)
+                | ExprElem::FuncElem(_)
+                | ExprElem::ListElem(_)
+                | ExprElem::SyntaxBoxElem(_) => {
                     name_tmp = Some(inner);
                     flag = true;
                 }
-                ExprElem::ListBlockElem(_) => {
+                ExprElem::ListBlockElem(_) | ExprElem::ParenBlockElem(_) => {
                     if let Some(ExprElem::WordElem(v)) = name_tmp {
                         if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
                             return true;
                         }
-                    } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
-                        return true;
-                    } else if let Some(ExprElem::ListElem(_v)) = name_tmp {
-                        return true;
-                    } else {
-                        name_tmp = None;
-                        flag = false;
-                    }
-                }
-                ExprElem::ParenBlockElem(_) => {
-                    if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
+                    } else if let Some(v) = name_tmp {
+                        if let ExprElem::FuncElem(_)
+                        | ExprElem::ListElem(_)
+                        | ExprElem::SyntaxBoxElem(_) = v
+                        {
                             return true;
+                        } else {
+                            name_tmp = None;
+                            flag = false;
                         }
-                    } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
-                        return true;
-                    } else if let Some(ExprElem::ListElem(_v)) = name_tmp {
-                        return true;
                     } else {
                         name_tmp = None;
                         flag = false;
@@ -515,6 +510,12 @@ impl ExprParser {
                     }
                     name_tmp = Some(inner.clone());
                 }
+                ExprElem::SyntaxBoxElem(_v) => {
+                    if let Some(s) = name_tmp {
+                        rlist.push(s);
+                    }
+                    name_tmp = Some(inner.clone());
+                }
                 // [] ()
                 ExprElem::ListBlockElem(v) => {
                     let list_items = ExprElem::ListBlockElem(v.clone());
@@ -543,6 +544,13 @@ impl ExprParser {
                     } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
                         rlist.push(ExprElem::ListElem(ListBranch {
                             name: Box::new(ExprElem::ListElem(lb.clone())),
+                            contents: vec![list_items],
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else if let Some(ExprElem::SyntaxBoxElem(ref sb)) = name_tmp {
+                        rlist.push(ExprElem::ListElem(ListBranch {
+                            name: Box::new(ExprElem::SyntaxBoxElem(sb.clone())),
                             contents: vec![list_items],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
@@ -583,6 +591,13 @@ impl ExprParser {
                     } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
                         rlist.push(ExprElem::FuncElem(FuncBranch {
                             name: Box::new(ExprElem::ListElem(lb.clone())),
+                            contents: vec![function_args],
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else if let Some(ExprElem::SyntaxBoxElem(ref sb)) = name_tmp {
+                        rlist.push(ExprElem::FuncElem(FuncBranch {
+                            name: Box::new(ExprElem::SyntaxBoxElem(sb.clone())),
                             contents: vec![function_args],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
