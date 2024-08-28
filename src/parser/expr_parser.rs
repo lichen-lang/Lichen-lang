@@ -13,7 +13,6 @@ use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
-use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
 pub struct ExprParser {
@@ -242,23 +241,16 @@ impl ExprParser {
                                 depth: self.depth,
                             }))
                         } else {
-                            // rlist += group
-                            let grouup_tmp: Vec<ExprElem> = group
-                                .chars()
-                                .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                                .collect();
-                            rlist.extend(grouup_tmp);
+                            let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                            rlist.extend(group_tmp);
                         }
                         group.clear();
                     }
                     Ordering::Greater => {
                         // ope_size < group.len()
                         // rlist += group
-                        let grouup_tmp: Vec<ExprElem> = group
-                            .chars()
-                            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                            .collect();
-                        rlist.extend(grouup_tmp);
+                        let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                        rlist.extend(group_tmp);
                         group.clear();
                     }
                 }
@@ -266,11 +258,8 @@ impl ExprParser {
                 // 既にtokenが割り当てられているとき
                 match group.len().cmp(&ope_size) {
                     Ordering::Less => {
-                        let grouup_tmp: Vec<ExprElem> = group
-                            .chars()
-                            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                            .collect();
-                        rlist.extend(grouup_tmp);
+                        let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                        rlist.extend(group_tmp);
                     }
                     Ordering::Equal => {
                         if group == ope {
@@ -280,20 +269,14 @@ impl ExprParser {
                             }))
                         } else {
                             // rlist += group
-                            let grouup_tmp: Vec<ExprElem> = group
-                                .chars()
-                                .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                                .collect();
-                            rlist.extend(grouup_tmp);
+                            let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                            rlist.extend(group_tmp);
                         }
                     }
                     Ordering::Greater => {
                         // rlist += group
-                        let grouup_tmp: Vec<ExprElem> = group
-                            .chars()
-                            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                            .collect();
-                        rlist.extend(grouup_tmp);
+                        let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                        rlist.extend(group_tmp);
                     }
                 }
                 group.clear();
@@ -612,10 +595,8 @@ impl ExprParser {
                         depth: self.depth,
                         loopdepth: self.loopdepth,
                     })];
-                    Ok(())
-                } else {
-                    Ok(())
                 }
+                Ok(())
             }
             Err(e) => Err(e),
         }

@@ -55,7 +55,10 @@ mod tests {
         if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
-            println!("{:#?}", e_parser.code_list);
+            // println!("{:#?}", e_parser.code_list);
+            for i in e_parser.code_list {
+                i.show();
+            }
         }
     }
 
