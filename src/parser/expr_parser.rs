@@ -445,42 +445,38 @@ impl ExprParser {
         let mut name_tmp: Option<&ExprElem> = None;
 
         for inner in &self.code_list {
-            match inner {
-                ExprElem::WordElem(_)
-                | ExprElem::FuncElem(_)
-                | ExprElem::ListElem(_)
-                | ExprElem::SyntaxBoxElem(_) => {
-                    name_tmp = Some(inner);
-                    flag = true;
-                }
-                ExprElem::ListBlockElem(_) | ExprElem::ParenBlockElem(_) => {
-                    if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
-                            return true;
-                        }
-                    } else if let Some(v) = name_tmp {
-                        if let ExprElem::FuncElem(_)
-                        | ExprElem::ListElem(_)
-                        | ExprElem::SyntaxBoxElem(_) = v
-                        {
-                            return true;
-                        } else {
-                            name_tmp = None;
-                            flag = false;
-                        }
+            if let ExprElem::WordElem(_)
+            | ExprElem::FuncElem(_)
+            | ExprElem::ListElem(_)
+            | ExprElem::SyntaxBoxElem(_) = inner
+            {
+                name_tmp = Some(inner);
+                flag = true;
+            }
+            if let ExprElem::ListBlockElem(_) | ExprElem::ParenBlockElem(_) = inner {
+                if let Some(ExprElem::WordElem(v)) = name_tmp {
+                    if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
+                        return true;
+                    }
+                } else if let Some(v) = name_tmp {
+                    if let ExprElem::FuncElem(_)
+                    | ExprElem::ListElem(_)
+                    | ExprElem::SyntaxBoxElem(_) = v
+                    {
+                        return true;
                     } else {
                         name_tmp = None;
                         flag = false;
                     }
+                } else {
+                    name_tmp = None;
+                    flag = false;
                 }
-                _ => {
-                    if flag {
-                        flag = false;
-                        name_tmp = None;
-                    } else {
-                        //pass
-                    }
-                }
+            } else if flag {
+                flag = false;
+                name_tmp = None;
+            } else {
+                //pass
             }
         }
         false
@@ -635,10 +631,8 @@ impl ExprParser {
                         depth: self.depth,
                         loopdepth: self.loopdepth,
                     })];
-                    Ok(())
-                } else {
-                    Ok(())
                 }
+                Ok(())
             }
             Err(e) => Err(e),
         }
