@@ -502,43 +502,17 @@ impl ExprParser {
                 name_tmp = Some(inner.clone());
             }
             // [] ()
-            else if let ExprElem::ListBlockElem(_) = inner {
-                if let Some(v) = name_tmp {
-                    if let ExprElem::WordElem(ref wd) = v {
-                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
+            else if let Some(v) = &name_tmp {
+                if let ExprElem::WordElem(ref wd) = v {
+                    if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
+                        if let ExprElem::ListBlockElem(_) = inner {
                             rlist.push(ExprElem::ListElem(ListBranch {
                                 name: Box::new(v.clone()),
                                 contents: vec![inner.clone()],
                                 depth: self.depth,
                                 loopdepth: self.loopdepth,
                             }));
-                        } else {
-                            // 1
-                            rlist.push(v.clone());
-                            rlist.push(inner.clone());
-                        }
-                    } else if let ExprElem::FuncElem(_)
-                    | ExprElem::ListElem(_)
-                    | ExprElem::SyntaxBoxElem(_) = &v
-                    {
-                        rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(v.clone()),
-                            contents: vec![inner.clone()],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else {
-                        rlist.push(v.clone());
-                        rlist.push(inner.clone());
-                    }
-                } else {
-                    rlist.push(inner.clone());
-                }
-                name_tmp = None;
-            } else if let ExprElem::ParenBlockElem(_) = inner {
-                if let Some(v) = name_tmp {
-                    if let ExprElem::WordElem(ref wd) = v {
-                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
+                        } else if let ExprElem::ParenBlockElem(_) = inner {
                             rlist.push(ExprElem::FuncElem(FuncBranch {
                                 name: Box::new(v.clone()),
                                 contents: vec![inner.clone()],
@@ -546,14 +520,26 @@ impl ExprParser {
                                 loopdepth: self.loopdepth,
                             }));
                         } else {
-                            // 1
                             rlist.push(v.clone());
                             rlist.push(inner.clone());
                         }
-                    } else if let ExprElem::FuncElem(_)
-                    | ExprElem::ListElem(_)
-                    | ExprElem::SyntaxBoxElem(_) = &v
-                    {
+                    } else {
+                        // 1
+                        rlist.push(v.clone());
+                        rlist.push(inner.clone());
+                    }
+                } else if let ExprElem::FuncElem(_)
+                | ExprElem::ListElem(_)
+                | ExprElem::SyntaxBoxElem(_) = &v
+                {
+                    if let ExprElem::ListBlockElem(_) = inner {
+                        rlist.push(ExprElem::ListElem(ListBranch {
+                            name: Box::new(v.clone()),
+                            contents: vec![inner.clone()],
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                    } else if let ExprElem::ParenBlockElem(_) = inner {
                         rlist.push(ExprElem::FuncElem(FuncBranch {
                             name: Box::new(v.clone()),
                             contents: vec![inner.clone()],
@@ -565,19 +551,16 @@ impl ExprParser {
                         rlist.push(inner.clone());
                     }
                 } else {
+                    rlist.push(v.clone());
                     rlist.push(inner.clone());
                 }
-                name_tmp = None;
-            } else if let Some(ref s) = name_tmp {
-                rlist.push(s.clone());
-                rlist.push(inner.clone());
                 name_tmp = None;
             } else {
                 rlist.push(inner.clone());
             }
         }
-        if let Some(ref s) = name_tmp {
-            rlist.push(s.clone());
+        if let Some(v) = &name_tmp {
+            rlist.push(v.clone());
         }
         self.code_list = rlist;
         Ok(())
