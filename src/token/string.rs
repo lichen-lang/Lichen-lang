@@ -7,6 +7,7 @@ use crate::abs::ast::*;
 pub struct StringBranch {
     pub contents: String,
     pub depth: isize,
+    pub loopdepth: isize,
 }
 
 impl ASTBranch for StringBranch {

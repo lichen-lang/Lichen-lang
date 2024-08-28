@@ -88,6 +88,7 @@ impl CommaParser {
                         rlist.push(ExprElem::StringElem(StringBranch {
                             contents: group.clone(),
                             depth: self.depth,
+                            loopdepth: self.loopdepth,
                         }));
                         group.clear();
                         open_flag = false;
