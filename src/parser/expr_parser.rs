@@ -491,135 +491,89 @@ impl ExprParser {
         let mut rlist: Vec<ExprElem> = Vec::new();
 
         for inner in &self.code_list {
-            match inner {
-                ExprElem::WordElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
+            if let ExprElem::WordElem(_)
+            | ExprElem::FuncElem(_)
+            | ExprElem::ListElem(_)
+            | ExprElem::SyntaxBoxElem(_) = inner
+            {
+                if let Some(s) = name_tmp {
+                    rlist.push(s);
                 }
-                ExprElem::FuncElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
-                }
-                ExprElem::ListElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
-                }
-                ExprElem::SyntaxBoxElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
-                }
-                // [] ()
-                ExprElem::ListBlockElem(v) => {
-                    let list_items = ExprElem::ListBlockElem(v.clone());
-                    if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
+                name_tmp = Some(inner.clone());
+            }
+            // [] ()
+            else if let ExprElem::ListBlockElem(_) = inner {
+                if let Some(v) = name_tmp {
+                    if let ExprElem::WordElem(ref wd) = v {
                         if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::ListElem(ListBranch {
-                                name: Box::new(ExprElem::WordElem(wd.clone())),
-                                contents: vec![list_items],
+                                name: Box::new(v.clone()),
+                                contents: vec![inner.clone()],
                                 depth: self.depth,
                                 loopdepth: self.loopdepth,
                             }));
                         } else {
                             // 1
-                            if let Some(ref s) = name_tmp {
-                                rlist.push(s.clone());
-                            }
+                            rlist.push(v.clone());
                             rlist.push(inner.clone());
                         }
-                    } else if let Some(ExprElem::FuncElem(ref fb)) = name_tmp {
+                    } else if let ExprElem::FuncElem(_)
+                    | ExprElem::ListElem(_)
+                    | ExprElem::SyntaxBoxElem(_) = &v
+                    {
                         rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(ExprElem::FuncElem(fb.clone())),
-                            contents: vec![list_items],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
-                        rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(ExprElem::ListElem(lb.clone())),
-                            contents: vec![list_items],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let Some(ExprElem::SyntaxBoxElem(ref sb)) = name_tmp {
-                        rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(ExprElem::SyntaxBoxElem(sb.clone())),
-                            contents: vec![list_items],
+                            name: Box::new(v.clone()),
+                            contents: vec![inner.clone()],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
                     } else {
-                        // 1
-                        if let Some(ref s) = name_tmp {
-                            rlist.push(s.clone());
-                        }
+                        rlist.push(v.clone());
                         rlist.push(inner.clone());
                     }
-                    name_tmp = None;
+                } else {
+                    rlist.push(inner.clone());
                 }
-                ExprElem::ParenBlockElem(v) => {
-                    let function_args = ExprElem::ParenBlockElem(v.clone());
-                    if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
+                name_tmp = None;
+            } else if let ExprElem::ParenBlockElem(_) = inner {
+                if let Some(v) = name_tmp {
+                    if let ExprElem::WordElem(ref wd) = v {
                         if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
                             rlist.push(ExprElem::FuncElem(FuncBranch {
-                                name: Box::new(ExprElem::WordElem(wd.clone())),
-                                contents: vec![function_args],
+                                name: Box::new(v.clone()),
+                                contents: vec![inner.clone()],
                                 depth: self.depth,
                                 loopdepth: self.loopdepth,
                             }));
                         } else {
                             // 1
-                            if let Some(ref s) = name_tmp {
-                                rlist.push(s.clone());
-                            }
+                            rlist.push(v.clone());
                             rlist.push(inner.clone());
                         }
-                    } else if let Some(ExprElem::FuncElem(ref fb)) = name_tmp {
+                    } else if let ExprElem::FuncElem(_)
+                    | ExprElem::ListElem(_)
+                    | ExprElem::SyntaxBoxElem(_) = &v
+                    {
                         rlist.push(ExprElem::FuncElem(FuncBranch {
-                            name: Box::new(ExprElem::FuncElem(fb.clone())),
-                            contents: vec![function_args],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
-                        rlist.push(ExprElem::FuncElem(FuncBranch {
-                            name: Box::new(ExprElem::ListElem(lb.clone())),
-                            contents: vec![function_args],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let Some(ExprElem::SyntaxBoxElem(ref sb)) = name_tmp {
-                        rlist.push(ExprElem::FuncElem(FuncBranch {
-                            name: Box::new(ExprElem::SyntaxBoxElem(sb.clone())),
-                            contents: vec![function_args],
+                            name: Box::new(v.clone()),
+                            contents: vec![inner.clone()],
                             depth: self.depth,
                             loopdepth: self.loopdepth,
                         }));
                     } else {
-                        // 1
-                        if let Some(ref s) = name_tmp {
-                            rlist.push(s.clone());
-                        }
+                        rlist.push(v.clone());
                         rlist.push(inner.clone());
                     }
-                    name_tmp = None;
+                } else {
+                    rlist.push(inner.clone());
                 }
-                _ => {
-                    if let Some(ref s) = name_tmp {
-                        rlist.push(s.clone());
-                        rlist.push(inner.clone());
-                        name_tmp = None;
-                    } else {
-                        rlist.push(inner.clone());
-                    }
-                }
+                name_tmp = None;
+            } else if let Some(ref s) = name_tmp {
+                rlist.push(s.clone());
+                rlist.push(inner.clone());
+                name_tmp = None;
+            } else {
+                rlist.push(inner.clone());
             }
         }
         if let Some(ref s) = name_tmp {
