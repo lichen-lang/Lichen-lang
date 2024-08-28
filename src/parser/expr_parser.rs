@@ -484,8 +484,8 @@ impl ExprParser {
             | ExprElem::ListElem(_)
             | ExprElem::SyntaxBoxElem(_) = inner
             {
-                if let Some(s) = name_tmp {
-                    rlist.push(s);
+                if let Some(v) = name_tmp {
+                    rlist.push(v);
                 }
                 name_tmp = Some(inner.clone());
             }
@@ -493,51 +493,40 @@ impl ExprParser {
             else if let Some(v) = &name_tmp {
                 if let ExprElem::WordElem(ref wd) = v {
                     if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
-                        if let ExprElem::ListBlockElem(_) = inner {
-                            rlist.push(ExprElem::ListElem(ListBranch {
-                                name: Box::new(v.clone()),
-                                contents: vec![inner.clone()],
-                                depth: self.depth,
-                                loopdepth: self.loopdepth,
-                            }));
-                        } else if let ExprElem::ParenBlockElem(_) = inner {
-                            rlist.push(ExprElem::FuncElem(FuncBranch {
-                                name: Box::new(v.clone()),
-                                contents: vec![inner.clone()],
-                                depth: self.depth,
-                                loopdepth: self.loopdepth,
-                            }));
-                        } else {
-                            rlist.push(v.clone());
-                            rlist.push(inner.clone());
-                        }
+                        // jump to point01
                     } else {
                         // 1
                         rlist.push(v.clone());
                         rlist.push(inner.clone());
+                        name_tmp = None;
+                        continue;
                     }
                 } else if let ExprElem::FuncElem(_)
                 | ExprElem::ListElem(_)
                 | ExprElem::SyntaxBoxElem(_) = &v
                 {
-                    if let ExprElem::ListBlockElem(_) = inner {
-                        rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(v.clone()),
-                            contents: vec![inner.clone()],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let ExprElem::ParenBlockElem(_) = inner {
-                        rlist.push(ExprElem::FuncElem(FuncBranch {
-                            name: Box::new(v.clone()),
-                            contents: vec![inner.clone()],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else {
-                        rlist.push(v.clone());
-                        rlist.push(inner.clone());
-                    }
+                    // jump to point01
+                } else {
+                    rlist.push(v.clone());
+                    rlist.push(inner.clone());
+                    name_tmp = None;
+                    continue;
+                }
+                // point01
+                if let ExprElem::ListBlockElem(_) = inner {
+                    rlist.push(ExprElem::ListElem(ListBranch {
+                        name: Box::new(v.clone()),
+                        contents: vec![inner.clone()],
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
+                } else if let ExprElem::ParenBlockElem(_) = inner {
+                    rlist.push(ExprElem::FuncElem(FuncBranch {
+                        name: Box::new(v.clone()),
+                        contents: vec![inner.clone()],
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
                 } else {
                     rlist.push(v.clone());
                     rlist.push(inner.clone());
