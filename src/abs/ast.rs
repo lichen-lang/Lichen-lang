@@ -13,7 +13,7 @@ use crate::token::word::WordBranch;
 
 use crate::errors::parser_errors::ParserError;
 
-/// # BaseElem
+/// # ExprElem
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
 #[derive(Clone, Debug)]
@@ -30,6 +30,11 @@ pub enum ExprElem {
     StringElem(StringBranch),
     WordElem(WordBranch),
     OpeElem(OperatorBranch),
+    UnKnownElem(UnKnownBranch),
+}
+
+#[derive(Clone, Debug)]
+pub enum TypeElem {
     UnKnownElem(UnKnownBranch),
 }
 
