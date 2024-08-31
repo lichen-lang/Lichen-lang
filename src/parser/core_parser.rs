@@ -166,8 +166,9 @@ pub trait Parser<'a> {
     const BLOCK_PAREN_CLOSE: char = ')';
     const BLOCK_LIST_OPEN: char = '[';
     const BLOCK_LIST_CLOSE: char = ']';
-
-    // fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str>;
+    // type
+    const BLOCK_TYPE_OPEN: char = '<';
+    const BLOCK_TYPE_CLOSE: char = '>';
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self;
     fn resolve(&mut self) -> Result<(), ParserError>;

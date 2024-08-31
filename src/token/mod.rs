@@ -16,3 +16,6 @@ pub mod item;
 pub mod string;
 pub mod unknown;
 pub mod word;
+
+// type
+pub mod ttype;
