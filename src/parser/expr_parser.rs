@@ -308,26 +308,17 @@ impl ExprParser {
                 }
             } else if let ExprElem::BlockElem(bl) = inner {
                 if let Some(syntax_name) = name {
-                    if let Some(syntax_expr) = expr {
-                        // another case
-                        // println!("{:?}", syntax_expr.contents);
-                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
-                            name: syntax_name,
-                            expr: syntax_expr.contents,
-                            contents: bl.contents.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else {
-                        // "else" "loop" case
-                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
-                            name: syntax_name,
-                            expr: Vec::new(),
-                            contents: bl.contents.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    }
+                    rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
+                        name: syntax_name,
+                        expr: if let Some(syntax_expr) = expr {
+                            syntax_expr.contents
+                        } else {
+                            Vec::new()
+                        },
+                        contents: bl.contents.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
                 } else {
                     // TODO
                     // error とは限らない
