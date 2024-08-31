@@ -6,6 +6,7 @@ use crate::token::operator::OperatorBranch;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
+/// # StmtParser
 pub struct StmtParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,

@@ -15,6 +15,8 @@ use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::word::WordBranch;
 
+/// # ExprParser
+///
 pub struct ExprParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,

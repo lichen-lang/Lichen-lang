@@ -7,6 +7,9 @@ use crate::parser::core_parser::Parser;
 use crate::token::item::ItemBranch;
 use crate::token::string::StringBranch;
 
+/// # CommaParser
+/// This parser is a bit anomalous.
+/// It performs specialized parsing of the argument part of a function that takes multiple arguments.
 pub struct CommaParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,
@@ -14,8 +17,6 @@ pub struct CommaParser {
     pub loopdepth: isize,
 }
 
-/// This parser is a bit anomalous.
-/// It performs specialized parsing of the argument part of a function that takes multiple arguments.
 impl CommaParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
         self.grouping_quotation()?;
