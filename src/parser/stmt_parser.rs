@@ -1,6 +1,8 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::*;
+
+use crate::token::operator::OperatorBranch;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
@@ -12,6 +14,27 @@ pub struct StmtParser {
 }
 
 impl StmtParser {
+    pub fn code2vec(&mut self) -> Result<(), ParserError> {
+        self.grouping_quotation()?;
+        self.grouping_elements(
+            ExprElem::BlockElem,
+            Self::BLOCK_BRACE_OPEN,  // {
+            Self::BLOCK_BRACE_CLOSE, // }
+        )?;
+        self.grouping_elements(
+            ExprElem::ListBlockElem,
+            Self::BLOCK_LIST_OPEN,  // [
+            Self::BLOCK_LIST_CLOSE, // ]
+        )?;
+        self.grouping_elements(
+            ExprElem::ParenBlockElem,
+            Self::BLOCK_PAREN_OPEN,  // (
+            Self::BLOCK_PAREN_CLOSE, // )
+        )?;
+        self.grouping_words()?;
+        Ok(())
+    }
+
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
         let mut open_flag = false;
         let mut escape_flag = false;
@@ -23,8 +46,7 @@ impl StmtParser {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else if v.contents == Self::DOUBLE_QUOTATION
-                // '"'
+                } else if v.contents == '"'
                 // is quochar
                 {
                     if open_flag {
@@ -41,7 +63,7 @@ impl StmtParser {
                         open_flag = true;
                     }
                 } else if open_flag {
-                    escape_flag = v.contents == Self::ESCAPECHAR;
+                    escape_flag = v.contents == '\\';
                     group.push(v.contents);
                 } else {
                     rlist.push(inner.clone());
@@ -74,9 +96,9 @@ impl StmtParser {
             if let ExprElem::UnKnownElem(ref b) = inner {
                 if b.contents == open_char {
                     match depth {
-                        0 => {}
+                        0 => { /*pass*/ }
                         1.. => group.push(inner.clone()),
-                        _ => return Err(ParserError::Uncategorized),
+                        _ => return Err(ParserError::BraceNotOpened),
                     }
                     depth += 1;
                 } else if b.contents == close_char {
@@ -91,13 +113,13 @@ impl StmtParser {
                             group.clear();
                         }
                         1.. => group.push(inner.clone()),
-                        _ => return Err(ParserError::Uncategorized),
+                        _ => return Err(ParserError::BraceNotOpened),
                     }
                 } else {
                     match depth {
                         0 => rlist.push(inner.clone()),
                         1.. => group.push(inner.clone()),
-                        _ => return Err(ParserError::Uncategorized),
+                        _ => return Err(ParserError::BraceNotOpened),
                     }
                 }
             } else {
@@ -116,8 +138,26 @@ impl StmtParser {
     }
 
     fn grouping_words(&mut self) -> Result<(), ParserError> {
+        // macro
+        macro_rules! add_rlist {
+            ($rlist:expr,$group:expr) => {
+                if let Ok(_) = Self::find_ope_priority(&$group) {
+                    $rlist.push(ExprElem::OpeElem(OperatorBranch {
+                        ope: $group.clone(),
+                        depth: self.depth,
+                    }))
+                } else {
+                    $rlist.push(ExprElem::WordElem(WordBranch {
+                        contents: $group.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
+                }
+            };
+        }
         let mut rlist: Vec<ExprElem> = Vec::new();
         let mut group: String = String::new();
+        let ope_str = Self::LENGTH_ORDER_OPE_LIST.map(|a| a.opestr).join("");
 
         for inner in &self.code_list {
             if let ExprElem::UnKnownElem(ref e) = inner {
@@ -125,22 +165,14 @@ impl StmtParser {
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(ExprElem::WordElem(WordBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
+                        add_rlist!(rlist, group);
                         group.clear();
                     }
-                } else if Self::EXCLUDE_WORDS.contains(&e.contents)
+                } else if Self::EXCLUDE_WORDS.contains(&e.contents) || ope_str.contains(e.contents)
                 // inner in split
                 {
                     if !group.is_empty() {
-                        rlist.push(ExprElem::WordElem(WordBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
+                        add_rlist!(rlist, group);
                         group.clear();
                     }
                     rlist.push(inner.clone());
@@ -149,46 +181,17 @@ impl StmtParser {
                 }
             } else {
                 if !group.is_empty() {
-                    rlist.push(ExprElem::WordElem(WordBranch {
-                        contents: group.clone(),
-                        depth: self.depth,
-                        loopdepth: self.loopdepth,
-                    }));
+                    add_rlist!(rlist, group);
                     group.clear();
                 }
                 rlist.push(inner.clone());
             }
         }
         if !group.is_empty() {
-            rlist.push(ExprElem::WordElem(WordBranch {
-                contents: group.clone(),
-                depth: self.depth,
-                loopdepth: self.loopdepth,
-            }));
+            add_rlist!(rlist, group);
             group.clear();
         }
         self.code_list = rlist;
-        Ok(())
-    }
-
-    pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        self.grouping_quotation()?;
-        self.grouping_words()?;
-        self.grouping_elements(
-            ExprElem::BlockElem,
-            Self::BLOCK_BRACE_OPEN,  // {
-            Self::BLOCK_BRACE_CLOSE, // }
-        )?;
-        self.grouping_elements(
-            ExprElem::ListBlockElem,
-            Self::BLOCK_LIST_OPEN,  // [
-            Self::BLOCK_LIST_CLOSE, // ]
-        )?;
-        self.grouping_elements(
-            ExprElem::ParenBlockElem,
-            Self::BLOCK_PAREN_OPEN,  // (
-            Self::BLOCK_PAREN_CLOSE, // )
-        )?;
         Ok(())
     }
 }

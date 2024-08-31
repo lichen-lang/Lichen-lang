@@ -24,7 +24,6 @@ pub struct ExprParser {
 
 impl ExprParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        // --- macro ---
         self.grouping_quotation()?;
         // grouping_elements
         self.grouping_elements(
@@ -61,7 +60,7 @@ impl ExprParser {
         // macro
         macro_rules! add_rlist {
             ($rlist:expr,$group:expr) => {
-                if let Ok(_) = self.find_ope_priority(&$group) {
+                if let Ok(_) = Self::find_ope_priority(&$group) {
                     $rlist.push(ExprElem::OpeElem(OperatorBranch {
                         ope: $group.clone(),
                         depth: self.depth,
@@ -518,22 +517,13 @@ impl ExprParser {
         Ok(())
     }
 
-    fn find_ope_priority(&self, ope: &str) -> Result<&Ope, ()> {
-        for i in Self::LENGTH_ORDER_OPE_LIST {
-            if i.opestr == ope {
-                return Ok(i);
-            }
-        }
-        Err(())
-    }
-
     fn find_min_priority_index(&self) -> Result<Option<usize>, ParserError> {
         let mut priority_tmp: i32 = i32::MAX;
         let mut index_tmp = None;
         for (index, inner) in self.code_list.iter().enumerate() {
             if let ExprElem::OpeElem(ope) = inner {
                 let ope_contents = &ope.ope;
-                if let Ok(ope_info) = self.find_ope_priority(ope_contents) {
+                if let Ok(ope_info) = Self::find_ope_priority(ope_contents) {
                     if index < 1
                     // if index == 0:
                     {

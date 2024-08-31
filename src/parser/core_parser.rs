@@ -179,4 +179,13 @@ pub trait Parser<'a> {
             .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
             .collect();
     }
+
+    fn find_ope_priority(ope: &'a str) -> Result<&Ope, &'a str> {
+        for i in Self::LENGTH_ORDER_OPE_LIST {
+            if i.opestr == ope {
+                return Ok(i);
+            }
+        }
+        Err("ope not exist")
+    }
 }
