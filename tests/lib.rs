@@ -6,6 +6,7 @@ mod utils;
 mod tests {
     use crate::utils::testutils::insert_space;
     use colored::*;
+    use lichen_lang::abs::ast::*;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
 

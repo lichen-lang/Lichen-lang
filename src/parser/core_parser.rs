@@ -1,7 +1,8 @@
+use std::fmt::Debug;
+
 // use crate::parser::token::*;
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
-use crate::token::unknown::UnKnownBranch;
 
 pub enum Prio {
     Left,
@@ -172,12 +173,13 @@ pub trait Parser<'a> {
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self;
     fn resolve(&mut self) -> Result<(), ParserError>;
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
-
-    fn code2_vec_pre_proc_func(code: &str) -> Vec<ExprElem> {
+    fn code2_vec_pre_proc_func<T>(code: &str) -> Vec<T>
+    where
+        T: Token + Clone + Debug,
+    {
         return code
             .chars()
-            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
+            .map(|c| Token::set_char_as_unknown(c))
             .collect();
     }
 

@@ -585,10 +585,12 @@ impl ExprParser {
             Err(e) => Err(e),
         }
     }
-}
 
-impl Parser<'_> for ExprParser {
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+    pub fn create_parser_from_vec(
+        code_list: Vec<ExprElem>,
+        depth: isize,
+        loopdepth: isize,
+    ) -> Self {
         Self {
             code: String::new(),
             code_list,
@@ -596,7 +598,9 @@ impl Parser<'_> for ExprParser {
             loopdepth,
         }
     }
+}
 
+impl Parser<'_> for ExprParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: code.clone(),

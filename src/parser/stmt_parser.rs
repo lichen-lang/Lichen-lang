@@ -195,6 +195,19 @@ impl StmtParser {
         self.code_list = rlist;
         Ok(())
     }
+
+    pub fn create_parser_from_vec(
+        code_list: Vec<ExprElem>,
+        depth: isize,
+        loopdepth: isize,
+    ) -> Self {
+        Self {
+            code: String::new(),
+            code_list,
+            depth,
+            loopdepth,
+        }
+    }
 }
 
 impl Parser<'_> for StmtParser {
@@ -202,15 +215,6 @@ impl Parser<'_> for StmtParser {
         Self {
             code: code.clone(),
             code_list: Self::code2_vec_pre_proc_func(&code),
-            depth,
-            loopdepth,
-        }
-    }
-
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
-        Self {
-            code: String::new(),
-            code_list,
             depth,
             loopdepth,
         }

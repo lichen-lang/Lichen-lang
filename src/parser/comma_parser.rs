@@ -173,10 +173,12 @@ impl CommaParser {
         self.code_list = rlist;
         Ok(())
     }
-}
 
-impl Parser<'_> for CommaParser {
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+    pub fn create_parser_from_vec(
+        code_list: Vec<ExprElem>,
+        depth: isize,
+        loopdepth: isize,
+    ) -> Self {
         Self {
             code: String::new(),
             code_list,
@@ -184,7 +186,9 @@ impl Parser<'_> for CommaParser {
             loopdepth,
         }
     }
+}
 
+impl Parser<'_> for CommaParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
             code,

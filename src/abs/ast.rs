@@ -15,6 +15,115 @@ use crate::token::word::WordBranch;
 
 use crate::errors::parser_errors::ParserError;
 
+pub trait Token {
+    fn set_char_as_unknown(c: char) -> Self;
+    fn show(&self);
+    fn get_show_as_string(&self) -> String;
+    fn resolve_self(&mut self) -> Result<(), ParserError>;
+}
+
+impl Token for ExprElem {
+    fn set_char_as_unknown(c: char) -> Self {
+        ExprElem::UnKnownElem(UnKnownBranch { contents: c })
+    }
+
+    fn show(&self) {
+        match self {
+            Self::BlockElem(e) => e.show(),
+            Self::UnKnownElem(e) => e.show(),
+            Self::StringElem(e) => e.show(),
+            Self::ListBlockElem(e) => e.show(),
+            Self::ParenBlockElem(e) => e.show(),
+            Self::WordElem(e) => e.show(),
+            Self::SyntaxElem(e) => e.show(),
+            Self::SyntaxBoxElem(e) => e.show(),
+            Self::FuncElem(e) => e.show(),
+            Self::ItemElem(e) => e.show(),
+            Self::OpeElem(e) => e.show(),
+            Self::ListElem(e) => e.show(),
+        }
+    }
+
+    fn get_show_as_string(&self) -> String {
+        match self {
+            Self::BlockElem(e) => e.get_show_as_string(),
+            Self::UnKnownElem(e) => e.get_show_as_string(),
+            Self::StringElem(e) => e.get_show_as_string(),
+            Self::ListBlockElem(e) => e.get_show_as_string(),
+            Self::ParenBlockElem(e) => e.get_show_as_string(),
+            Self::WordElem(e) => e.get_show_as_string(),
+            Self::SyntaxElem(e) => e.get_show_as_string(),
+            Self::SyntaxBoxElem(e) => e.get_show_as_string(),
+            Self::FuncElem(e) => e.get_show_as_string(),
+            Self::ItemElem(e) => e.get_show_as_string(),
+            Self::OpeElem(e) => e.get_show_as_string(),
+            Self::ListElem(e) => e.get_show_as_string(),
+        }
+    }
+
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
+        match self {
+            // recursive analysis elements
+            Self::BlockElem(e) => e.resolve_self(),
+            Self::ListBlockElem(e) => e.resolve_self(),
+            Self::ParenBlockElem(e) => e.resolve_self(),
+            Self::SyntaxElem(e) => e.resolve_self(),
+            Self::SyntaxBoxElem(e) => e.resolve_self(),
+            Self::FuncElem(e) => e.resolve_self(),
+            Self::ListElem(e) => e.resolve_self(),
+            Self::ItemElem(e) => e.resolve_self(),
+
+            // unrecursive analysis elements
+            Self::StringElem(_) => Ok(()),
+            Self::WordElem(_) => Ok(()),
+            Self::OpeElem(_) => Ok(()),
+            Self::UnKnownElem(_) => Ok(()),
+        }
+    }
+}
+
+impl Token for TypeElem {
+    fn set_char_as_unknown(c: char) -> Self {
+        TypeElem::UnKnownElem(UnKnownBranch { contents: c })
+    }
+
+    fn get_show_as_string(&self) -> String {
+        match self {
+            TypeElem::PrimitiveElem(e) => e.get_show_as_string(),
+            TypeElem::UnKnownElem(e) => e.get_show_as_string(),
+        }
+    }
+
+    fn show(&self) {
+        match self {
+            TypeElem::PrimitiveElem(e) => e.show(),
+            TypeElem::UnKnownElem(e) => e.show(),
+        }
+    }
+
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
+        todo!()
+    }
+}
+
+impl Token for StmtElem {
+    fn set_char_as_unknown(c: char) -> Self {
+        StmtElem::UnKnownElem(UnKnownBranch { contents: c })
+    }
+
+    fn get_show_as_string(&self) -> String {
+        todo!()
+    }
+
+    fn show(&self) {
+        todo!()
+    }
+
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
+        todo!()
+    }
+}
+
 /// # ExprElem
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
@@ -45,62 +154,6 @@ pub enum TypeElem {
 pub enum StmtElem {
     ExprElem(ExprBranch),
     UnKnownElem(UnKnownBranch),
-}
-
-impl ExprElem {
-    pub fn show(&self) {
-        match self {
-            Self::BlockElem(e) => e.show(),
-            Self::UnKnownElem(e) => e.show(),
-            Self::StringElem(e) => e.show(),
-            Self::ListBlockElem(e) => e.show(),
-            Self::ParenBlockElem(e) => e.show(),
-            Self::WordElem(e) => e.show(),
-            Self::SyntaxElem(e) => e.show(),
-            Self::SyntaxBoxElem(e) => e.show(),
-            Self::FuncElem(e) => e.show(),
-            Self::ItemElem(e) => e.show(),
-            Self::OpeElem(e) => e.show(),
-            Self::ListElem(e) => e.show(),
-        }
-    }
-
-    pub fn get_show_as_string(&self) -> String {
-        match self {
-            Self::BlockElem(e) => e.get_show_as_string(),
-            Self::UnKnownElem(e) => e.get_show_as_string(),
-            Self::StringElem(e) => e.get_show_as_string(),
-            Self::ListBlockElem(e) => e.get_show_as_string(),
-            Self::ParenBlockElem(e) => e.get_show_as_string(),
-            Self::WordElem(e) => e.get_show_as_string(),
-            Self::SyntaxElem(e) => e.get_show_as_string(),
-            Self::SyntaxBoxElem(e) => e.get_show_as_string(),
-            Self::FuncElem(e) => e.get_show_as_string(),
-            Self::ItemElem(e) => e.get_show_as_string(),
-            Self::OpeElem(e) => e.get_show_as_string(),
-            Self::ListElem(e) => e.get_show_as_string(),
-        }
-    }
-
-    pub fn resolve_self(&mut self) -> Result<(), ParserError> {
-        match self {
-            // recursive analysis elements
-            Self::BlockElem(e) => e.resolve_self(),
-            Self::ListBlockElem(e) => e.resolve_self(),
-            Self::ParenBlockElem(e) => e.resolve_self(),
-            Self::SyntaxElem(e) => e.resolve_self(),
-            Self::SyntaxBoxElem(e) => e.resolve_self(),
-            Self::FuncElem(e) => e.resolve_self(),
-            Self::ListElem(e) => e.resolve_self(),
-            Self::ItemElem(e) => e.resolve_self(),
-
-            // unrecursive analysis elements
-            Self::StringElem(_) => Ok(()),
-            Self::WordElem(_) => Ok(()),
-            Self::OpeElem(_) => Ok(()),
-            Self::UnKnownElem(_) => Ok(()),
-        }
-    }
 }
 
 /// #  ASTBranch

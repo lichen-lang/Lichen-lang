@@ -34,8 +34,6 @@ where
     }
 }
 
-fn function00(lbb: ListBlockBranchEx<TypeElem>) {}
-
 fn function01<T>(lbb: &ListBlockBranchEx<T>) -> &T
 where
     T: TokenEx,
@@ -53,15 +51,15 @@ mod tests {
 
     #[test]
     fn test00() {
-        let a = ListBlockBranchEx::new(vec![ExprElem::A, ExprElem::B]);
-        let b = ListBlockBranchEx::new(vec![TypeElem::A, TypeElem::B]);
+        let a = ListBlockBranchEx::new(vec![ExprElem::A, ExprElem::B, ExprElem::C]);
+        let b = ListBlockBranchEx::new(vec![TypeElem::A, TypeElem::B, TypeElem::C]);
         println!("{:?}", a);
         println!("{:?}", b);
     }
 
     #[test]
     fn test01() {
-        let a = ListBlockBranchEx::new(vec![ExprElem::A, ExprElem::B]);
+        let a = ListBlockBranchEx::new(vec![ExprElem::A, ExprElem::B, ExprElem::C]);
         let b = function01(&a);
         println!("{:?}", b);
         println!("{:?}", a);
