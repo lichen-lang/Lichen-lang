@@ -47,7 +47,7 @@ impl StmtParser {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else if v.contents == '"'
+                } else if v.contents == Self::DOUBLE_QUOTATION
                 // is quochar
                 {
                     if open_flag {
@@ -64,7 +64,7 @@ impl StmtParser {
                         open_flag = true;
                     }
                 } else if open_flag {
-                    escape_flag = v.contents == '\\';
+                    escape_flag = v.contents == Self::ESCAPECHAR;
                     group.push(v.contents);
                 } else {
                     rlist.push(inner.clone());
