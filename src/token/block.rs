@@ -24,9 +24,6 @@ impl RecursiveAnalysisElements for BlockBranch {
             Ok(_) => {
                 let mut rlist = parser.code_list;
                 for i in &mut rlist {
-                    // if let Err(e) = i.resolve_self() {
-                    //     return Err(e);
-                    // }
                     i.resolve_self()?;
                 }
                 self.contents = rlist;
