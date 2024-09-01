@@ -36,8 +36,17 @@ where
 
 fn function00(lbb: ListBlockBranchEx<TypeElem>) {}
 
+fn function01<T>(lbb: &ListBlockBranchEx<T>) -> &T
+where
+    T: TokenEx,
+{
+    &lbb.code_list[0]
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::utils::labo::function01;
+
     use super::ExprElem;
     use super::ListBlockBranchEx;
     use super::TypeElem;
@@ -48,5 +57,13 @@ mod tests {
         let b = ListBlockBranchEx::new(vec![TypeElem::A, TypeElem::B]);
         println!("{:?}", a);
         println!("{:?}", b);
+    }
+
+    #[test]
+    fn test01() {
+        let a = ListBlockBranchEx::new(vec![ExprElem::A, ExprElem::B]);
+        let b = function01(&a);
+        println!("{:?}", b);
+        println!("{:?}", a);
     }
 }
