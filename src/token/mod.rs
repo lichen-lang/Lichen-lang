@@ -19,3 +19,5 @@ pub mod word;
 
 // type
 pub mod ttype;
+// statement
+pub mod stmt;
