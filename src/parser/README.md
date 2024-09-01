@@ -12,6 +12,7 @@
 
 - `stmt_parser.rs`
   文をパースするためのparser
+  文はパース後Vecの要素が1になるとは限らない
 
 - `comma_parser.rs`
   カンマ区切りのコードのためのparser

@@ -40,11 +40,7 @@ impl TypeParser {
                     depth -= 1;
                     match depth {
                         0 => {
-                            rlist.push(elemtype(TypeAreaBranch::new(
-                                group.clone(),
-                                self.depth,
-                                self.loopdepth,
-                            )));
+                            rlist.push(elemtype(TypeAreaBranch::new(group.clone(), self.depth)));
                             group.clear();
                         }
                         1.. => group.push(inner.clone()),

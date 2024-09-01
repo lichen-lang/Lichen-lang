@@ -22,6 +22,38 @@ pub trait Token {
     fn resolve_self(&mut self) -> Result<(), ParserError>;
 }
 
+/// # ExprElem
+/// 抽象的なtoken
+/// プログラムの要素を表現できる
+#[derive(Clone, Debug)]
+pub enum ExprElem {
+    BlockElem(BlockBranch),
+    ListBlockElem(ListBlockBranch),
+    ParenBlockElem(ParenBlockBranch),
+    SyntaxElem(SyntaxBranch),
+    SyntaxBoxElem(SyntaxBoxBranch),
+    FuncElem(FuncBranch),
+    ListElem(ListBranch),
+    ItemElem(ItemBranch),
+    // without RecursiveAnalysisElements trait structures
+    StringElem(StringBranch),
+    WordElem(WordBranch),
+    OpeElem(OperatorBranch),
+    UnKnownElem(UnKnownBranch),
+}
+
+#[derive(Clone, Debug)]
+pub enum TypeElem {
+    PrimitiveElem(PrimitiveBranch),
+    UnKnownElem(UnKnownBranch),
+}
+
+#[derive(Clone, Debug)]
+pub enum StmtElem {
+    ExprElem(ExprBranch),
+    UnKnownElem(UnKnownBranch),
+}
+
 impl Token for ExprElem {
     fn set_char_as_unknown(c: char) -> Self {
         ExprElem::UnKnownElem(UnKnownBranch { contents: c })
@@ -124,38 +156,6 @@ impl Token for StmtElem {
     }
 }
 
-/// # ExprElem
-/// 抽象的なtoken
-/// プログラムの要素を表現できる
-#[derive(Clone, Debug)]
-pub enum ExprElem {
-    BlockElem(BlockBranch),
-    ListBlockElem(ListBlockBranch),
-    ParenBlockElem(ParenBlockBranch),
-    SyntaxElem(SyntaxBranch),
-    SyntaxBoxElem(SyntaxBoxBranch),
-    FuncElem(FuncBranch),
-    ListElem(ListBranch),
-    ItemElem(ItemBranch),
-    // without RecursiveAnalysisElements trait structures
-    StringElem(StringBranch),
-    WordElem(WordBranch),
-    OpeElem(OperatorBranch),
-    UnKnownElem(UnKnownBranch),
-}
-
-#[derive(Clone, Debug)]
-pub enum TypeElem {
-    PrimitiveElem(PrimitiveBranch),
-    UnKnownElem(UnKnownBranch),
-}
-
-#[derive(Clone, Debug)]
-pub enum StmtElem {
-    ExprElem(ExprBranch),
-    UnKnownElem(UnKnownBranch),
-}
-
 /// #  ASTBranch
 /// このtraitを実装している構造体は
 /// - 自分自身の構造をわかりやすく出力できる
@@ -172,7 +172,7 @@ pub trait ASTAreaBranch {
 }
 
 pub trait TypeAreaBranch {
-    fn new(contents: Vec<TypeElem>, depth: isize, loopdepth: isize) -> Self;
+    fn new(contents: Vec<TypeElem>, depth: isize) -> Self;
 }
 
 pub trait RecursiveAnalysisElements {
