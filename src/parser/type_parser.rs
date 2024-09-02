@@ -11,6 +11,7 @@ pub struct TypeParser {
 
 impl TypeParser {
     fn code2vec(&mut self) -> Result<(), ParserError> {
+        self.grouping_elements(TypeElem::TypeBlockElem, '<', '>')?;
         Ok(())
     }
 

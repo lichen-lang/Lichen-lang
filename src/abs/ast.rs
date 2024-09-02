@@ -10,6 +10,7 @@ use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
 use crate::token::ttype::primitive::PrimitiveBranch;
+use crate::token::ttype::type_block::TypeBlockBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
@@ -45,6 +46,7 @@ pub enum ExprElem {
 #[derive(Clone, Debug)]
 pub enum TypeElem {
     PrimitiveElem(PrimitiveBranch),
+    TypeBlockElem(TypeBlockBranch),
     UnKnownElem(UnKnownBranch),
 }
 
@@ -122,6 +124,7 @@ impl Token for TypeElem {
     fn get_show_as_string(&self) -> String {
         match self {
             TypeElem::PrimitiveElem(e) => e.get_show_as_string(),
+            TypeElem::TypeBlockElem(e) => e.get_show_as_string(),
             TypeElem::UnKnownElem(e) => e.get_show_as_string(),
         }
     }
@@ -129,6 +132,7 @@ impl Token for TypeElem {
     fn show(&self) {
         match self {
             TypeElem::PrimitiveElem(e) => e.show(),
+            TypeElem::TypeBlockElem(e) => e.show(),
             TypeElem::UnKnownElem(e) => e.show(),
         }
     }
