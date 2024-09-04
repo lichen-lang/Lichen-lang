@@ -431,15 +431,11 @@ impl ExprParser {
                     if !Self::KEYWORDS.contains(&v.contents.as_str()) {
                         return true;
                     }
-                } else if let Some(v) = name_tmp {
-                    if let ExprElem::FuncElem(_)
-                    | ExprElem::ListElem(_)
-                    | ExprElem::SyntaxBoxElem(_) = v
-                    {
-                        return true;
-                    } else {
-                        name_tmp = None;
-                    }
+                } else if let Some(
+                    ExprElem::FuncElem(_) | ExprElem::ListElem(_) | ExprElem::SyntaxBoxElem(_),
+                ) = name_tmp
+                {
+                    return true;
                 } else {
                     name_tmp = None;
                 }

@@ -1,4 +1,10 @@
 use crate::abs::ast::*;
+use crate::errors::parser_errors::ParserError;
+
+// type match
+// Result<Ok, Err> : structure
+// [i32; 10]       : array
+// (i32, f32, f64) : tuple
 
 #[derive(Clone, Debug)]
 pub struct TypeBlockBranch {
@@ -24,7 +30,15 @@ impl ASTBranch for TypeBlockBranch {
 }
 
 impl TypeAreaBranch for TypeBlockBranch {
-    fn new(contents: Vec<TypeElem>, depth: isize) -> Self {
-        todo!()
+    fn new(code_list: Vec<TypeElem>, depth: isize) -> Self {
+        Self { code_list, depth }
+    }
+}
+
+impl RecursiveAnalysisElements for TypeBlockBranch {
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
+        // TODO!
+
+        Ok(())
     }
 }
