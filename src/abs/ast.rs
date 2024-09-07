@@ -1,4 +1,5 @@
 use crate::token::block::BlockBranch;
+use crate::token::comment::CommentBranch;
 use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
@@ -37,6 +38,7 @@ pub enum ExprElem {
     ListElem(ListBranch),
     ItemElem(ItemBranch),
     // without RecursiveAnalysisElements trait structures
+    CommentElem(CommentBranch),
     StringElem(StringBranch),
     WordElem(WordBranch),
     OpeElem(OperatorBranch),
@@ -75,6 +77,7 @@ impl Token for ExprElem {
             Self::ItemElem(e) => e.show(),
             Self::OpeElem(e) => e.show(),
             Self::ListElem(e) => e.show(),
+            Self::CommentElem(e) => e.show(),
         }
     }
 
@@ -92,6 +95,7 @@ impl Token for ExprElem {
             Self::ItemElem(e) => e.get_show_as_string(),
             Self::OpeElem(e) => e.get_show_as_string(),
             Self::ListElem(e) => e.get_show_as_string(),
+            Self::CommentElem(e) => e.get_show_as_string(),
         }
     }
 
@@ -112,6 +116,7 @@ impl Token for ExprElem {
             Self::WordElem(_) => Ok(()),
             Self::OpeElem(_) => Ok(()),
             Self::UnKnownElem(_) => Ok(()),
+            Self::CommentElem(_) => Ok(()),
         }
     }
 }
@@ -161,8 +166,7 @@ impl Token for StmtElem {
 }
 
 /// #  ASTBranch
-/// このtraitを実装している構造体は
-/// - 自分自身の構造をわかりやすく出力できる
+/// token buranch should be implemented this trait
 pub trait ASTBranch {
     fn show(&self);
     fn get_show_as_string(&self) -> String;

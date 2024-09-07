@@ -5,6 +5,7 @@ use crate::parser::core_parser::*;
 
 use crate::errors::parser_errors::ParserError;
 
+use crate::token::comment::CommentBranch;
 use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
@@ -27,6 +28,7 @@ pub struct ExprParser {
 impl ExprParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
         self.grouping_quotation()?;
+        self.grouping_comment()?;
         // grouping_elements
         self.grouping_elements(
             ExprElem::BlockElem,
@@ -154,7 +156,114 @@ impl ExprParser {
             }
         }
         if open_flag {
+            // comment内部であればquotationは閉じる必要がない
             return Err(ParserError::QuotationNotClosed);
+        }
+        self.code_list = rlist;
+        Ok(())
+    }
+
+    fn grouping_comment(&mut self) -> Result<(), ParserError> {
+        let mut group: String = String::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
+        let mut open_status: i8 = -1;
+        let mut ignore_flag = false;
+
+        for (count, inner) in self.code_list.iter().enumerate() {
+            if ignore_flag {
+                ignore_flag = false;
+                continue;
+            }
+            if let ExprElem::UnKnownElem(e) = inner {
+                if open_status == 0 {
+                    // //が開いているとき
+                    if e.contents == '\n' {
+                        rlist.push(ExprElem::CommentElem(CommentBranch {
+                            contents: group.clone(),
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                        open_status = -1;
+                        group.clear();
+                    } else {
+                        group.push(e.contents);
+                    }
+                } else if open_status == 1 {
+                    // /*が開いているとき
+                    if Self::COMMENT_CLOSE.starts_with(e.contents)
+                    // "*" == e.content
+                    {
+                        if count < self.code_list.len() {
+                            if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                if Self::COMMENT_CLOSE.ends_with(next_e.contents)
+                                // "/" == e.content
+                                {
+                                    rlist.push(ExprElem::CommentElem(CommentBranch {
+                                        contents: group.clone(),
+                                        depth: self.depth,
+                                        loopdepth: self.loopdepth,
+                                    }));
+                                    group.clear();
+                                    open_status = -1;
+                                    ignore_flag = true;
+                                } else {
+                                    group.push(e.contents);
+                                }
+                            } else {
+                                // defer type
+                                return Err(ParserError::UnexpectedType);
+                            }
+                        } else {
+                            return Err(ParserError::CommentBlockNotClosed);
+                        }
+                    } else {
+                        group.push(e.contents);
+                    }
+                } else if open_status == -1 {
+                    // 何も開いていないとき
+                    if Self::COMMENT_OPEN.starts_with(e.contents)
+                        || Self::COMMENT_START.starts_with(e.contents)
+                    {
+                        if count < self.code_list.len() {
+                            if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                if Self::COMMENT_OPEN.ends_with(next_e.contents) {
+                                    open_status = 1;
+                                    ignore_flag = true;
+                                } else if Self::COMMENT_START.ends_with(next_e.contents) {
+                                    open_status = 0;
+                                    ignore_flag = true;
+                                } else {
+                                    rlist.push(inner.clone())
+                                }
+                            } else {
+                                rlist.push(inner.clone());
+                            }
+                        } else {
+                            rlist.push(inner.clone());
+                        }
+                    } else {
+                        rlist.push(inner.clone());
+                    }
+                } else {
+                    //error
+                    return Err(ParserError::DevError);
+                }
+            } else if let ExprElem::StringElem(v) = inner {
+                if open_status == 0 || open_status == 1 {
+                    group = format!("{}{}", group, v.contents); // concat
+                } else if open_status == -1 {
+                    rlist.push(inner.clone());
+                }
+            } else {
+                return Err(ParserError::UnexpectedType);
+            }
+        }
+        if open_status == 0 {
+            rlist.push(ExprElem::CommentElem(CommentBranch {
+                contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
         }
         self.code_list = rlist;
         Ok(())

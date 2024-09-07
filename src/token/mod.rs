@@ -1,5 +1,6 @@
 // tokens
 pub mod block;
+pub mod comment;
 pub mod func;
 pub mod list;
 pub mod list_block;

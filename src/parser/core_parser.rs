@@ -94,6 +94,11 @@ pub trait Parser<'a> {
         Self::NOT,        // !
     ];
 
+    // comment
+    const COMMENT_OPEN: &'a str = "/*";
+    const COMMENT_CLOSE: &'a str = "*/";
+    const COMMENT_START: &'a str = "//"; // end newline or
+
     const SEMICOLON: char = ';';
     const COMMA: char = ',';
     const SPLIT_CHAR: [char; 3] = [' ', '\t', '\n'];
