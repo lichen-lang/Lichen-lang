@@ -25,6 +25,13 @@ pub struct ExprParser {
     pub loopdepth: isize,
 }
 
+enum StringAreaState {
+    CommentOpen,  // /*
+    CommentStart, // //
+    // QuotationOpen,
+    Closed,
+}
+
 impl ExprParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
         self.grouping_quotation()?;
@@ -166,7 +173,7 @@ impl ExprParser {
     fn grouping_comment(&mut self) -> Result<(), ParserError> {
         let mut group: String = String::new();
         let mut rlist: Vec<ExprElem> = Vec::new();
-        let mut open_status: i8 = -1;
+        let mut open_status: StringAreaState = StringAreaState::Closed;
         let mut ignore_flag = false;
 
         for (count, inner) in self.code_list.iter().enumerate() {
@@ -175,65 +182,71 @@ impl ExprParser {
                 continue;
             }
             if let ExprElem::UnKnownElem(e) = inner {
-                if open_status == 0 {
-                    // //が開いているとき
-                    if e.contents == '\n' {
-                        rlist.push(ExprElem::CommentElem(CommentBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                        open_status = -1;
-                        group.clear();
-                    } else {
-                        group.push(e.contents);
+                match open_status {
+                    StringAreaState::CommentStart => {
+                        // //が開いているとき
+                        if e.contents == '\n' {
+                            rlist.push(ExprElem::CommentElem(CommentBranch {
+                                contents: group.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                            open_status = StringAreaState::Closed;
+                            group.clear();
+                        } else {
+                            group.push(e.contents);
+                        }
                     }
-                } else if open_status == 1 {
-                    // /*が開いているとき
-                    if Self::COMMENT_CLOSE.starts_with(e.contents)
-                    // "*" == e.content
-                    {
-                        if count < self.code_list.len() {
-                            if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
-                                if Self::COMMENT_CLOSE.ends_with(next_e.contents)
-                                // "/" == e.content
-                                {
-                                    rlist.push(ExprElem::CommentElem(CommentBranch {
-                                        contents: group.clone(),
-                                        depth: self.depth,
-                                        loopdepth: self.loopdepth,
-                                    }));
-                                    group.clear();
-                                    open_status = -1;
-                                    ignore_flag = true;
+                    StringAreaState::CommentOpen => {
+                        // /*が開いているとき
+                        if Self::COMMENT_CLOSE.starts_with(e.contents)
+                        // "*" == e.content
+                        {
+                            if count < self.code_list.len() {
+                                if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                    if Self::COMMENT_CLOSE.ends_with(next_e.contents)
+                                    // "/" == e.content
+                                    {
+                                        rlist.push(ExprElem::CommentElem(CommentBranch {
+                                            contents: group.clone(),
+                                            depth: self.depth,
+                                            loopdepth: self.loopdepth,
+                                        }));
+                                        group.clear();
+                                        open_status = StringAreaState::Closed;
+                                        ignore_flag = true;
+                                    } else {
+                                        group.push(e.contents);
+                                    }
                                 } else {
-                                    group.push(e.contents);
+                                    // defer type
+                                    return Err(ParserError::UnexpectedType);
                                 }
                             } else {
-                                // defer type
-                                return Err(ParserError::UnexpectedType);
+                                return Err(ParserError::CommentBlockNotClosed);
                             }
                         } else {
-                            return Err(ParserError::CommentBlockNotClosed);
+                            group.push(e.contents);
                         }
-                    } else {
-                        group.push(e.contents);
                     }
-                } else if open_status == -1 {
-                    // 何も開いていないとき
-                    if Self::COMMENT_OPEN.starts_with(e.contents)
-                        || Self::COMMENT_START.starts_with(e.contents)
-                    {
-                        if count < self.code_list.len() {
-                            if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
-                                if Self::COMMENT_OPEN.ends_with(next_e.contents) {
-                                    open_status = 1;
-                                    ignore_flag = true;
-                                } else if Self::COMMENT_START.ends_with(next_e.contents) {
-                                    open_status = 0;
-                                    ignore_flag = true;
+                    StringAreaState::Closed => {
+                        // 何も開いていないとき
+                        if Self::COMMENT_OPEN.starts_with(e.contents)
+                            || Self::COMMENT_START.starts_with(e.contents)
+                        {
+                            if count < self.code_list.len() {
+                                if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                    if Self::COMMENT_OPEN.ends_with(next_e.contents) {
+                                        open_status = StringAreaState::CommentOpen;
+                                        ignore_flag = true;
+                                    } else if Self::COMMENT_START.ends_with(next_e.contents) {
+                                        open_status = StringAreaState::CommentStart;
+                                        ignore_flag = true;
+                                    } else {
+                                        rlist.push(inner.clone())
+                                    }
                                 } else {
-                                    rlist.push(inner.clone())
+                                    rlist.push(inner.clone());
                                 }
                             } else {
                                 rlist.push(inner.clone());
@@ -241,24 +254,22 @@ impl ExprParser {
                         } else {
                             rlist.push(inner.clone());
                         }
-                    } else {
-                        rlist.push(inner.clone());
                     }
-                } else {
-                    //error
-                    return Err(ParserError::DevError);
                 }
             } else if let ExprElem::StringElem(v) = inner {
-                if open_status == 0 || open_status == 1 {
-                    group = format!("{}{}", group, v.contents); // concat
-                } else if open_status == -1 {
-                    rlist.push(inner.clone());
+                match open_status {
+                    StringAreaState::CommentOpen | StringAreaState::CommentStart => {
+                        group = format!("{}{}", group, v.contents); // concat
+                    }
+                    StringAreaState::Closed => {
+                        rlist.push(inner.clone());
+                    }
                 }
             } else {
                 return Err(ParserError::UnexpectedType);
             }
         }
-        if open_status == 0 {
+        if let StringAreaState::CommentStart = open_status {
             rlist.push(ExprElem::CommentElem(CommentBranch {
                 contents: group.clone(),
                 depth: self.depth,
