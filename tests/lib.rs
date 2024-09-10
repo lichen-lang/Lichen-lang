@@ -92,6 +92,7 @@ mod tests {
 /* \" */
 // \"
 ",
+            "\"\\\" <- quotation escape\"",
         ];
         for code in test_cases {
             println!("{}", "-".repeat(30));
