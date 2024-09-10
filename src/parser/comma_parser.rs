@@ -7,6 +7,9 @@ use crate::parser::core_parser::Parser;
 use crate::token::item::ItemBranch;
 use crate::token::string::StringBranch;
 
+/// # CommaParser
+/// This parser is a bit anomalous.
+/// It performs specialized parsing of the argument part of a function that takes multiple arguments.
 pub struct CommaParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,
@@ -14,8 +17,6 @@ pub struct CommaParser {
     pub loopdepth: isize,
 }
 
-/// This parser is a bit anomalous.
-/// It performs specialized parsing of the argument part of a function that takes multiple arguments.
 impl CommaParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
         self.grouping_quotation()?;
@@ -69,6 +70,7 @@ impl CommaParser {
         self.code_list = rlist;
         Ok(())
     }
+
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
         let mut open_flag = false;
         let mut escape_flag = false;
@@ -80,7 +82,8 @@ impl CommaParser {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else if v.contents == '"'
+                } else if v.contents == Self::DOUBLE_QUOTATION
+                // '"'
                 // is quochar
                 {
                     if open_flag {
@@ -88,6 +91,7 @@ impl CommaParser {
                         rlist.push(ExprElem::StringElem(StringBranch {
                             contents: group.clone(),
                             depth: self.depth,
+                            loopdepth: self.loopdepth,
                         }));
                         group.clear();
                         open_flag = false;
@@ -96,7 +100,7 @@ impl CommaParser {
                         open_flag = true;
                     }
                 } else if open_flag {
-                    escape_flag = v.contents == '\\';
+                    escape_flag = v.contents == Self::ESCAPECHAR; // '\\'
                     group.push(v.contents);
                 } else {
                     rlist.push(inner.clone());
@@ -169,10 +173,12 @@ impl CommaParser {
         self.code_list = rlist;
         Ok(())
     }
-}
 
-impl Parser<'_> for CommaParser {
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+    pub fn create_parser_from_vec(
+        code_list: Vec<ExprElem>,
+        depth: isize,
+        loopdepth: isize,
+    ) -> Self {
         Self {
             code: String::new(),
             code_list,
@@ -180,7 +186,9 @@ impl Parser<'_> for CommaParser {
             loopdepth,
         }
     }
+}
 
+impl Parser<'_> for CommaParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
             code,

@@ -19,9 +19,6 @@ jobs:
 
 
     steps:
-    - name: SayHello
-      run: echo "hello world!!"
-
     - name: Checkout
       uses: actions/checkout@v4
 

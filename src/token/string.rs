@@ -7,13 +7,14 @@ use crate::abs::ast::*;
 pub struct StringBranch {
     pub contents: String,
     pub depth: isize,
+    pub loopdepth: isize,
 }
 
 impl ASTBranch for StringBranch {
     fn show(&self) {
-        println!("Word {}", self.contents)
+        println!("String \"{}\"", self.contents)
     }
     fn get_show_as_string(&self) -> String {
-        format!("Word {}", self.contents)
+        format!("String \"{}\"", self.contents)
     }
 }

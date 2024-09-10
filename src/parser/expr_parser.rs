@@ -5,6 +5,7 @@ use crate::parser::core_parser::*;
 
 use crate::errors::parser_errors::ParserError;
 
+use crate::token::comment::CommentBranch;
 use crate::token::func::FuncBranch;
 use crate::token::item::ItemBranch;
 use crate::token::list::ListBranch;
@@ -13,9 +14,10 @@ use crate::token::paren_block::ParenBlockBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
-use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
 
+/// # ExprParser
+///
 pub struct ExprParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,
@@ -23,10 +25,16 @@ pub struct ExprParser {
     pub loopdepth: isize,
 }
 
+enum StringAreaState {
+    CommentOpen,  // /*
+    CommentStart, // //
+    QuotationOpen,
+    Closed,
+}
+
 impl ExprParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        // --- macro ---
-        self.grouping_quotation()?;
+        self.grouping_string()?;
         // grouping_elements
         self.grouping_elements(
             ExprElem::BlockElem,
@@ -62,7 +70,7 @@ impl ExprParser {
         // macro
         macro_rules! add_rlist {
             ($rlist:expr,$group:expr) => {
-                if let Ok(_) = self.find_ope_priority(&$group) {
+                if let Ok(_) = Self::find_ope_priority(&$group) {
                     $rlist.push(ExprElem::OpeElem(OperatorBranch {
                         ope: $group.clone(),
                         depth: self.depth,
@@ -116,43 +124,136 @@ impl ExprParser {
         Ok(())
     }
 
-    fn grouping_quotation(&mut self) -> Result<(), ParserError> {
-        let mut open_flag = false;
-        let mut escape_flag = false;
-        let mut rlist = Vec::new();
-        let mut group = String::new();
+    fn grouping_string(&mut self) -> Result<(), ParserError> {
+        // now this function can group all string in  the program
+        let mut group: String = String::new();
+        let mut rlist: Vec<ExprElem> = Vec::new();
+        let mut open_status: StringAreaState = StringAreaState::Closed;
+        let mut ignore_flag = false;
+        let mut string_escape_flag = false;
 
-        for inner in &self.code_list {
-            if let ExprElem::UnKnownElem(ref v) = inner {
-                if escape_flag {
-                    group.push(v.contents);
-                    escape_flag = false
-                } else if v.contents == '"'
-                // is quochar
-                {
-                    if open_flag {
-                        group.push(v.contents);
-                        rlist.push(ExprElem::StringElem(StringBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                        }));
-                        group.clear();
-                        open_flag = false;
-                    } else {
-                        group.push(v.contents);
-                        open_flag = true;
+        for (count, inner) in self.code_list.iter().enumerate() {
+            if ignore_flag {
+                ignore_flag = false;
+                // 二文字の判別
+                continue;
+            }
+            if let ExprElem::UnKnownElem(e) = inner {
+                match open_status {
+                    StringAreaState::CommentStart => {
+                        // //が開いているとき
+                        if e.contents == '\n' {
+                            rlist.push(ExprElem::CommentElem(CommentBranch {
+                                contents: group.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                            open_status = StringAreaState::Closed;
+                            group.clear();
+                        } else {
+                            group.push(e.contents);
+                        }
                     }
-                } else if open_flag {
-                    escape_flag = v.contents == '\\';
-                    group.push(v.contents);
-                } else {
-                    rlist.push(inner.clone());
+                    StringAreaState::CommentOpen => {
+                        // /*が開いているとき
+                        if Self::COMMENT_CLOSE.starts_with(e.contents)
+                        // "*" == e.content
+                        {
+                            if count < self.code_list.len() {
+                                if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                    if Self::COMMENT_CLOSE.ends_with(next_e.contents)
+                                    // "/" == e.content
+                                    {
+                                        rlist.push(ExprElem::CommentElem(CommentBranch {
+                                            contents: group.clone(),
+                                            depth: self.depth,
+                                            loopdepth: self.loopdepth,
+                                        }));
+                                        group.clear();
+                                        open_status = StringAreaState::Closed;
+                                        ignore_flag = true;
+                                    } else {
+                                        group.push(e.contents);
+                                    }
+                                } else {
+                                    // defer type
+                                    return Err(ParserError::UnexpectedType);
+                                }
+                            } else {
+                                return Err(ParserError::CommentBlockNotClosed);
+                            }
+                        } else {
+                            group.push(e.contents);
+                        }
+                    }
+                    StringAreaState::QuotationOpen => {
+                        // '"' is opened
+                        if Self::DOUBLE_QUOTATION == e.contents {
+                            if string_escape_flag {
+                                group.push(e.contents);
+                                string_escape_flag = false;
+                            } else {
+                                rlist.push(ExprElem::StringElem(StringBranch {
+                                    contents: group.clone(),
+                                    depth: self.depth,
+                                    loopdepth: self.loopdepth,
+                                }));
+                                group.clear();
+                                open_status = StringAreaState::Closed;
+                            }
+                        } else if Self::ESCAPECHAR == e.contents {
+                            if string_escape_flag {
+                                group.push(e.contents);
+                                string_escape_flag = false;
+                            } else {
+                                string_escape_flag = true;
+                            }
+                        } else {
+                            group.push(e.contents);
+                        }
+                    }
+                    StringAreaState::Closed => {
+                        // 何も開いていないとき
+                        if Self::COMMENT_OPEN.starts_with(e.contents)
+                            || Self::COMMENT_START.starts_with(e.contents)
+                        {
+                            if count < self.code_list.len() {
+                                if let ExprElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                    if Self::COMMENT_OPEN.ends_with(next_e.contents) {
+                                        open_status = StringAreaState::CommentOpen;
+                                        ignore_flag = true;
+                                    } else if Self::COMMENT_START.ends_with(next_e.contents) {
+                                        open_status = StringAreaState::CommentStart;
+                                        ignore_flag = true;
+                                    } else {
+                                        rlist.push(inner.clone())
+                                    }
+                                } else {
+                                    rlist.push(inner.clone());
+                                }
+                            } else {
+                                rlist.push(inner.clone());
+                            }
+                        } else if Self::DOUBLE_QUOTATION == e.contents {
+                            open_status = StringAreaState::QuotationOpen;
+                        } else {
+                            rlist.push(inner.clone());
+                        }
+                    }
                 }
             } else {
-                rlist.push(inner.clone());
+                return Err(ParserError::UnexpectedType);
             }
         }
-        if open_flag {
+        if let StringAreaState::CommentStart = open_status {
+            rlist.push(ExprElem::CommentElem(CommentBranch {
+                contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
+        } else if let StringAreaState::CommentOpen = open_status {
+            return Err(ParserError::CommentBlockNotClosed);
+        } else if let StringAreaState::QuotationOpen = open_status {
             return Err(ParserError::QuotationNotClosed);
         }
         self.code_list = rlist;
@@ -242,23 +343,16 @@ impl ExprParser {
                                 depth: self.depth,
                             }))
                         } else {
-                            // rlist += group
-                            let grouup_tmp: Vec<ExprElem> = group
-                                .chars()
-                                .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                                .collect();
-                            rlist.extend(grouup_tmp);
+                            let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                            rlist.extend(group_tmp);
                         }
                         group.clear();
                     }
                     Ordering::Greater => {
                         // ope_size < group.len()
                         // rlist += group
-                        let grouup_tmp: Vec<ExprElem> = group
-                            .chars()
-                            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                            .collect();
-                        rlist.extend(grouup_tmp);
+                        let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                        rlist.extend(group_tmp);
                         group.clear();
                     }
                 }
@@ -266,11 +360,8 @@ impl ExprParser {
                 // 既にtokenが割り当てられているとき
                 match group.len().cmp(&ope_size) {
                     Ordering::Less => {
-                        let grouup_tmp: Vec<ExprElem> = group
-                            .chars()
-                            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                            .collect();
-                        rlist.extend(grouup_tmp);
+                        let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                        rlist.extend(group_tmp);
                     }
                     Ordering::Equal => {
                         if group == ope {
@@ -280,20 +371,14 @@ impl ExprParser {
                             }))
                         } else {
                             // rlist += group
-                            let grouup_tmp: Vec<ExprElem> = group
-                                .chars()
-                                .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                                .collect();
-                            rlist.extend(grouup_tmp);
+                            let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                            rlist.extend(group_tmp);
                         }
                     }
                     Ordering::Greater => {
                         // rlist += group
-                        let grouup_tmp: Vec<ExprElem> = group
-                            .chars()
-                            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
-                            .collect();
-                        rlist.extend(grouup_tmp);
+                        let group_tmp = Self::code2_vec_pre_proc_func(&group);
+                        rlist.extend(group_tmp);
                     }
                 }
                 group.clear();
@@ -324,26 +409,17 @@ impl ExprParser {
                 }
             } else if let ExprElem::BlockElem(bl) = inner {
                 if let Some(syntax_name) = name {
-                    if let Some(syntax_expr) = expr {
-                        // another case
-                        // println!("{:?}", syntax_expr.contents);
-                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
-                            name: syntax_name,
-                            expr: syntax_expr.contents,
-                            contents: bl.contents.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else {
-                        // "else" "loop" case
-                        rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
-                            name: syntax_name,
-                            expr: Vec::new(),
-                            contents: bl.contents.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    }
+                    rlist.push(ExprElem::SyntaxElem(SyntaxBranch {
+                        name: syntax_name,
+                        expr: if let Some(syntax_expr) = expr {
+                            syntax_expr.contents
+                        } else {
+                            Vec::new()
+                        },
+                        contents: bl.contents.clone(),
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
                 } else {
                     // TODO
                     // error とは限らない
@@ -441,51 +517,30 @@ impl ExprParser {
     // a[]()     // 関数を保持しているリスト
     // ```
     fn contain_subscriptable(&self) -> bool {
-        let mut flag = false;
         let mut name_tmp: Option<&ExprElem> = None;
 
         for inner in &self.code_list {
-            match inner {
-                ExprElem::WordElem(_) | ExprElem::FuncElem(_) | ExprElem::ListElem(_) => {
-                    name_tmp = Some(inner);
-                    flag = true;
-                }
-                ExprElem::ListBlockElem(_) => {
-                    if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
-                            return true;
-                        }
-                    } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
+            if let ExprElem::WordElem(_)
+            | ExprElem::FuncElem(_)
+            | ExprElem::ListElem(_)
+            | ExprElem::SyntaxBoxElem(_) = inner
+            {
+                name_tmp = Some(inner);
+            } else if let ExprElem::ListBlockElem(_) | ExprElem::ParenBlockElem(_) = inner {
+                if let Some(ExprElem::WordElem(v)) = name_tmp {
+                    if !Self::KEYWORDS.contains(&v.contents.as_str()) {
                         return true;
-                    } else if let Some(ExprElem::ListElem(_v)) = name_tmp {
-                        return true;
-                    } else {
-                        name_tmp = None;
-                        flag = false;
                     }
+                } else if let Some(
+                    ExprElem::FuncElem(_) | ExprElem::ListElem(_) | ExprElem::SyntaxBoxElem(_),
+                ) = name_tmp
+                {
+                    return true;
+                } else {
+                    name_tmp = None;
                 }
-                ExprElem::ParenBlockElem(_) => {
-                    if let Some(ExprElem::WordElem(v)) = name_tmp {
-                        if flag && !Self::KEYWORDS.contains(&v.contents.as_str()) {
-                            return true;
-                        }
-                    } else if let Some(ExprElem::FuncElem(_v)) = name_tmp {
-                        return true;
-                    } else if let Some(ExprElem::ListElem(_v)) = name_tmp {
-                        return true;
-                    } else {
-                        name_tmp = None;
-                        flag = false;
-                    }
-                }
-                _ => {
-                    if flag {
-                        flag = false;
-                        name_tmp = None;
-                    } else {
-                        //pass
-                    }
-                }
+            } else if name_tmp.is_some() {
+                name_tmp = None;
             }
         }
         false
@@ -496,131 +551,68 @@ impl ExprParser {
         let mut rlist: Vec<ExprElem> = Vec::new();
 
         for inner in &self.code_list {
-            match inner {
-                ExprElem::WordElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
+            if let ExprElem::WordElem(_)
+            | ExprElem::FuncElem(_)
+            | ExprElem::ListElem(_)
+            | ExprElem::SyntaxBoxElem(_) = inner
+            {
+                if let Some(v) = name_tmp {
+                    rlist.push(v);
                 }
-                ExprElem::FuncElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
-                }
-                ExprElem::ListElem(_v) => {
-                    if let Some(s) = name_tmp {
-                        rlist.push(s);
-                    }
-                    name_tmp = Some(inner.clone());
-                }
-                // [] ()
-                ExprElem::ListBlockElem(v) => {
-                    let list_items = ExprElem::ListBlockElem(v.clone());
-                    if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
-                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
-                            rlist.push(ExprElem::ListElem(ListBranch {
-                                name: Box::new(ExprElem::WordElem(wd.clone())),
-                                contents: vec![list_items],
-                                depth: self.depth,
-                                loopdepth: self.loopdepth,
-                            }));
-                        } else {
-                            // 1
-                            if let Some(ref s) = name_tmp {
-                                rlist.push(s.clone());
-                            }
-                            rlist.push(inner.clone());
-                        }
-                    } else if let Some(ExprElem::FuncElem(ref fb)) = name_tmp {
-                        rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(ExprElem::FuncElem(fb.clone())),
-                            contents: vec![list_items],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
-                        rlist.push(ExprElem::ListElem(ListBranch {
-                            name: Box::new(ExprElem::ListElem(lb.clone())),
-                            contents: vec![list_items],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
+                name_tmp = Some(inner.clone());
+            }
+            // [] ()
+            else if let Some(v) = &name_tmp {
+                if let ExprElem::WordElem(ref wd) = v {
+                    if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
+                        // jump to point01
                     } else {
                         // 1
-                        if let Some(ref s) = name_tmp {
-                            rlist.push(s.clone());
-                        }
-                        rlist.push(inner.clone());
-                    }
-                    name_tmp = None;
-                }
-                ExprElem::ParenBlockElem(v) => {
-                    let function_args = ExprElem::ParenBlockElem(v.clone());
-                    if let Some(ExprElem::WordElem(ref wd)) = name_tmp {
-                        if !Self::KEYWORDS.contains(&wd.contents.as_str()) {
-                            rlist.push(ExprElem::FuncElem(FuncBranch {
-                                name: Box::new(ExprElem::WordElem(wd.clone())),
-                                contents: vec![function_args],
-                                depth: self.depth,
-                                loopdepth: self.loopdepth,
-                            }));
-                        } else {
-                            // 1
-                            if let Some(ref s) = name_tmp {
-                                rlist.push(s.clone());
-                            }
-                            rlist.push(inner.clone());
-                        }
-                    } else if let Some(ExprElem::FuncElem(ref fb)) = name_tmp {
-                        rlist.push(ExprElem::FuncElem(FuncBranch {
-                            name: Box::new(ExprElem::FuncElem(fb.clone())),
-                            contents: vec![function_args],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else if let Some(ExprElem::ListElem(ref lb)) = name_tmp {
-                        rlist.push(ExprElem::FuncElem(FuncBranch {
-                            name: Box::new(ExprElem::ListElem(lb.clone())),
-                            contents: vec![function_args],
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                    } else {
-                        // 1
-                        if let Some(ref s) = name_tmp {
-                            rlist.push(s.clone());
-                        }
-                        rlist.push(inner.clone());
-                    }
-                    name_tmp = None;
-                }
-                _ => {
-                    if let Some(ref s) = name_tmp {
-                        rlist.push(s.clone());
+                        rlist.push(v.clone());
                         rlist.push(inner.clone());
                         name_tmp = None;
-                    } else {
-                        rlist.push(inner.clone());
+                        continue;
                     }
+                } else if let ExprElem::FuncElem(_)
+                | ExprElem::ListElem(_)
+                | ExprElem::SyntaxBoxElem(_) = &v
+                {
+                    // jump to point01
+                } else {
+                    rlist.push(v.clone());
+                    rlist.push(inner.clone());
+                    name_tmp = None;
+                    continue;
                 }
+                // point01
+                if let ExprElem::ListBlockElem(_) = inner {
+                    rlist.push(ExprElem::ListElem(ListBranch {
+                        name: Box::new(v.clone()),
+                        contents: vec![inner.clone()],
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
+                } else if let ExprElem::ParenBlockElem(_) = inner {
+                    rlist.push(ExprElem::FuncElem(FuncBranch {
+                        name: Box::new(v.clone()),
+                        contents: vec![inner.clone()],
+                        depth: self.depth,
+                        loopdepth: self.loopdepth,
+                    }));
+                } else {
+                    rlist.push(v.clone());
+                    rlist.push(inner.clone());
+                }
+                name_tmp = None;
+            } else {
+                rlist.push(inner.clone());
             }
         }
-        if let Some(ref s) = name_tmp {
-            rlist.push(s.clone());
+        if let Some(v) = &name_tmp {
+            rlist.push(v.clone());
         }
         self.code_list = rlist;
         Ok(())
-    }
-
-    fn find_ope_priority(&self, ope: &str) -> Result<&Ope, ()> {
-        for i in Self::LENGTH_ORDER_OPE_LIST {
-            if i.opestr == ope {
-                return Ok(i);
-            }
-        }
-        Err(())
     }
 
     fn find_min_priority_index(&self) -> Result<Option<usize>, ParserError> {
@@ -629,7 +621,7 @@ impl ExprParser {
         for (index, inner) in self.code_list.iter().enumerate() {
             if let ExprElem::OpeElem(ope) = inner {
                 let ope_contents = &ope.ope;
-                if let Ok(ope_info) = self.find_ope_priority(ope_contents) {
+                if let Ok(ope_info) = Self::find_ope_priority(ope_contents) {
                     if index < 1
                     // if index == 0:
                     {
@@ -683,18 +675,18 @@ impl ExprParser {
                         depth: self.depth,
                         loopdepth: self.loopdepth,
                     })];
-                    Ok(())
-                } else {
-                    Ok(())
                 }
+                Ok(())
             }
             Err(e) => Err(e),
         }
     }
-}
 
-impl Parser<'_> for ExprParser {
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+    pub fn create_parser_from_vec(
+        code_list: Vec<ExprElem>,
+        depth: isize,
+        loopdepth: isize,
+    ) -> Self {
         Self {
             code: String::new(),
             code_list,
@@ -702,7 +694,9 @@ impl Parser<'_> for ExprParser {
             loopdepth,
         }
     }
+}
 
+impl Parser<'_> for ExprParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
             code: code.clone(),

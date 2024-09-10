@@ -1,5 +1,6 @@
 // tokens
 pub mod block;
+pub mod comment;
 pub mod func;
 pub mod list;
 pub mod list_block;
@@ -16,3 +17,8 @@ pub mod item;
 pub mod string;
 pub mod unknown;
 pub mod word;
+
+// type
+pub mod ttype;
+// statement
+pub mod stmt;

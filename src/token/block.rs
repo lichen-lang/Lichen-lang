@@ -1,7 +1,5 @@
 use crate::abs::ast::*;
-
 use crate::errors::parser_errors::ParserError;
-use crate::parser::core_parser::Parser;
 use crate::parser::stmt_parser::*;
 
 /// # BlockBranch
@@ -26,9 +24,6 @@ impl RecursiveAnalysisElements for BlockBranch {
             Ok(_) => {
                 let mut rlist = parser.code_list;
                 for i in &mut rlist {
-                    // if let Err(e) = i.resolve_self() {
-                    //     return Err(e);
-                    // }
                     i.resolve_self()?;
                 }
                 self.contents = rlist;

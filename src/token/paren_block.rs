@@ -1,16 +1,12 @@
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
-use crate::parser::core_parser::Parser;
 use crate::parser::expr_parser::ExprParser;
 
 /// #ParenBlockBranch
 /// `()`を使用したプログラムにおけるデータを格納するstruct
 /// 中では,
 /// - 式を解析する必要がある場合
-/// - タイプ宣言を解析する必要がある場合１ ex) (a:T, b:T)
 /// - タイプ宣言を解析する必要がある場合２ ex) (T, T)
-/// があり個別に呼び出すパーサを実装する必要がある。
-/// 実装する
 #[derive(Clone, Debug)]
 pub struct ParenBlockBranch {
     pub contents: Vec<ExprElem>,

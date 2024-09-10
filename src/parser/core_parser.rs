@@ -1,7 +1,8 @@
+use std::fmt::Debug;
+
 // use crate::parser::token::*;
 use crate::abs::ast::*;
 use crate::errors::parser_errors::ParserError;
-use crate::token::unknown::UnKnownBranch;
 
 pub enum Prio {
     Left,
@@ -93,6 +94,11 @@ pub trait Parser<'a> {
         Self::NOT,        // !
     ];
 
+    // comment
+    const COMMENT_OPEN: &'a str = "/*";
+    const COMMENT_CLOSE: &'a str = "*/";
+    const COMMENT_START: &'a str = "//"; // end newline or
+
     const SEMICOLON: char = ';';
     const COMMA: char = ',';
     const SPLIT_CHAR: [char; 3] = [' ', '\t', '\n'];
@@ -166,17 +172,28 @@ pub trait Parser<'a> {
     const BLOCK_PAREN_CLOSE: char = ')';
     const BLOCK_LIST_OPEN: char = '[';
     const BLOCK_LIST_CLOSE: char = ']';
-
-    // fn code2vec(&self, code: &Vec<BaseElem>) -> Result<Vec<BaseElem>, &str>;
+    // type
+    const BLOCK_TYPE_OPEN: char = '<';
+    const BLOCK_TYPE_CLOSE: char = '>';
 
     fn new(code: String, depth: isize, loopdepth: isize) -> Self;
     fn resolve(&mut self) -> Result<(), ParserError>;
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
-
-    fn code2_vec_pre_proc_func(code: &str) -> Vec<ExprElem> {
+    fn code2_vec_pre_proc_func<T>(code: &str) -> Vec<T>
+    where
+        T: Token + Clone + Debug,
+    {
         return code
             .chars()
-            .map(|c| ExprElem::UnKnownElem(UnKnownBranch { contents: c }))
+            .map(|c| Token::set_char_as_unknown(c))
             .collect();
+    }
+
+    fn find_ope_priority(ope: &'a str) -> Result<&Ope, &'a str> {
+        for i in Self::LENGTH_ORDER_OPE_LIST {
+            if i.opestr == ope {
+                return Ok(i);
+            }
+        }
+        Err("ope not exist")
     }
 }

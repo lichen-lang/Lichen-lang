@@ -6,6 +6,7 @@ mod utils;
 mod tests {
     use crate::utils::testutils::insert_space;
     use colored::*;
+    use lichen_lang::abs::ast::*;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
 
@@ -38,7 +39,7 @@ mod tests {
         if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
-            // println!("{:#?}", e_parser.code_list);
+            println!("{:#?}", e_parser.code_list);
             for i in e_parser.code_list {
                 i.show();
             }
@@ -55,20 +56,24 @@ mod tests {
         if e_parser.resolve().is_err() {
             println!("ParseError occured");
         } else {
-            println!("{:#?}", e_parser.code_list);
+            // println!("{:#?}", e_parser.code_list);
+            for i in e_parser.code_list {
+                i.show();
+            }
         }
     }
 
     #[test]
     fn expr_test03() {
-        let code = "tarai[1][2][3]";
+        // let code = "tarai[1][2][3]";
         // let code = "tarai(1)(2)(3)";
+        let code = "while  (0 < x) { 1 } else {0}(1)[2](3)";
         let string_code: String = String::from(code);
         let mut e_parser = ExprParser::new(string_code, 0, 0);
 
         println!("test case -> {}", code);
-        if e_parser.resolve().is_err() {
-            println!("ParseError occured");
+        if let Err(e) = e_parser.resolve() {
+            println!("{:?}", e);
         } else {
             println!("{:#?}", e_parser.code_list);
             for i in e_parser.code_list {
@@ -79,18 +84,29 @@ mod tests {
 
     #[test]
     fn expr_test04() {
-        let code = "if (0 < x){ 1 } else {0} + 1";
-        // let code = "tarai(1)(2)(3)";
-        let string_code: String = String::from(code);
-        let mut e_parser = ExprParser::new(string_code, 0, 0);
+        let test_cases = vec![
+            "// \"hello\"",
+            "\"hello world\"",
+            "
+\"hello\"
+/* \" */
+// \"
+",
+            "\"\\\" <- quotation escape\"",
+        ];
+        for code in test_cases {
+            println!("{}", "-".repeat(30));
+            let string_code: String = String::from(code);
+            let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        println!("test case -> {}", code);
-        if e_parser.resolve().is_err() {
-            println!("ParseError occured");
-        } else {
-            println!("{:#?}", e_parser.code_list);
-            for i in e_parser.code_list {
-                i.show();
+            println!("test case -> {}", code);
+            if let Err(e) = e_parser.resolve() {
+                println!("{}", format!("Parser Error {:?}", e).red());
+            } else {
+                println!("{:#?}", e_parser.code_list);
+                for i in e_parser.code_list {
+                    i.show();
+                }
             }
         }
     }
