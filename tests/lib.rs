@@ -84,18 +84,28 @@ mod tests {
 
     #[test]
     fn expr_test04() {
-        let code = "// \"hello\"";
-        // let code = "tarai(1)(2)(3)";
-        let string_code: String = String::from(code);
-        let mut e_parser = ExprParser::new(string_code, 0, 0);
+        let test_cases = vec![
+            "// \"hello\"",
+            "\"hello world\"",
+            "
+\"hello\"
+/* \" */
+// \"
+",
+        ];
+        for code in test_cases {
+            println!("{}", "-".repeat(30));
+            let string_code: String = String::from(code);
+            let mut e_parser = ExprParser::new(string_code, 0, 0);
 
-        println!("test case -> {}", code);
-        if let Err(e) = e_parser.resolve() {
-            println!("{}", format!("Parser Error {:?}", e).red());
-        } else {
-            println!("{:#?}", e_parser.code_list);
-            for i in e_parser.code_list {
-                i.show();
+            println!("test case -> {}", code);
+            if let Err(e) = e_parser.resolve() {
+                println!("{}", format!("Parser Error {:?}", e).red());
+            } else {
+                println!("{:#?}", e_parser.code_list);
+                for i in e_parser.code_list {
+                    i.show();
+                }
             }
         }
     }

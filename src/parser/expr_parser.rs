@@ -28,13 +28,13 @@ pub struct ExprParser {
 enum StringAreaState {
     CommentOpen,  // /*
     CommentStart, // //
-    // QuotationOpen,
+    QuotationOpen,
     Closed,
 }
 
 impl ExprParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        self.grouping_quotation()?;
+        // self.grouping_quotation()?;
         self.grouping_comment()?;
         // grouping_elements
         self.grouping_elements(
@@ -171,14 +171,17 @@ impl ExprParser {
     }
 
     fn grouping_comment(&mut self) -> Result<(), ParserError> {
+        // now this function can group all string in  the program
         let mut group: String = String::new();
         let mut rlist: Vec<ExprElem> = Vec::new();
         let mut open_status: StringAreaState = StringAreaState::Closed;
         let mut ignore_flag = false;
+        let mut string_escape_flag = false;
 
         for (count, inner) in self.code_list.iter().enumerate() {
             if ignore_flag {
                 ignore_flag = false;
+                // 二文字の判別
                 continue;
             }
             if let ExprElem::UnKnownElem(e) = inner {
@@ -229,6 +232,32 @@ impl ExprParser {
                             group.push(e.contents);
                         }
                     }
+                    StringAreaState::QuotationOpen => {
+                        // '"' is opened
+                        if Self::DOUBLE_QUOTATION == e.contents {
+                            if string_escape_flag {
+                                group.push(e.contents);
+                                string_escape_flag = false;
+                            } else {
+                                rlist.push(ExprElem::StringElem(StringBranch {
+                                    contents: group.clone(),
+                                    depth: self.depth,
+                                    loopdepth: self.loopdepth,
+                                }));
+                                group.clear();
+                                open_status = StringAreaState::Closed;
+                            }
+                        } else if Self::ESCAPECHAR == e.contents {
+                            if string_escape_flag {
+                                group.push(e.contents);
+                                string_escape_flag = false;
+                            } else {
+                                string_escape_flag = true;
+                            }
+                        } else {
+                            group.push(e.contents);
+                        }
+                    }
                     StringAreaState::Closed => {
                         // 何も開いていないとき
                         if Self::COMMENT_OPEN.starts_with(e.contents)
@@ -251,18 +280,11 @@ impl ExprParser {
                             } else {
                                 rlist.push(inner.clone());
                             }
+                        } else if Self::DOUBLE_QUOTATION == e.contents {
+                            open_status = StringAreaState::QuotationOpen;
                         } else {
                             rlist.push(inner.clone());
                         }
-                    }
-                }
-            } else if let ExprElem::StringElem(v) = inner {
-                match open_status {
-                    StringAreaState::CommentOpen | StringAreaState::CommentStart => {
-                        group = format!("{}{}", group, v.contents); // concat
-                    }
-                    StringAreaState::Closed => {
-                        rlist.push(inner.clone());
                     }
                 }
             } else {
