@@ -34,8 +34,7 @@ enum StringAreaState {
 
 impl ExprParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        // self.grouping_quotation()?;
-        self.grouping_comment()?;
+        self.grouping_string()?;
         // grouping_elements
         self.grouping_elements(
             ExprElem::BlockElem,
@@ -125,52 +124,7 @@ impl ExprParser {
         Ok(())
     }
 
-    fn grouping_quotation(&mut self) -> Result<(), ParserError> {
-        let mut open_flag = false;
-        let mut escape_flag = false;
-        let mut rlist = Vec::new();
-        let mut group = String::new();
-
-        for inner in &self.code_list {
-            if let ExprElem::UnKnownElem(ref v) = inner {
-                if escape_flag {
-                    group.push(v.contents);
-                    escape_flag = false
-                } else if v.contents == Self::DOUBLE_QUOTATION
-                // is quochar
-                {
-                    if open_flag {
-                        group.push(v.contents);
-                        rlist.push(ExprElem::StringElem(StringBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                        group.clear();
-                        open_flag = false;
-                    } else {
-                        group.push(v.contents);
-                        open_flag = true;
-                    }
-                } else if open_flag {
-                    escape_flag = v.contents == Self::ESCAPECHAR;
-                    group.push(v.contents);
-                } else {
-                    rlist.push(inner.clone());
-                }
-            } else {
-                rlist.push(inner.clone());
-            }
-        }
-        if open_flag {
-            // comment内部であればquotationは閉じる必要がない
-            return Err(ParserError::QuotationNotClosed);
-        }
-        self.code_list = rlist;
-        Ok(())
-    }
-
-    fn grouping_comment(&mut self) -> Result<(), ParserError> {
+    fn grouping_string(&mut self) -> Result<(), ParserError> {
         // now this function can group all string in  the program
         let mut group: String = String::new();
         let mut rlist: Vec<ExprElem> = Vec::new();
@@ -297,6 +251,10 @@ impl ExprParser {
                 depth: self.depth,
                 loopdepth: self.loopdepth,
             }));
+        } else if let StringAreaState::CommentOpen = open_status {
+            return Err(ParserError::CommentBlockNotClosed);
+        } else if let StringAreaState::QuotationOpen = open_status {
+            return Err(ParserError::QuotationNotClosed);
         }
         self.code_list = rlist;
         Ok(())
