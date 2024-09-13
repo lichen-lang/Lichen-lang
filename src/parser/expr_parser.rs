@@ -288,7 +288,7 @@ impl ExprParser {
                     }
                 }
             } else {
-                return Err(ParserError::UnexpectedType);
+                rlist.push(inner.clone());
             }
         }
         if let StringAreaState::CommentStart = open_status {
