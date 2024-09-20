@@ -14,7 +14,7 @@ use crate::parser::stmt_parser::StmtParser;
 pub struct SyntaxBranch {
     pub name: String,
     pub expr: Vec<ExprElem>,
-    pub contents: Vec<ExprElem>,
+    pub contents: Vec<StmtElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }

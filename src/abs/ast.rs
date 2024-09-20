@@ -6,7 +6,7 @@ use crate::token::list::ListBranch;
 use crate::token::list_block::ListBlockBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::paren_block::ParenBlockBranch;
-use crate::token::stmt::expr::ExprBranch;
+use crate::token::stmt::stmt::StmtBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
@@ -54,8 +54,24 @@ pub enum TypeElem {
 
 #[derive(Clone, Debug)]
 pub enum StmtElem {
-    ExprElem(ExprBranch),
+    BlockElem(BlockBranch),
+    ListBlockElem(ListBlockBranch),
+    ParenBlockElem(ParenBlockBranch),
+    SyntaxElem(SyntaxBranch),
+    SyntaxBoxElem(SyntaxBoxBranch),
+    FuncElem(FuncBranch),
+    ListElem(ListBranch),
+    ItemElem(ItemBranch),
+    // without RecursiveAnalysisElements trait structures
+    CommentElem(CommentBranch),
+    StringElem(StringBranch),
+    WordElem(WordBranch),
+    OpeElem(OperatorBranch),
     UnKnownElem(UnKnownBranch),
+
+    // stmt original
+    // WARN:変則的なトークンであるため注意
+    StmtElem(StmtBranch),
 }
 
 impl Token for ExprElem {
@@ -176,7 +192,9 @@ pub trait ASTBranch {
 /// ## resolve_self
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
 pub trait ASTAreaBranch {
-    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+    fn new<T>(contents: Vec<T>, depth: isize, loopdepth: isize) -> Self
+    where
+        T: Token;
 }
 
 pub trait TypeAreaBranch {
