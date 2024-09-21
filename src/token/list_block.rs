@@ -35,7 +35,7 @@ impl ASTBranch for ListBlockBranch {
 }
 
 impl ASTAreaBranch for ListBlockBranch {
-    fn new<T>(contents: Vec<T>, depth: isize, loopdepth: isize) -> Self {
+    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents,
             depth,
