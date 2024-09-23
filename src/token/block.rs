@@ -8,7 +8,7 @@ use crate::parser::stmt_parser::*;
 ///
 #[derive(Clone, Debug)]
 pub struct BlockBranch {
-    pub contents: Vec<ExprElem>,
+    pub contents: Vec<StmtElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -34,8 +34,8 @@ impl RecursiveAnalysisElements for BlockBranch {
     }
 }
 
-impl ASTAreaBranch for BlockBranch {
-    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+impl ASTAreaBranch<StmtElem> for BlockBranch {
+    fn new(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents,
             depth,

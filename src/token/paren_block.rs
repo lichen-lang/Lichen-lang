@@ -56,7 +56,7 @@ impl ASTBranch for ParenBlockBranch {
     }
 }
 
-impl ASTAreaBranch for ParenBlockBranch {
+impl ASTAreaBranch<ExprElem> for ParenBlockBranch {
     fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents,

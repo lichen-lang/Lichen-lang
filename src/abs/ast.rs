@@ -24,6 +24,15 @@ pub trait Token {
     fn resolve_self(&mut self) -> Result<(), ParserError>;
 }
 
+pub trait ProcToken {
+    // `ExprElem`と`StmtElem`に実装
+    // 解析時に揺れがある
+    fn t_string(contents: String, depth: isize, loopdepth: isize) -> Self;
+    fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self;
+    fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+    fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+}
+
 /// # ExprElem
 /// 抽象的なtoken
 /// プログラムの要素を表現できる
@@ -54,7 +63,14 @@ pub enum TypeElem {
 
 #[derive(Clone, Debug)]
 pub enum StmtElem {
+    BlockElem(BlockBranch),
+    ListBlockElem(ListBlockBranch),
+    ParenBlockElem(ParenBlockBranch),
+    // without RecursiveAnalysisElements trait structures
+    StringElem(StringBranch),
     ExprElem(ExprBranch),
+    WordElem(WordBranch),
+    OpeElem(OperatorBranch),
     UnKnownElem(UnKnownBranch),
 }
 
@@ -121,6 +137,42 @@ impl Token for ExprElem {
     }
 }
 
+impl ProcToken for ExprElem {
+    fn t_string(contents: String, depth: isize, loopdepth: isize) -> Self {
+        Self::StringElem(StringBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::BlockElem(BlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ParenBlockElem(ParenBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ListBlockElem(ListBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+}
+
+impl ExprElem {}
+
 impl Token for TypeElem {
     fn set_char_as_unknown(c: char) -> Self {
         TypeElem::UnKnownElem(UnKnownBranch { contents: c })
@@ -165,6 +217,40 @@ impl Token for StmtElem {
     }
 }
 
+impl ProcToken for StmtElem {
+    fn t_string(contents: String, depth: isize, loopdepth: isize) -> Self {
+        Self::StringElem(StringBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::BlockElem(BlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ParenBlockElem(ParenBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ListBlockElem(ListBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+}
+
 /// #  ASTBranch
 /// token buranch should be implemented this trait
 pub trait ASTBranch {
@@ -175,8 +261,11 @@ pub trait ASTBranch {
 /// # ASTAreaBranch
 /// ## resolve_self
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
-pub trait ASTAreaBranch {
-    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+pub trait ASTAreaBranch<T>
+where
+    T: Token,
+{
+    fn new(contents: Vec<T>, depth: isize, loopdepth: isize) -> Self;
 }
 
 pub trait TypeAreaBranch {
