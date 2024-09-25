@@ -3,6 +3,7 @@ use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::*;
 
 use crate::token::operator::OperatorBranch;
+use crate::token::stmt::expr::ExprBranch;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 
@@ -33,6 +34,7 @@ impl StmtParser {
             Self::BLOCK_PAREN_CLOSE, // )
         )?;
         self.grouping_words()?;
+        self.split_semicolon()?;
         Ok(())
     }
 
@@ -231,6 +233,56 @@ impl StmtParser {
         }
         self.code_list = rlist;
         Ok(())
+    }
+
+    pub fn split_semicolon(&mut self) -> Result<(), ParserError> {
+        let mut rlist: Vec<StmtElem> = Vec::new();
+        let mut group: Vec<StmtElem> = Vec::new();
+        for inner in &self.code_list {
+            match &inner {
+                StmtElem::UnKnownElem(unb) => {
+                    if unb.contents == Self::SEMICOLON {
+                        rlist.push(StmtElem::ExprElem(ExprBranch {
+                            code_list: Self::stmt2expr(group.clone())?,
+                            depth: self.depth,
+                            loopdepth: self.loopdepth,
+                        }));
+                        group.clear();
+                    } else {
+                        group.push(inner.clone());
+                    }
+                }
+                _ => {
+                    group.push(inner.clone());
+                }
+            }
+        }
+        if !group.is_empty() {
+            rlist.push(StmtElem::ExprElem(ExprBranch {
+                code_list: Self::stmt2expr(group.clone())?,
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
+        }
+        self.code_list = rlist;
+        Ok(())
+    }
+
+    fn stmt2expr(i: Vec<StmtElem>) -> Result<Vec<ExprElem>, ParserError> {
+        let mut rlist: Vec<ExprElem> = Vec::new();
+        for inner in i {
+            rlist.push(match inner {
+                StmtElem::StringElem(a) => ExprElem::StringElem(a),
+                StmtElem::BlockElem(a) => ExprElem::BlockElem(a),
+                StmtElem::ListBlockElem(a) => ExprElem::ListBlockElem(a),
+                StmtElem::ParenBlockElem(a) => ExprElem::ParenBlockElem(a),
+                StmtElem::OpeElem(a) => ExprElem::OpeElem(a),
+                StmtElem::WordElem(a) => ExprElem::WordElem(a),
+                StmtElem::UnKnownElem(a) => ExprElem::UnKnownElem(a),
+                _ => return Err(ParserError::UnableToConvertType),
+            });
+        }
+        Ok(rlist)
     }
 
     pub fn create_parser_from_vec(
