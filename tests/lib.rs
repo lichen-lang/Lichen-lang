@@ -112,6 +112,15 @@ mod tests {
     }
 
     #[test]
+    fn stmt_test00() {
+        let test_cases = vec![
+            "
+		1 + 1;
+		",
+        ];
+    }
+
+    #[test]
     fn unit_test00() {
         let test_cases = vec![
             vec!["!", "a", "&&", "!", "b"],  // !a&&!bs

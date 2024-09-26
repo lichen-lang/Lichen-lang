@@ -235,6 +235,13 @@ impl StmtParser {
         Ok(())
     }
 
+    /// function for splitting semicolon
+    ///
+    /// ```text
+    /// let a = 1; // <- stmt
+    /// let b = 2; // <- stmt
+    /// let c = 3; // <- stmt
+    /// ```
     pub fn split_semicolon(&mut self) -> Result<(), ParserError> {
         let mut rlist: Vec<StmtElem> = Vec::new();
         let mut group: Vec<StmtElem> = Vec::new();
@@ -243,6 +250,7 @@ impl StmtParser {
                 StmtElem::UnKnownElem(unb) => {
                     if unb.contents == Self::SEMICOLON {
                         rlist.push(StmtElem::ExprElem(ExprBranch {
+                            // TODO ここは、`stmt`で処理される必要があるので変更する
                             code_list: Self::stmt2expr(group.clone())?,
                             depth: self.depth,
                             loopdepth: self.loopdepth,
@@ -268,6 +276,7 @@ impl StmtParser {
         Ok(())
     }
 
+    /// function for converting `stmt` to `expr`
     fn stmt2expr(i: Vec<StmtElem>) -> Result<Vec<ExprElem>, ParserError> {
         let mut rlist: Vec<ExprElem> = Vec::new();
         for inner in i {

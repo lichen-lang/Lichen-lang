@@ -1,3 +1,4 @@
+// tokens
 use crate::token::block::BlockBranch;
 use crate::token::comment::CommentBranch;
 use crate::token::func::FuncBranch;
@@ -14,7 +15,7 @@ use crate::token::ttype::primitive::PrimitiveBranch;
 use crate::token::ttype::type_block::TypeBlockBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
-
+// errors
 use crate::errors::parser_errors::ParserError;
 
 pub trait Token {
@@ -205,15 +206,45 @@ impl Token for StmtElem {
     }
 
     fn get_show_as_string(&self) -> String {
-        todo!()
+        match self {
+            Self::BlockElem(e) => e.get_show_as_string(),
+            Self::ListBlockElem(e) => e.get_show_as_string(),
+            Self::ParenBlockElem(e) => e.get_show_as_string(),
+            // without RecursiveAnalysisElements trait structures
+            Self::StringElem(e) => e.get_show_as_string(),
+            Self::ExprElem(e) => e.get_show_as_string(),
+            Self::WordElem(e) => e.get_show_as_string(),
+            Self::OpeElem(e) => e.get_show_as_string(),
+            Self::UnKnownElem(e) => e.get_show_as_string(),
+        }
     }
 
     fn show(&self) {
-        todo!()
+        match self {
+            Self::BlockElem(e) => e.show(),
+            Self::ListBlockElem(e) => e.show(),
+            Self::ParenBlockElem(e) => e.show(),
+            // without RecursiveAnalysisElements trait structures
+            Self::StringElem(e) => e.show(),
+            Self::ExprElem(e) => e.show(),
+            Self::WordElem(e) => e.show(),
+            Self::OpeElem(e) => e.show(),
+            Self::UnKnownElem(e) => e.show(),
+        }
     }
 
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        todo!()
+        match self {
+            Self::BlockElem(e) => e.resolve_self(),
+            Self::ListBlockElem(e) => e.resolve_self(),
+            Self::ParenBlockElem(e) => e.resolve_self(),
+            Self::ExprElem(e) => e.resolve_self(),
+            // without RecursiveAnalysisElements trait structures
+            Self::StringElem(e) => Ok(()),
+            Self::WordElem(e) => Ok(()),
+            Self::OpeElem(e) => Ok(()),
+            Self::UnKnownElem(e) => Ok(()),
+        }
     }
 }
 
