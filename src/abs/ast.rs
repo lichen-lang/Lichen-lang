@@ -240,10 +240,10 @@ impl Token for StmtElem {
             Self::ParenBlockElem(e) => e.resolve_self(),
             Self::ExprElem(e) => e.resolve_self(),
             // without RecursiveAnalysisElements trait structures
-            Self::StringElem(e) => Ok(()),
-            Self::WordElem(e) => Ok(()),
-            Self::OpeElem(e) => Ok(()),
-            Self::UnKnownElem(e) => Ok(()),
+            Self::StringElem(_) => Ok(()),
+            Self::WordElem(_) => Ok(()),
+            Self::OpeElem(_) => Ok(()),
+            Self::UnKnownElem(_) => Ok(()),
         }
     }
 }
