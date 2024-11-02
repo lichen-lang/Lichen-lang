@@ -72,6 +72,7 @@ pub enum StmtElem {
     ExprElem(ExprBranch),
     WordElem(WordBranch),
     OpeElem(OperatorBranch),
+    CommentElem(CommentBranch),
     UnKnownElem(UnKnownBranch),
 }
 
@@ -212,6 +213,7 @@ impl Token for StmtElem {
             Self::ParenBlockElem(e) => e.get_show_as_string(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(e) => e.get_show_as_string(),
+            Self::CommentElem(e) => e.get_show_as_string(),
             Self::ExprElem(e) => e.get_show_as_string(),
             Self::WordElem(e) => e.get_show_as_string(),
             Self::OpeElem(e) => e.get_show_as_string(),
@@ -226,6 +228,7 @@ impl Token for StmtElem {
             Self::ParenBlockElem(e) => e.show(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(e) => e.show(),
+            Self::CommentElem(e) => e.show(),
             Self::ExprElem(e) => e.show(),
             Self::WordElem(e) => e.show(),
             Self::OpeElem(e) => e.show(),
@@ -241,6 +244,7 @@ impl Token for StmtElem {
             Self::ExprElem(e) => e.resolve_self(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(_) => Ok(()),
+            Self::CommentElem(_) => Ok(()),
             Self::WordElem(_) => Ok(()),
             Self::OpeElem(_) => Ok(()),
             Self::UnKnownElem(_) => Ok(()),
@@ -287,6 +291,7 @@ impl ProcToken for StmtElem {
 pub trait ASTBranch {
     fn show(&self);
     fn get_show_as_string(&self) -> String;
+   //  fn expand_assembly(&self) -> String;
 }
 
 /// # ASTAreaBranch
