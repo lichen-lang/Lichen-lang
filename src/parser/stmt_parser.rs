@@ -6,6 +6,7 @@ use crate::token::operator::OperatorBranch;
 use crate::token::stmt::expr::ExprBranch;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
+use crate::token::comment::CommentBranch;
 
 /// # StmtParser
 pub struct StmtParser {
@@ -15,9 +16,17 @@ pub struct StmtParser {
     pub loopdepth: isize,
 }
 
+enum StringAreaState {
+    CommentOpen,  // /*
+    CommentStart, // //
+    QuotationOpen,
+    Closed,
+}
+
 impl StmtParser {
+
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
-        self.grouping_quotation()?;
+        self.grouping_string()?;
         self.grouping_elements(
             StmtElem::BlockElem,
             Self::BLOCK_BRACE_OPEN,  // {
@@ -38,44 +47,136 @@ impl StmtParser {
         Ok(())
     }
 
-    fn grouping_quotation(&mut self) -> Result<(), ParserError> {
-        let mut open_flag = false;
-        let mut escape_flag = false;
-        let mut rlist = Vec::new();
-        let mut group = String::new();
+        fn grouping_string(&mut self) -> Result<(), ParserError> {
+        // now this function can group all string in  the program
+        let mut group: String = String::new();
+        let mut rlist: Vec<StmtElem> = Vec::new();
+        let mut open_status: StringAreaState = StringAreaState::Closed;
+        let mut ignore_flag = false;
+        let mut string_escape_flag = false;
 
-        for inner in &self.code_list {
-            if let StmtElem::UnKnownElem(ref v) = inner {
-                if escape_flag {
-                    group.push(v.contents);
-                    escape_flag = false
-                } else if v.contents == Self::DOUBLE_QUOTATION
-                // is quochar
-                {
-                    if open_flag {
-                        group.push(v.contents);
-                        rlist.push(StmtElem::StringElem(StringBranch {
-                            contents: group.clone(),
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
-                        group.clear();
-                        open_flag = false;
-                    } else {
-                        group.push(v.contents);
-                        open_flag = true;
+        for (count, inner) in self.code_list.iter().enumerate() {
+            if ignore_flag {
+                ignore_flag = false;
+                // 二文字の判別
+                continue;
+            }
+            if let StmtElem::UnKnownElem(e) = inner {
+                match open_status {
+                    StringAreaState::CommentStart => {
+                        // //が開いているとき
+                        if e.contents == '\n' {
+                            rlist.push(StmtElem::CommentElem(CommentBranch {
+                                contents: group.clone(),
+                                depth: self.depth,
+                                loopdepth: self.loopdepth,
+                            }));
+                            open_status = StringAreaState::Closed;
+                            group.clear();
+                        } else {
+                            group.push(e.contents);
+                        }
                     }
-                } else if open_flag {
-                    escape_flag = v.contents == Self::ESCAPECHAR;
-                    group.push(v.contents);
-                } else {
-                    rlist.push(inner.clone());
+                    StringAreaState::CommentOpen => {
+                        // /*が開いているとき
+                        if Self::COMMENT_CLOSE.starts_with(e.contents)
+                        // "*" == e.content
+                        {
+                            if count < self.code_list.len() {
+                                if let StmtElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                    if Self::COMMENT_CLOSE.ends_with(next_e.contents)
+                                    // "/" == e.content
+                                    {
+                                        rlist.push(StmtElem::CommentElem(CommentBranch {
+                                            contents: group.clone(),
+                                            depth: self.depth,
+                                            loopdepth: self.loopdepth,
+                                        }));
+                                        group.clear();
+                                        open_status = StringAreaState::Closed;
+                                        ignore_flag = true;
+                                    } else {
+                                        group.push(e.contents);
+                                    }
+                                } else {
+                                    // defer type
+                                    return Err(ParserError::UnexpectedType);
+                                }
+                            } else {
+                                return Err(ParserError::CommentBlockNotClosed);
+                            }
+                        } else {
+                            group.push(e.contents);
+                        }
+                    }
+                    StringAreaState::QuotationOpen => {
+                        // '"' is opened
+                        if Self::DOUBLE_QUOTATION == e.contents {
+                            if string_escape_flag {
+                                group.push(e.contents);
+                                string_escape_flag = false;
+                            } else {
+                                rlist.push(StmtElem::StringElem(StringBranch {
+                                    contents: group.clone(),
+                                    depth: self.depth,
+                                    loopdepth: self.loopdepth,
+                                }));
+                                group.clear();
+                                open_status = StringAreaState::Closed;
+                            }
+                        } else if Self::ESCAPECHAR == e.contents {
+                            if string_escape_flag {
+                                group.push(e.contents);
+                                string_escape_flag = false;
+                            } else {
+                                string_escape_flag = true;
+                            }
+                        } else {
+                            group.push(e.contents);
+                        }
+                    }
+                    StringAreaState::Closed => {
+                        // 何も開いていないとき
+                        if Self::COMMENT_OPEN.starts_with(e.contents)
+                            || Self::COMMENT_START.starts_with(e.contents)
+                        {
+                            if count < self.code_list.len() {
+                                if let StmtElem::UnKnownElem(next_e) = &self.code_list[count + 1] {
+                                    if Self::COMMENT_OPEN.ends_with(next_e.contents) {
+                                        open_status = StringAreaState::CommentOpen;
+                                        ignore_flag = true;
+                                    } else if Self::COMMENT_START.ends_with(next_e.contents) {
+                                        open_status = StringAreaState::CommentStart;
+                                        ignore_flag = true;
+                                    } else {
+                                        rlist.push(inner.clone())
+                                    }
+                                } else {
+                                    rlist.push(inner.clone());
+                                }
+                            } else {
+                                rlist.push(inner.clone());
+                            }
+                        } else if Self::DOUBLE_QUOTATION == e.contents {
+                            open_status = StringAreaState::QuotationOpen;
+                        } else {
+                            rlist.push(inner.clone());
+                        }
+                    }
                 }
             } else {
                 rlist.push(inner.clone());
             }
         }
-        if open_flag {
+        if let StringAreaState::CommentStart = open_status {
+            rlist.push(StmtElem::CommentElem(CommentBranch {
+                contents: group.clone(),
+                depth: self.depth,
+                loopdepth: self.loopdepth,
+            }));
+        } else if let StringAreaState::CommentOpen = open_status {
+            return Err(ParserError::CommentBlockNotClosed);
+        } else if let StringAreaState::QuotationOpen = open_status {
             return Err(ParserError::QuotationNotClosed);
         }
         self.code_list = rlist;
@@ -282,13 +383,16 @@ impl StmtParser {
         for inner in i {
             rlist.push(match inner {
                 StmtElem::StringElem(a) => ExprElem::StringElem(a),
+                StmtElem::CommentElem(a) => ExprElem::CommentElem(a),
                 StmtElem::BlockElem(a) => ExprElem::BlockElem(a),
                 StmtElem::ListBlockElem(a) => ExprElem::ListBlockElem(a),
                 StmtElem::ParenBlockElem(a) => ExprElem::ParenBlockElem(a),
                 StmtElem::OpeElem(a) => ExprElem::OpeElem(a),
                 StmtElem::WordElem(a) => ExprElem::WordElem(a),
                 StmtElem::UnKnownElem(a) => ExprElem::UnKnownElem(a),
-                _ => return Err(ParserError::UnableToConvertType),
+                _ => {
+                    return Err(ParserError::UnableToConvertType)
+                },
             });
         }
         Ok(rlist)

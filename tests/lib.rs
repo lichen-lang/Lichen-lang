@@ -119,9 +119,10 @@ mod tests {
             "
 		let mut a = 1 + 1;
 		let b = 1 + 1;
-                if (a < b){
+                if (a < b) // hello world
+                {
                     print(a, b);
-                }
+                };
 		b = 1 + 1;
 	    ",
             "
@@ -130,18 +131,22 @@ mod tests {
                 if (a < b){
                     print(a, b);
                 }
-                if (a < b){
+                elif (a < b){
                     print(a, b);
-                }
+                };
 		b = 1 + 1;
             "
         ];
         for test_case in test_cases{
             let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
-            if s_parser.resolve().is_err(){
+            if let Err(e) = s_parser.resolve()
+            {
                 println!("unexpected ParseError occured");
+                println!("{:?}", e);
                 panic!()
-            }else{
+            }
+            else
+            {
                 println!("--------------------------------");
                 for i in s_parser.code_list{
                     ans_ast_string.push_str(i.get_show_as_string().as_str());
