@@ -9,6 +9,7 @@ mod tests {
     use lichen_lang::abs::ast::*;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
+    use lichen_lang::parser::stmt_parser::StmtParser;
 
     // expr tests
 
@@ -113,11 +114,41 @@ mod tests {
 
     #[test]
     fn stmt_test00() {
+        let mut ans_ast_string = String::new();
         let test_cases = vec![
             "
-		1 + 1;
-		",
+		let mut a = 1 + 1;
+		let b = 1 + 1;
+                if (a < b){
+                    print(a, b);
+                }
+		b = 1 + 1;
+	    ",
+            "
+		let mut a = 1 + 1;
+		let b = 1 + 1;
+                if (a < b){
+                    print(a, b);
+                }
+                if (a < b){
+                    print(a, b);
+                }
+		b = 1 + 1;
+            "
         ];
+        for test_case in test_cases{
+            let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+            if s_parser.resolve().is_err(){
+                println!("unexpected ParseError occured");
+                panic!()
+            }else{
+                println!("--------------------------------");
+                for i in s_parser.code_list{
+                    ans_ast_string.push_str(i.get_show_as_string().as_str());
+                }
+                println!("{}", ans_ast_string);
+            }
+        }
     }
 
     #[test]
@@ -144,7 +175,7 @@ mod tests {
                 panic!()
             } else {
                 for i in e_parser.code_list {
-                    ans_ast_string = format!("{}{}", ans_ast_string, i.get_show_as_string())
+                    ans_ast_string.push_str(i.get_show_as_string().as_str());
                 }
                 println!("{}", ans_ast_string);
             }
