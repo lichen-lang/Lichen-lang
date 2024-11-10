@@ -68,11 +68,17 @@ cargo test --package lichen-lang --test lib -- tests::unit_test00 --exact --show
 ### unit test01
 
 expr_parserが正常に動作するかを確かめるテスト01
-`callable` `subscriptable`なコードが正常な動作をするかどうかのテスト
+ここでは、`callable` `subscriptable`なコードが正常な動作をするかどうかのテストをします
 
 ```bash
 cargo test --package lichen-lang --test lib -- tests::unit_test01 --exact --show-output
 ```
+
+### stmt test00
+```bash
+cargo test --package lichen-lang --test lib -- tests::stmt_test00 --exact --show-output
+```
+
 
 ## テストの走るタイミング
 
