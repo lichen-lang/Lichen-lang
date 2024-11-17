@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::string;
 
 // use crate::parser::token::*;
 use crate::abs::ast::*;
@@ -25,6 +26,63 @@ macro_rules! def_ope {
             priority: $prio,
         };
     };
+}
+
+pub enum OpeTable{
+    OR,
+    AND,
+    EQ,
+    NE,
+    LT,
+    LE,
+    GT,
+    GE,
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    DOT,
+    ASSIGNMENT,
+    ADDEQ,
+    SUBEQ,
+    MULEQ,
+    DIVEQ,
+    MODEQ,
+    POW,
+    NOT,
+}
+
+impl OpeTable{
+    pub fn set(s:&str) -> Result<Self, &str>{
+        match s{
+            "||" => Ok(Self::OR),
+            "&&" => Ok(Self::AND),
+            "==" => Ok(Self::EQ),
+            "!=" => Ok(Self::NE),
+            "<"  => Ok(Self::LT),
+            "<=" => Ok(Self::LE),
+            ">"  => Ok(Self::GT),
+            ">=" => Ok(Self::GE),
+            "+"  => Ok(Self::ADD),
+            "-"  => Ok(Self::SUB),
+            "*"  => Ok(Self::MUL),
+            "/"  => Ok(Self::DIV),
+            "%"  => Ok(Self::MOD),
+            "@"  => Ok(Self::DOT),
+            "="  => Ok(Self::ASSIGNMENT),
+            "+=" => Ok(Self::ADDEQ),
+            "-=" => Ok(Self::SUBEQ),
+            "*=" => Ok(Self::MULEQ),
+            "/=" => Ok(Self::DIVEQ),
+            "%=" => Ok(Self::MODEQ),
+            "**" => Ok(Self::POW),
+            "!"  => Ok(Self::NOT),
+            _ => {
+                Err("Invalid Operation String")
+            }
+        }
+    }
 }
 
 /// # Parser trait
