@@ -61,7 +61,7 @@ impl ExprParser {
         while self.contain_subscriptable() {
             self.grouping_subscription()?;
         }
-        self.grouoping_operator()?;
+        self.grouping_operator()?;
         self.resolve_operation()?;
         Ok(())
     }
@@ -70,18 +70,11 @@ impl ExprParser {
         // macro
         macro_rules! add_rlist {
             ($rlist:expr,$group:expr) => {
-                if let Ok(_) = Self::find_ope_priority(&$group) {
-                    $rlist.push(ExprElem::OpeElem(OperatorBranch {
-                        ope: $group.clone(),
-                        depth: self.depth,
-                    }))
-                } else {
-                    $rlist.push(ExprElem::WordElem(WordBranch {
-                        contents: $group.clone(),
-                        depth: self.depth,
-                        loopdepth: self.loopdepth,
-                    }));
-                }
+                $rlist.push(ExprElem::WordElem(WordBranch {
+                    contents: $group.clone(),
+                    depth: self.depth,
+                    loopdepth: self.loopdepth,
+                }));
             };
         }
         let mut rlist: Vec<ExprElem> = Vec::new();
@@ -355,14 +348,14 @@ impl ExprParser {
         Ok(())
     }
 
-    fn grouoping_operator(&mut self) -> Result<(), ParserError> {
+    fn grouping_operator(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            self.grouoping_operator_unit(ope.opestr.to_string())?;
+            self.grouping_operator_unit(ope.opestr.to_string())?;
         }
         Ok(())
     }
 
-    fn grouoping_operator_unit(&mut self, ope: String) -> Result<(), ParserError> {
+    fn grouping_operator_unit(&mut self, ope: String) -> Result<(), ParserError> {
         let mut group: String = String::new();
         let mut rlist: Vec<ExprElem> = Vec::new();
 
