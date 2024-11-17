@@ -1,4 +1,6 @@
 use crate::abs::ast::*;
+use crate::abs::gen::*;
+
 use crate::errors::parser_errors::ParserError;
 
 use crate::parser::comma_parser::CommaParser;
@@ -83,5 +85,22 @@ impl RecursiveAnalysisElements for FuncBranch {
             inner.resolve_self()?;
         }
         Ok(())
+    }
+}
+
+
+impl Wasm_gen for FuncBranch {
+
+    fn generate(&self) -> String{
+        //
+        match &*self.name{
+            // pass
+            ExprElem::OpeElem(a) => {
+                todo!()
+            }
+            _ => {
+                todo!()
+            }
+        }
     }
 }
