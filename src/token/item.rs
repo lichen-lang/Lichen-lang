@@ -1,7 +1,12 @@
 use crate::abs::ast::*;
+
+use crate::abs::gen::Wasm_gen;
+use crate::errors::generate_errors::GenerateError;
+
 use crate::errors::parser_errors::ParserError;
 use crate::parser::expr_parser::ExprParser;
 
+/// 引数などの式を格納します
 #[derive(Clone, Debug)]
 pub struct ItemBranch {
     pub contents: Vec<ExprElem>,
@@ -44,5 +49,50 @@ impl RecursiveAnalysisElements for ItemBranch {
             }
             Err(e) => Err(e),
         }
+    }
+}
+
+impl Wasm_gen for ItemBranch {
+
+    fn generate(&self) -> Result<String, GenerateError> {
+        // 複数の場合もあることに注意
+        let mut assembly_text = String::default();
+        if self.contents.len() == 0{
+            // itemの中に何も要素を持たない場合
+            // 考えられるのは'-'だったりする場合
+        } else if self.contents.len() == 1 {
+            // Itemの中に要素が一つだけの場合
+            // （特別に修飾子が付与されない場合）
+            // TODO
+            // ここでは、変数をi32として扱います
+            match &self.contents[0]{
+                ExprElem::WordElem(b) => {
+                    if b.self_is_num()? {
+                        // もし数字だった場合
+                        assembly_text.push_str(&format!("i32.const {}\n", b.contents));
+                    } else {
+                        // もし何らかの変数だった場合
+                        assembly_text.push_str(&format!("local.get ${}\n", b.contents));
+                    }
+                }
+
+                ExprElem::FuncElem(func_b) => {
+                    assembly_text.push_str(&func_b.generate()?);
+                }
+
+                ExprElem::ParenBlockElem(paren_b) => {
+                    assembly_text.push_str(&paren_b.generate()?);
+                }
+                _ => {
+                    return Err(GenerateError::Deverror);
+                }
+            }
+        } else {
+            // ここは例えば、let mut aなどの場合
+            // 
+            // borrow mut &mut とか引数に
+            return Err(GenerateError::Deverror);// 未実装
+        }
+        return Ok(assembly_text);
     }
 }

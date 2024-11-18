@@ -7,6 +7,7 @@ mod tests {
     use crate::utils::testutils::insert_space;
     use colored::*;
     use lichen_lang::abs::ast::*;
+    use lichen_lang::abs::gen::Wasm_gen;
     use lichen_lang::parser::core_parser::Parser;
     use lichen_lang::parser::expr_parser::ExprParser;
     use lichen_lang::parser::stmt_parser::StmtParser;
@@ -135,10 +136,14 @@ mod tests {
                     print(a, b);
                 };
 		b = 1 + 1;
+            ",
+            "
+            let a = tarai(tarai(x - 1,  y, z), tarai(y - 1, z, x), tarai(z - 1, x, y));
             "
         ];
         for test_case in test_cases{
             let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+            println!("----------------------------------------------------------------");
             if let Err(e) = s_parser.resolve()
             {
                 println!("unexpected ParseError occured");
@@ -147,11 +152,59 @@ mod tests {
             }
             else
             {
-                println!("--------------------------------");
                 for i in s_parser.code_list{
                     ans_ast_string.push_str(i.get_show_as_string().as_str());
                 }
                 println!("{}", ans_ast_string);
+                ans_ast_string.clear();
+            }
+        }
+    }
+
+
+    #[test]
+    fn gen_test00(){
+        let test_cases = vec![
+            "!a&&!bs" , 
+            "-10+20"  , 
+            // "a**b**c" ,
+            "a+b+c"   ,
+            "(a+bc)+(cde-defg)" ,
+            "func(10,1)+2*x"    ,
+            // "tarai(1)(2)(3)"    ,
+            // "if (0 < x){ 1 } else {0} + 1" ,
+        ];
+
+        for code in test_cases {
+            let string_code: String = String::from(code);
+            let mut e_parser = ExprParser::new(string_code, 0, 0);
+
+            println!("------------------------------------------");
+            println!("test case -> {}", code);
+            match e_parser.resolve() {
+                Err(e) => println!("{:?}", e),
+                Ok(_) => {
+                    for i in e_parser.code_list {
+                        i.show();
+                        match &i{
+                            ExprElem::FuncElem(a) => {
+                                match a.generate(){
+                                    Ok(s) => {
+                                        println!("{}", s);
+                                    }
+                                    Err(e) => {
+                                        println!("wasm生成中にerrorが発生しました");
+                                        println!("{:?}", e);
+                                    }
+                                }
+                            }
+                            _ => {
+                                println!("func 型ではありませんでした");
+                                continue;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

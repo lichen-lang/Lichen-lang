@@ -1,3 +1,5 @@
+use crate::errors::generate_errors::GenerateError;
+
 
 enum wasm_instructions
 {
@@ -24,8 +26,13 @@ enum wasm_instructions
 /// wasmランタイムの命令に従ったwat形式を返却します。
 /// ここでの変換則がlichenのすべてのルールに対応でき
 /// ているわけではないことに注意してください
+///
+/// このトレイトはブランチ構造体に実装します。
+///
 pub trait Wasm_gen {
-    fn generate(&self) -> String;
+
+
+    fn generate(&self) -> Result<String, GenerateError>;
 }
 
 
