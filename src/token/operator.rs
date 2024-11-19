@@ -29,34 +29,6 @@ impl ASTBranch for OperatorBranch {
     }
 }
 
-impl Wasm_gen for OperatorBranch {
-    fn generate(&self) -> Result<String, GenerateError>{
-        // 最初はi32向のみ対応
-        // ここで送られて来るデータが本当に文字列でいいのか考える
-        match &*self.ope{
-            "=" => {
-                Ok(format!("local.set\n"))
-            }
-            // pass
-            "+" => {
-                Ok(format!("i32.add\n"))
-            }
-            "-" => {
-                Ok(format!("i32.sub\n"))
-            }
-            "*" => {
-                Ok(format!("i32.mul\n"))
-            }
-            "/" => {
-                Ok(format!("i32.div\n"))
-            }
-            _ => {
-                Err(GenerateError::InvalidOperation)
-            }
-        }
-    }
-}
-
 
 impl OperatorBranch{
     pub fn generate_wasm(&self, l_expr:&ExprElem,r_expr:&ExprElem) -> Result<String, GenerateError> {
