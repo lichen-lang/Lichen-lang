@@ -94,32 +94,37 @@ impl Wasm_gen for FuncBranch {
     fn generate(&self) -> Result<String, GenerateError> {
         let mut assembly_text:String = String::new();
 
-        // 引数処理部分
-        for i in &self.contents{
-            match i{
-                ExprElem::ItemElem(b) => {
-                    assembly_text.push_str(&b.generate()?);
-                }
-                _ => {
-                    // 必ず引数はアイテムになるのでエラー
-                    // ここにitem以外の要素を検知した場合は、
-                    // おそらく、コンパイラの実装に何らかの問題があります
-                    return Err(GenerateError::Deverror);
-                }
-            }
-        }
-
         // 関数処理部分
         match &*self.name {
             // pass
-            ExprElem::OpeElem(a) => {
+            ExprElem::OpeElem(ope_b) => {
                 // 演算子のとき
-                assembly_text.push_str(&a.generate()?);
+                // 必ず２つの引数が渡されるが`-1`などの場合に注意が必要
+                assembly_text.push_str(&ope_b.generate_wasm(
+                        &self.contents[0],
+                        &self.contents[1]
+                )?);
             }
+
             ExprElem::WordElem(word_b) => {
                 // 普通の関数のとき
+                // 引数処理部分
+                for i in &self.contents{
+                    match i{
+                        ExprElem::ItemElem(b) => {
+                            assembly_text.push_str(&b.generate()?);
+                        }
+                        _ => {
+                            // 必ず引数はアイテムになるのでエラー
+                            // ここにitem以外の要素を検知した場合は、
+                            // コンパイラの実装に何らかの問題があります
+                            return Err(GenerateError::Deverror);
+                        }
+                    }
+                }
                 assembly_text.push_str(&format!("call ${}\n", word_b.contents));
             }
+
             _ => {
                 // ここは関数を返すifやwhileを定義しない限りerrorになる
                 return Err(GenerateError::Deverror);

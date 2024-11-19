@@ -173,6 +173,13 @@ mod tests {
             "func(10,1)+2*x"    ,
             // "tarai(1)(2)(3)"    ,
             // "if (0 < x){ 1 } else {0} + 1" ,
+            "c = !a&&!bs" , 
+            "d = -10+20"  , 
+            // "a**b**c" ,
+            "e = a+b+c"   ,
+            "f = (a+bc)+(cde-defg)" ,
+            "g = func(10,1)+2*x"    ,
+            "var = (10 - 1) + 2 * ((1 + 4) * 5)", // 59
         ];
 
         for code in test_cases {
@@ -186,6 +193,7 @@ mod tests {
                 Ok(_) => {
                     for i in e_parser.code_list {
                         i.show();
+                        println!("--- wasm code ---");
                         match &i{
                             ExprElem::FuncElem(a) => {
                                 match a.generate(){
@@ -199,7 +207,7 @@ mod tests {
                                 }
                             }
                             _ => {
-                                println!("func 型ではありませんでした");
+                                println!("func 要素ではありませんでした");
                                 continue;
                             }
                         }

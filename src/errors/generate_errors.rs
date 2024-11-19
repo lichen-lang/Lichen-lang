@@ -3,6 +3,7 @@
 pub enum GenerateError {
     InvalidNum,     // 不正な数字表現があった場合に発生します
     InvalidOperation, // 非対応の演算子を使った場合
+    InvalidleftPattern,
     // developer向けのエラーです。
     Deverror,
 }

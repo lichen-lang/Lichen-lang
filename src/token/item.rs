@@ -14,6 +14,13 @@ pub struct ItemBranch {
     pub loopdepth: isize,
 }
 
+impl ItemBranch{
+    /// 何も要素を持たない引数だった場合trueを返却する
+    pub fn has_no_elem(&self) -> bool {
+        self.contents.is_empty()
+    }
+}
+
 impl ASTBranch for ItemBranch {
     fn show(&self) {
         println!("{}Item(", " ".repeat(self.depth as usize * 4));
@@ -59,20 +66,20 @@ impl Wasm_gen for ItemBranch {
         let mut assembly_text = String::default();
         if self.contents.len() == 0{
             // itemの中に何も要素を持たない場合
-            // 考えられるのは'-'だったりする場合
+            // 例えば、考えられるのは'-'だったりする場合
         } else if self.contents.len() == 1 {
             // Itemの中に要素が一つだけの場合
             // （特別に修飾子が付与されない場合）
             // TODO
             // ここでは、変数をi32として扱います
             match &self.contents[0]{
-                ExprElem::WordElem(b) => {
-                    if b.self_is_num()? {
+                ExprElem::WordElem(word_b) => {
+                    if word_b.self_is_num()? {
                         // もし数字だった場合
-                        assembly_text.push_str(&format!("i32.const {}\n", b.contents));
+                        assembly_text.push_str(&format!("i32.const {}\n", word_b.contents));
                     } else {
                         // もし何らかの変数だった場合
-                        assembly_text.push_str(&format!("local.get ${}\n", b.contents));
+                        assembly_text.push_str(&format!("local.get ${}\n", word_b.contents));
                     }
                 }
 
