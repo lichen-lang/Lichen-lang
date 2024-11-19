@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn gen_test00(){
         let test_cases = vec![
-            "!a&&!bs" , 
+            "!a&&!b" , 
             "-10+20"  , 
             // "a**b**c" ,
             "a+b+c"   ,
@@ -173,7 +173,7 @@ mod tests {
             "func(10,1)+2*x"    ,
             // "tarai(1)(2)(3)"    ,
             // "if (0 < x){ 1 } else {0} + 1" ,
-            "c = !a&&!bs" , 
+            "c = !a&&!b" , 
             "d = -10+20"  , 
             // "a**b**c" ,
             "e = a+b+c"   ,

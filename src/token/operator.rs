@@ -11,6 +11,7 @@ pub struct OperatorBranch {
     pub depth: isize,
 }
 
+
 impl ASTBranch for OperatorBranch {
     fn show(&self) {
         println!(
@@ -36,11 +37,35 @@ impl OperatorBranch{
         // ここで送られて来るデータが本当に文字列でいいのか考える
         let mut assembly_text = String::default();
         match &*self.ope{
-            "=" => assembly_text.push_str( &equal_gen_wasm(l_expr, r_expr)?),
-            "+" => assembly_text.push_str( &normal_ope_gen_wasm(l_expr, r_expr, "i32.add\n")?),
-            "-" => assembly_text.push_str( &sub_gen_wasm(l_expr, r_expr)?) ,
-            "*" => assembly_text.push_str( &normal_ope_gen_wasm(l_expr, r_expr, "i32.mul\n")?),
-            "/" => assembly_text.push_str( &normal_ope_gen_wasm(l_expr, r_expr, "i32.div\n")?) ,
+            "=" => assembly_text.push_str(
+                &equal_gen_wasm(l_expr, r_expr)?), // equal
+            "+" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.add\n")?),
+            "-" => assembly_text.push_str(
+                &sub_gen_wasm(l_expr, r_expr)?) , // subtract
+            "*" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.mul\n")?),
+            "/" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.div\n")?) ,
+            "&&" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.and\n")?),
+            "||" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.or\n")?),
+            "!" => assembly_text.push_str(
+                &not_gen_wasm(l_expr, r_expr)?),
+            // 
+            "==" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.eq\n")?) ,
+            "!=" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.ne\n")?) ,
+            "<" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.lt\n")?) ,
+            ">" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.gt\n")?) ,
+            "<=" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.le\n")?) ,
+            ">=" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.ge\n")?) ,
             _ => return Err(GenerateError::InvalidOperation),
         }
         Ok(assembly_text)
@@ -71,6 +96,8 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
 }
 
 
+
+/// ふたつの引数を両端からとる"普通の"演算子の生成
 fn normal_ope_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope_string:&str)-> Result<String, GenerateError>{
     let mut assembly_text = String::default();
     if let ExprElem::ItemElem(item_b) = l_expr{
@@ -88,7 +115,8 @@ fn normal_ope_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope_string:&str)-> Re
 }
 
 
-fn sub_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem)-> Result<String, GenerateError> {
+/// 前置記法の場合わけが必要なケース("-"の場合)
+fn sub_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, GenerateError> {
     let mut assembly_text = String::default();
     if let ExprElem::ItemElem(item_b) = l_expr{
         if item_b.has_no_elem() {
@@ -107,3 +135,27 @@ fn sub_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem)-> Result<String, GenerateErr
     assembly_text.push_str("i32.sub\n");
     Ok(assembly_text)
 }
+
+
+/// 前置記法の場合わけが必要なケース("!"の場合)
+fn not_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, GenerateError> {
+    let mut assembly_text = String::default();
+    if let ExprElem::ItemElem(item_b) = l_expr{
+        if item_b.has_no_elem() {
+            assembly_text.push_str("i32.const 1\n");
+        } else {
+            assembly_text.push_str(&item_b.generate()?);
+        }
+    } else {
+        return Err(GenerateError::Deverror);
+    }
+    if let ExprElem::ItemElem(item_b) = r_expr{
+        assembly_text.push_str(&item_b.generate()?);
+    } else {
+        return Err(GenerateError::Deverror);
+    }
+    assembly_text.push_str("i32.xor\n");
+    Ok(assembly_text)
+}
+
+
