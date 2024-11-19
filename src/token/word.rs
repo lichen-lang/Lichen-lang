@@ -22,16 +22,16 @@ impl WordBranch{
         for (i, j    ) in self.contents.chars() .enumerate(){
             if j == '.' {
                 // 数字以外だった場合
-                if i == 0 || i == self.contents.len() - 1{
+                if i == 0 || i == self.contents.len() - 1 {
                     // 不正な数値表現
                     return Err(GenerateError::InvalidNum);
                 } else {
                     // pass
                 }
-            } else if !('0' < j && j <'9') {
+            } else if !('0' <= j && j <='9') {
                  return Ok(false);
             } else {
-                 // 数字だった場合
+                 // 数字だった場合はpass
             }
         }
         Ok(true)
