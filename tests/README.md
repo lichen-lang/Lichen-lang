@@ -15,7 +15,7 @@
 ```
 
 ```bash
-cargo test --package lichen-lang --test lib -- tests::expr_test00 --exact --show-output 
+cargo test --package lichen-lang --test lib -- test_set::expr_tests::expr_test00 --exact --show-output
 ```
 
 ### expr test 01
@@ -25,7 +25,7 @@ func00(10, 123 + func01(a,b,c)) + 2 * x
 ```
 
 ```bash
-cargo test --package lichen-lang --test lib -- tests::expr_test01 --exact --show-output
+cargo test --package lichen-lang --test lib -- test_set::expr_tests::expr_test01 --exact --show-output
 ```
 
 ### expr test 02
@@ -35,7 +35,7 @@ debug trait test
 ```
 
 ```bash
-cargo test --package lichen-lang --test lib -- tests::expr_test02 --exact --show-output
+cargo test --package lichen-lang --test lib -- test_set::expr_tests::expr_test02 --exact --show-output
 ```
 
 ### expr test 03
@@ -45,7 +45,7 @@ while  (0 < x) { 1 } else {0}(1)[2](3)
 ```
 
 ```bash
-cargo test --package lichen-lang --test lib -- tests::expr_test03 --exact --show-output
+cargo test --package lichen-lang --test lib -- test_set::expr_tests::expr_test03 --exact --show-output
 ```
 
 ### expr test04
@@ -55,7 +55,7 @@ cargo test --package lichen-lang --test lib -- tests::expr_test03 --exact --show
 ```
 
 ```bash
-cargo test --package lichen-lang --test lib -- tests::expr_test04 --exact --show-output
+cargo test --package lichen-lang --test lib -- test_set::expr_tests::expr_test04 --exact --show-output
 ```
 
 ### unit test00
@@ -76,13 +76,13 @@ cargo test --package lichen-lang --test lib -- tests::unit_test01 --exact --show
 
 ### stmt test00
 ```bash
-cargo test --package lichen-lang --test lib -- tests::stmt_test00 --exact --show-output
+cargo test --package lichen-lang --test lib -- test_set::stmt_tests::stmt_test00 --exact --show-output
 ```
 
 ### gen test00
 正しくwasmが生成できるかのテスト
 ```
-cargo test --package lichen-lang --test lib -- tests::gen_test00 --exact --show-output
+cargo test --package lichen-lang --test lib -- test_set::gen_tests::gen_test00 --exact --show-output
 ```
 
 
