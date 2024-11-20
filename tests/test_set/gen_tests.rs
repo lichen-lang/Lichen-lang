@@ -14,6 +14,7 @@ use anyhow;
 
 
 /// https://crates.io/crates/wasmer/
+#[test]
 pub fn run_wasm() -> anyhow::Result<()> {
     let module_wat = r#"
     (module
@@ -21,7 +22,8 @@ pub fn run_wasm() -> anyhow::Result<()> {
     (func $add_one (export "add_one") (type $t0) (param $p0 i32) (result i32)
         local.get $p0
         i32.const 1
-        i32.add))
+        i32.add
+    ))
     "#;
 
     let mut store = Store::default();
@@ -31,9 +33,12 @@ pub fn run_wasm() -> anyhow::Result<()> {
     let instance = Instance::new(&mut store, &module, &import_object)?;
 
     let add_one = instance.exports.get_function("add_one")?;
-    let result = add_one.call(&mut store, &[Value::I32(42)])?;
-    assert_eq!(result[0], Value::I32(43));
 
+    for i in 0..10{
+        let result = add_one.call(&mut store, &[Value::I32(i)])?;
+        println!("i:{} result: {}", i,result[0]);
+        assert_eq!(result[0], Value::I32(i + 1));
+    }
     Ok(())
 }
 
@@ -73,7 +78,7 @@ pub fn gen_test00(){
                     println!("--- wasm code ---");
                     match &i{
                         ExprElem::FuncElem(a) => {
-                            match a.generate(){
+                            match a.generate_wasm(){
                                 Ok(s) => {
                                     println!("{}", s);
                                 }
