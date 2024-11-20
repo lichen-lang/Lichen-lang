@@ -21,21 +21,25 @@ pub fn wasm_test_2_args_1_return(
         ans:&[i32]
     ) -> anyhow::Result<()> {
     let module_wat = &format!(r#"
-    (module
-    (type $t0 (func
-        (param i32)
-        (param i32)
-        (result i32)
-    ))
-    (func $test (export "test") (type $t0)
-        (param $a i32)
-        (param $b i32)
-        (result i32)
-        {}
-    ))
+(module
+(type $t0 (func
+(param i32)
+(param i32)
+(result i32)
+))
+(func $test (export "test") (type $t0)
+(param $a i32)
+(param $b i32)
+(result i32)
+;; -- start --
+{}
+;; --  end  --
+))
     "#,
     wasm_code
     );
+    println!("--- wasm code ---");
+    println!("{}", module_wat);
 
     let mut store = Store::default();
     let module = Module::new(&store, &module_wat)?;
@@ -68,6 +72,7 @@ pub fn wasm_test_2_args_1_return(
 }
 
 /// https://crates.io/crates/wasmer/
+/// wasmerの使い方の例
 #[test]
 pub fn run_wasm() -> anyhow::Result<()> {
     let module_wat = r#"
@@ -155,7 +160,8 @@ pub fn gen_test00(){
 }
 
 
-/// return がboolになるような2引数のケース
+/// return がboolになるような2引数のケースをwasmerで実際に実行して、テストします。
+/// 
 #[test]
 pub fn gen_test01(){
     let test_cases = vec![
@@ -193,12 +199,10 @@ pub fn gen_test01(){
             Ok(_) => {
                 for expr in e_parser.code_list {
                     expr.show();
-                    println!("--- wasm code ---");
                     match &expr{
                         ExprElem::FuncElem(a) => {
                             match a.generate_wasm(){
                                 Ok(wasm_code) => {
-                                    println!("{}", wasm_code);
                                     let _ = wasm_test_2_args_1_return(&wasm_code,  &arg_set[i], &ans[i]);
                                 }
                                 Err(e) => {
