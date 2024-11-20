@@ -97,7 +97,7 @@ impl Wasm_gen for ItemBranch {
         } else {
             // ここは例えば、let mut aなどの場合
             // 
-            // borrow mut &mut とか引数に
+            // `borrow mut` `&mut` とか引数に
             return Err(GenerateError::Deverror);// 未実装
         }
         return Ok(assembly_text);

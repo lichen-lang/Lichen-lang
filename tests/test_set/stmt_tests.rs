@@ -35,7 +35,10 @@ pub fn stmt_test00() {
             ",
             "
             let a = tarai(tarai(x - 1,  y, z), tarai(y - 1, z, x), tarai(z - 1, x, y));
-            "
+            ",
+            "let a: i32 = 1+2;",
+            "let a: (i32, i32) -> i32 -> i32 = f();",
+
         ];
         for test_case in test_cases{
             let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);

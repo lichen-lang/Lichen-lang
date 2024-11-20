@@ -16,4 +16,3 @@ impl RecursiveAnalysisElements for DecFuncBranch{
     }
 }
 
-

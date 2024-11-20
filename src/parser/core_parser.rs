@@ -29,6 +29,7 @@ macro_rules! def_ope {
 }
 
 pub enum OpeTable{
+    ARROW, // 矢印
     OR,
     AND,
     EQ,
@@ -56,6 +57,7 @@ pub enum OpeTable{
 impl OpeTable{
     pub fn set(s:&str) -> Result<Self, &str>{
         match s{
+            "->" => Ok(Self::OR),
             "||" => Ok(Self::OR),
             "&&" => Ok(Self::AND),
             "==" => Ok(Self::EQ),
@@ -91,6 +93,7 @@ pub trait Parser<'a> {
     // operators
     // - left priority
     //   - priority -3
+    def_ope!(ARROW, "->", Prio::Right, -4);
     def_ope!(OR, "||", Prio::Left, -3);
     //   - priority -2
     def_ope!(AND, "&&", Prio::Left, -2);
@@ -111,12 +114,12 @@ pub trait Parser<'a> {
 
     // - right priority
     //   - priority -4
-    def_ope!(ASSIGNMENT, "=", Prio::Right, -4);
-    def_ope!(ADDEQ, "+=", Prio::Right, -4);
-    def_ope!(SUBEQ, "-=", Prio::Right, -4);
-    def_ope!(MULEQ, "*=", Prio::Right, -4);
-    def_ope!(DIVEQ, "/=", Prio::Right, -4);
-    def_ope!(MODEQ, "%=", Prio::Right, -4);
+    def_ope!(ASSIGNMENT, "=", Prio::Right, -5);
+    def_ope!(ADDEQ, "+=", Prio::Right, -5);
+    def_ope!(SUBEQ, "-=", Prio::Right, -5);
+    def_ope!(MULEQ, "*=", Prio::Right, -5);
+    def_ope!(DIVEQ, "/=", Prio::Right, -5);
+    def_ope!(MODEQ, "%=", Prio::Right, -5);
     //   - priority -3
     def_ope!(POW, "**", Prio::Right, 3);
 
@@ -125,8 +128,9 @@ pub trait Parser<'a> {
     def_ope!(NOT, "!", Prio::Prefix, -1);
 
     /// 演算子を文字列として長いものからの順番で並べたもの
-    const LENGTH_ORDER_OPE_LIST: [&'a Ope<'a>; 22] = [
+    const LENGTH_ORDER_OPE_LIST: [&'a Ope<'a>; 23] = [
         // length 2
+        Self::ARROW,
         Self::OR,    // ||
         Self::AND,   // &&
         Self::EQ,    // ==

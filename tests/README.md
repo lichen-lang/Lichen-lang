@@ -85,6 +85,11 @@ cargo test --package lichen-lang --test lib -- test_set::stmt_tests::stmt_test00
 cargo test --package lichen-lang --test lib -- test_set::gen_tests::gen_test00 --exact --show-output
 ```
 
+### gen test01
+生成された`wasm text format` が期待する動作をするかどうか確かめるテスト
+```
+cargo test --package lichen-lang --test lib -- test_set::gen_tests::gen_test01 --exact --show-output
+```
 
 ## テストの走るタイミング
 
