@@ -91,7 +91,7 @@ impl RecursiveAnalysisElements for FuncBranch {
 
 impl Wasm_gen for FuncBranch {
 
-    fn generate(&self) -> Result<String, GenerateError> {
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
         let mut assembly_text:String = String::new();
 
         // 関数処理部分
@@ -112,7 +112,7 @@ impl Wasm_gen for FuncBranch {
                 for i in &self.contents{
                     match i{
                         ExprElem::ItemElem(b) => {
-                            assembly_text.push_str(&b.generate()?);
+                            assembly_text.push_str(&b.generate_wasm()?);
                         }
                         _ => {
                             // 必ず引数はアイテムになるのでエラー

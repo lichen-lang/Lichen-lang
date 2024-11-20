@@ -61,7 +61,7 @@ impl RecursiveAnalysisElements for ItemBranch {
 
 impl Wasm_gen for ItemBranch {
 
-    fn generate(&self) -> Result<String, GenerateError> {
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
         // 複数の場合もあることに注意
         let mut assembly_text = String::default();
         if self.contents.len() == 0{
@@ -84,11 +84,11 @@ impl Wasm_gen for ItemBranch {
                 }
 
                 ExprElem::FuncElem(func_b) => {
-                    assembly_text.push_str(&func_b.generate()?);
+                    assembly_text.push_str(&func_b.generate_wasm()?);
                 }
 
                 ExprElem::ParenBlockElem(paren_b) => {
-                    assembly_text.push_str(&paren_b.generate()?);
+                    assembly_text.push_str(&paren_b.generate_wasm()?);
                 }
                 _ => {
                     return Err(GenerateError::Deverror);

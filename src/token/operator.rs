@@ -52,20 +52,21 @@ impl OperatorBranch{
             "||" => assembly_text.push_str(
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.or\n")?),
             "!" => assembly_text.push_str(
-                &not_gen_wasm(l_expr, r_expr)?),
-            // 
+                &not_gen_wasm(l_expr, r_expr)?),  // xor を使ってnotを再現している
+            //
             "==" => assembly_text.push_str(
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.eq\n")?) ,
             "!=" => assembly_text.push_str(
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.ne\n")?) ,
+            // 大小には`signed` `unsigned`がある
             "<" => assembly_text.push_str(
-                &normal_ope_gen_wasm(l_expr, r_expr, "i32.lt\n")?) ,
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.lt_s\n")?) ,
             ">" => assembly_text.push_str(
-                &normal_ope_gen_wasm(l_expr, r_expr, "i32.gt\n")?) ,
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.gt_s\n")?) ,
             "<=" => assembly_text.push_str(
-                &normal_ope_gen_wasm(l_expr, r_expr, "i32.le\n")?) ,
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.le_s\n")?) ,
             ">=" => assembly_text.push_str(
-                &normal_ope_gen_wasm(l_expr, r_expr, "i32.ge\n")?) ,
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.ge_s\n")?) ,
             _ => return Err(GenerateError::InvalidOperation),
         }
         Ok(assembly_text)
@@ -76,7 +77,7 @@ impl OperatorBranch{
 fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, GenerateError>{
     let mut assembly_text = String::default();
     if let ExprElem::ItemElem(item_b) = r_expr{
-            assembly_text.push_str(&item_b.generate()?);
+            assembly_text.push_str(&item_b.generate_wasm()?);
     } else {
         return Err(GenerateError::Deverror);
     }
@@ -101,12 +102,12 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
 fn normal_ope_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope_string:&str)-> Result<String, GenerateError>{
     let mut assembly_text = String::default();
     if let ExprElem::ItemElem(item_b) = l_expr{
-        assembly_text.push_str(&item_b.generate()?);
+        assembly_text.push_str(&item_b.generate_wasm()?);
     } else {
         return Err(GenerateError::Deverror);
     }
     if let ExprElem::ItemElem(item_b) = r_expr{
-        assembly_text.push_str(&item_b.generate()?);
+        assembly_text.push_str(&item_b.generate_wasm()?);
     } else {
         return Err(GenerateError::Deverror);
     }
@@ -122,13 +123,13 @@ fn sub_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, GenerateEr
         if item_b.has_no_elem() {
             assembly_text.push_str("i32.const 0\n");
         } else {
-            assembly_text.push_str(&item_b.generate()?);
+            assembly_text.push_str(&item_b.generate_wasm()?);
         }
     } else {
         return Err(GenerateError::Deverror);
     }
     if let ExprElem::ItemElem(item_b) = r_expr{
-        assembly_text.push_str(&item_b.generate()?);
+        assembly_text.push_str(&item_b.generate_wasm()?);
     } else {
         return Err(GenerateError::Deverror);
     }
@@ -144,13 +145,13 @@ fn not_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, GenerateEr
         if item_b.has_no_elem() {
             assembly_text.push_str("i32.const 1\n");
         } else {
-            assembly_text.push_str(&item_b.generate()?);
+            assembly_text.push_str(&item_b.generate_wasm()?);
         }
     } else {
         return Err(GenerateError::Deverror);
     }
     if let ExprElem::ItemElem(item_b) = r_expr{
-        assembly_text.push_str(&item_b.generate()?);
+        assembly_text.push_str(&item_b.generate_wasm()?);
     } else {
         return Err(GenerateError::Deverror);
     }

@@ -70,7 +70,7 @@ impl ASTAreaBranch<ExprElem> for ParenBlockBranch {
 
 
 impl Wasm_gen for ParenBlockBranch{
-    fn generate(&self) -> Result<String, crate::errors::generate_errors::GenerateError> {
+    fn generate_wasm(&self) -> Result<String, crate::errors::generate_errors::GenerateError> {
         let mut assembly_text = String::default();
         match self.contents.len(){
             0 => {
@@ -87,7 +87,7 @@ impl Wasm_gen for ParenBlockBranch{
                 match &self.contents[0]{
                     // example `(1+a)`
                     ExprElem::FuncElem(func_b) => {
-                        assembly_text.push_str(&func_b.generate()?);
+                        assembly_text.push_str(&func_b.generate_wasm()?);
                     }
 
                     // example `(a)`
@@ -102,7 +102,7 @@ impl Wasm_gen for ParenBlockBranch{
 
                     // `((a + 1))`
                     ExprElem::ParenBlockElem(paren_b) => {
-                        assembly_text.push_str(&paren_b.generate()?);
+                        assembly_text.push_str(&paren_b.generate_wasm()?);
                     }
 
                     _ => {

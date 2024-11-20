@@ -31,8 +31,7 @@ enum wasm_instructions
 ///
 pub trait Wasm_gen {
 
-
-    fn generate(&self) -> Result<String, GenerateError>;
+    fn generate_wasm(&self) -> Result<String, GenerateError>;
 }
 
 
