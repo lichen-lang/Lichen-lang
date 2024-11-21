@@ -74,6 +74,6 @@ impl Wasm_gen for SyntaxBoxBranch {
                     return Err(GenerateError::Deverror);
             }
         }
-        return Ok(assembly_text);
+        Ok(assembly_text)
     }
 }

@@ -28,7 +28,7 @@ impl WordBranch{
                 } else {
                     // pass
                 }
-            } else if !('0' <= j && j <='9') {
+            } else if !j.is_ascii_digit() {
                  return Ok(false);
             } else {
                  // 数字だった場合はpass

@@ -119,7 +119,7 @@ impl Wasm_gen for ParenBlockBranch{
                 return Err(GenerateError::Deverror);
             }
         }
-        return Ok(assembly_text);
+        Ok(assembly_text)
     }
 }
 

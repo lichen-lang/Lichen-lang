@@ -130,7 +130,7 @@ impl Wasm_gen for FuncBranch {
                 return Err(GenerateError::Deverror);
             }
         }
-        return Ok(assembly_text);
+        Ok(assembly_text)
     }
 }
 

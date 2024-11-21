@@ -64,7 +64,7 @@ impl Wasm_gen for ItemBranch {
     fn generate_wasm(&self) -> Result<String, GenerateError> {
         // 複数の場合もあることに注意
         let mut assembly_text = String::default();
-        if self.contents.len() == 0{
+        if self.contents.is_empty(){
             // itemの中に何も要素を持たない場合
             // 例えば、考えられるのは'-'だったりする場合
         } else if self.contents.len() == 1 {
@@ -100,6 +100,6 @@ impl Wasm_gen for ItemBranch {
             // `borrow mut` `&mut` とか引数に
             return Err(GenerateError::Deverror);// 未実装
         }
-        return Ok(assembly_text);
+        Ok(assembly_text)
     }
 }

@@ -6,7 +6,6 @@ extern crate lichen_lang;
 use colored::*;
 use lichen_lang::parser::core_parser::Parser;
 use lichen_lang::parser::expr_parser::ExprParser;
-use lichen_lang::abs::gen::Wasm_gen;
 use lichen_lang::abs::ast::*;
 
 use crate::utils::testutils::insert_space;

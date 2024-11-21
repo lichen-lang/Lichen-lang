@@ -42,7 +42,7 @@ pub fn wasm_test_2_args_1_return(
     println!("{}", module_wat);
 
     let mut store = Store::default();
-    let module = Module::new(&store, &module_wat)?;
+    let module = Module::new(&store, module_wat)?;
     // The module doesn't import anything, so we create an empty import object.
     let import_object = imports! {};
     let instance = Instance::new(&mut store, &module, &import_object)?;
@@ -86,7 +86,7 @@ pub fn run_wasm() -> anyhow::Result<()> {
     "#;
 
     let mut store = Store::default();
-    let module = Module::new(&store, &module_wat)?;
+    let module = Module::new(&store, module_wat)?;
     // The module doesn't import anything, so we create an empty import object.
     let import_object = imports! {};
     let instance = Instance::new(&mut store, &module, &import_object)?;
@@ -165,13 +165,11 @@ pub fn gen_test00(){
 /// 
 #[test]
 pub fn gen_test01(){
-    let test_cases = vec![
-        "!a&&!b" , 
+    let test_cases = ["!a&&!b" , 
         "!(a||b)" , 
         "a != b" , 
         "a * b != a + b" , 
-        "-a <= b && b <= a",
-    ];
+        "-a <= b && b <= a"];
 
     let arg_set:Vec<Vec<(i32, i32)>> = vec![
         vec![(0, 0), (0, 1), (1, 0), (1, 1)], // !a&&!b

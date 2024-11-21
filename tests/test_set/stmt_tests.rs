@@ -5,7 +5,6 @@
 extern crate lichen_lang;
 use lichen_lang::parser::core_parser::Parser;
 use lichen_lang::parser::stmt_parser::StmtParser;
-use lichen_lang::abs::gen::Wasm_gen;
 use lichen_lang::abs::ast::*;
 
 
