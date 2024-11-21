@@ -1,8 +1,10 @@
 use crate::abs::ast::*;
+use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::Parser;
 use crate::parser::expr_parser::ExprParser;
 use crate::parser::stmt_parser::StmtParser;
+use crate::errors::generate_errors::GenerateError;
 
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct
@@ -61,5 +63,12 @@ impl RecursiveAnalysisElements for SyntaxBranch {
         s_parser.resolve()?;
         self.contents = s_parser.code_list;
         Ok(())
+    }
+}
+
+
+impl Wasm_gen for SyntaxBranch{
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
+        todo!()
     }
 }

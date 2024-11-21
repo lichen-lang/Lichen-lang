@@ -11,7 +11,7 @@ pub struct DecFuncBranch{
 }
 
 impl RecursiveAnalysisElements for DecFuncBranch{
-    fn resolve_self(&mut self) -> Result<(), crate::errors::parser_errors::ParserError> {
+    fn resolve_self(&mut self) -> Result<(), ParserError> {
         todo!()
     }
 }
