@@ -190,6 +190,7 @@ pub trait Parser<'a> {
     ];
     const ESCAPECHAR: char = '\\';
     const FUNCTION: &'a str = "fn";
+    const PUB_FUNCTION: &'a str = "pub_fn";
     const STRUCTURE: &'a str = "struct";
     const ENUMERATION: &'a str = "enum";
     const DOUBLE_QUOTATION: char = '"';
@@ -199,15 +200,19 @@ pub trait Parser<'a> {
     const CONTROL_BREAK: &'a str = "break";
     const CONTROL_CONTINUE: &'a str = "continue";
     const CONTROL_ASSERT: &'a str = "assert";
+    const CONTROL_LET: &'a str = "let";
+    const CONTROL_LETMUT: &'a str = "let_mut";
 
-    const CONTROL_STATEMENT: [&'a str; 4] = [
+    const CONTROL_STATEMENT: [&'a str; 6] = [
         Self::CONTROL_RETURN,   // return
         Self::CONTROL_BREAK,    // break
         Self::CONTROL_CONTINUE, // continue
         Self::CONTROL_ASSERT,   // assert
+        Self::CONTROL_LET,      // let
+        Self::CONTROL_LETMUT,   // let mut
     ];
 
-    const KEYWORDS: [&'a str; 14] = [
+    const KEYWORDS: [&'a str; 16] = [
         // Syntax
         Self::SYNTAX_IF,    // if
         Self::SYNTAX_ELIF,  // elif
@@ -225,6 +230,8 @@ pub trait Parser<'a> {
         Self::CONTROL_BREAK,    // break
         Self::CONTROL_CONTINUE, // control
         Self::CONTROL_ASSERT,   // assert
+        Self::CONTROL_LET,      // let
+        Self::CONTROL_LETMUT,   // let_mut
     ];
 
     const BLOCK_BRACE_OPEN: char = '{';

@@ -8,6 +8,7 @@ use crate::token::list_block::ListBlockBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::paren_block::ParenBlockBranch;
 use crate::token::stmt::expr::ExprBranch;
+use crate::token::stmt::stmt::StmtBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
@@ -67,9 +68,11 @@ pub enum StmtElem {
     BlockElem(BlockBranch),
     ListBlockElem(ListBlockBranch),
     ParenBlockElem(ParenBlockBranch),
+    // 
+    ExprElem(ExprBranch),
+    Special(StmtBranch),
     // without RecursiveAnalysisElements trait structures
     StringElem(StringBranch),
-    ExprElem(ExprBranch),
     WordElem(WordBranch),
     OpeElem(OperatorBranch),
     CommentElem(CommentBranch),
@@ -210,7 +213,8 @@ impl Token for StmtElem {
         match self {
             Self::BlockElem(e) => e.get_show_as_string(),
             Self::ListBlockElem(e) => e.get_show_as_string(),
-            Self::ParenBlockElem(e) => e.get_show_as_string(),
+            Self::ParenBlockElem(e)=> e.get_show_as_string(),
+            Self::Special(e) => e.get_show_as_string(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(e) => e.get_show_as_string(),
             Self::CommentElem(e) => e.get_show_as_string(),
@@ -226,6 +230,7 @@ impl Token for StmtElem {
             Self::BlockElem(e) => e.show(),
             Self::ListBlockElem(e) => e.show(),
             Self::ParenBlockElem(e) => e.show(),
+            Self::Special(e) => e.show(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(e) => e.show(),
             Self::CommentElem(e) => e.show(),
@@ -242,6 +247,7 @@ impl Token for StmtElem {
             Self::ListBlockElem(e) => e.resolve_self(),
             Self::ParenBlockElem(e) => e.resolve_self(),
             Self::ExprElem(e) => e.resolve_self(),
+            Self::Special(e) => e.resolve_self(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(_) => Ok(()),
             Self::CommentElem(_) => Ok(()),

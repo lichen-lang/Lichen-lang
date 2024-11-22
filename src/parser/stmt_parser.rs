@@ -4,6 +4,7 @@ use crate::parser::core_parser::*;
 
 use crate::token::operator::OperatorBranch;
 use crate::token::stmt::expr::ExprBranch;
+use crate::token::stmt::stmt::StmtBranch;
 use crate::token::string::StringBranch;
 use crate::token::word::WordBranch;
 use crate::token::comment::CommentBranch;
@@ -342,22 +343,49 @@ impl StmtParser {
     /// let a = 1; // <- stmt
     /// let b = 2; // <- stmt
     /// let c = 3; // <- stmt
+    /// return a; // <- stmt
     /// ```
     pub fn split_semicolon(&mut self) -> Result<(), ParserError> {
         let mut rlist: Vec<StmtElem> = Vec::new();
         let mut group: Vec<StmtElem> = Vec::new();
+
         for inner in &self.code_list {
             match &inner {
                 StmtElem::UnKnownElem(unb) => {
                     if unb.contents == Self::SEMICOLON {
-                        rlist.push(StmtElem::ExprElem(ExprBranch {
-                            // TODO ここは、`stmt`で処理される必要があるので変更する
-                            code_list: Self::stmt2expr(group.clone())?,
-                            depth: self.depth,
-                            loopdepth: self.loopdepth,
-                        }));
+                        if !group.is_empty() {
+                            if let StmtElem::WordElem(word_b) = &group[0]{
+                                if Self::CONTROL_STATEMENT.contains(&word_b.contents.as_str()) {
+                                    // return 等の
+                                    // 予約語だった場合
+                                    rlist.push(StmtElem::Special(StmtBranch { 
+                                        head: word_b.contents.clone(),
+                                        code_list: Self::stmt2expr(&group[1..])?,
+                                        depth: self.depth,
+                                        loopdepth: self.loopdepth
+                                    }));
+                                }else{
+                                    // 普通の変数のwordだった場合
+                                    rlist.push(StmtElem::ExprElem(ExprBranch {
+                                        code_list: Self::stmt2expr(&group)?,
+                                        depth: self.depth,
+                                        loopdepth: self.loopdepth,
+                                    }));
+                                }
+                            } else  {
+                                // 最初の要素がwordではなかった場合
+                                rlist.push(StmtElem::ExprElem(ExprBranch {
+                                    code_list: Self::stmt2expr(&group)?,
+                                    depth: self.depth,
+                                    loopdepth: self.loopdepth,
+                                }));
+                            }
+                        } else {
+                            // group が空だった場合
+                        }
                         group.clear();
                     } else {
+                        // セミコロン以外でまだ決定していないchar
                         group.push(inner.clone());
                     }
                 }
@@ -368,7 +396,7 @@ impl StmtParser {
         }
         if !group.is_empty() {
             rlist.push(StmtElem::ExprElem(ExprBranch {
-                code_list: Self::stmt2expr(group.clone())?,
+                code_list: Self::stmt2expr(&group)?,
                 depth: self.depth,
                 loopdepth: self.loopdepth,
             }));
@@ -378,18 +406,18 @@ impl StmtParser {
     }
 
     /// function for converting `stmt` to `expr`
-    fn stmt2expr(i: Vec<StmtElem>) -> Result<Vec<ExprElem>, ParserError> {
+    fn stmt2expr(i: &[StmtElem]) -> Result<Vec<ExprElem>, ParserError> {
         let mut rlist: Vec<ExprElem> = Vec::new();
-        for inner in i {
+        for inner in i.iter() {
             rlist.push(match inner {
-                StmtElem::StringElem(a) => ExprElem::StringElem(a),
-                StmtElem::CommentElem(a) => ExprElem::CommentElem(a),
-                StmtElem::BlockElem(a) => ExprElem::BlockElem(a),
-                StmtElem::ListBlockElem(a) => ExprElem::ListBlockElem(a),
-                StmtElem::ParenBlockElem(a) => ExprElem::ParenBlockElem(a),
-                StmtElem::OpeElem(a) => ExprElem::OpeElem(a),
-                StmtElem::WordElem(a) => ExprElem::WordElem(a),
-                StmtElem::UnKnownElem(a) => ExprElem::UnKnownElem(a),
+                StmtElem::StringElem(a) => ExprElem::StringElem(a.clone()),
+                StmtElem::CommentElem(a) => ExprElem::CommentElem(a.clone()),
+                StmtElem::BlockElem(a) => ExprElem::BlockElem(a.clone()),
+                StmtElem::ListBlockElem(a) => ExprElem::ListBlockElem(a.clone()),
+                StmtElem::ParenBlockElem(a) => ExprElem::ParenBlockElem(a.clone()),
+                StmtElem::OpeElem(a) => ExprElem::OpeElem(a.clone()),
+                StmtElem::WordElem(a) => ExprElem::WordElem(a.clone()),
+                StmtElem::UnKnownElem(a) => ExprElem::UnKnownElem(a.clone()),
                 _ => {
                     return Err(ParserError::UnableToConvertType)
                 },
