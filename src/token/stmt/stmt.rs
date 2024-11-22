@@ -1,6 +1,9 @@
 use crate::abs::ast::{ASTBranch, ExprElem, RecursiveAnalysisElements, StmtElem, Token};
+use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::expr_parser::ExprParser;
+use crate::errors::generate_errors::GenerateError;
+
 
 /// `return`
 /// `continue`
@@ -39,7 +42,7 @@ impl RecursiveAnalysisElements for StmtBranch {
 
 impl ASTBranch for StmtBranch {
     fn show(&self) {
-        println!("control name  {}", self.head);
+        println!("control Branch {}", self.head);
         for inner in &self.code_list{
             inner.show();
         }
@@ -48,11 +51,18 @@ impl ASTBranch for StmtBranch {
 
     fn get_show_as_string(&self) -> String {
         let mut rtext = String::default();
-        rtext.push_str(&format!("control name {} (\n", self.head));
+        rtext.push_str(&format!("control Branch \"{}\" (\n", self.head));
         for inner in &self.code_list{
             rtext.push_str(&inner.get_show_as_string());
         }
         rtext.push_str(")\n");
         return rtext;
+    }
+}
+
+
+impl Wasm_gen for StmtBranch {
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
+        todo!()
     }
 }

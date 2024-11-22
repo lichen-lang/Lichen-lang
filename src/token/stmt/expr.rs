@@ -2,6 +2,7 @@ use crate::abs::ast::{ ASTBranch, ExprElem, RecursiveAnalysisElements, Token};
 use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::expr_parser::ExprParser;
+use crate::errors::generate_errors::GenerateError;
 
 
 /// 式の集合を扱います
@@ -33,15 +34,16 @@ impl RecursiveAnalysisElements for ExprBranch {
 impl ASTBranch for ExprBranch {
     fn show(&self) {
         //pass
-        println!("ExprBranch");
+        println!("ExprBranch({}){{", self.code_list.len());
         for i in &self.code_list {
             i.show();
         }
+        println!("}}");
     }
 
     fn get_show_as_string(&self) -> String {
         //pass
-        let mut rlist: String = String::from(format!("ExprElem({}){{\n", self.code_list.len()));
+        let mut rlist: String = String::from(format!("ExprBranch({}){{\n", self.code_list.len()));
         for i in &self.code_list {
             rlist.push_str(&" ".repeat(4 * (self.depth as usize) + 1));
             rlist.push_str(&i.get_show_as_string());
@@ -53,14 +55,13 @@ impl ASTBranch for ExprBranch {
 
 
 impl Wasm_gen for ExprBranch{
-    fn generate_wasm(&self) -> Result<String, crate::errors::generate_errors::GenerateError> {
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
         let mut assembly_text = String::new();
         for expr in &self.code_list{
             match expr{
                 ExprElem::FuncElem(func_b) => {
                     // 普通の式の場合
                 }
-                // ここに別にreturn continue yield をキャッチする敷を書かなければならない
                 _ => {
                     // ここではエラーを返すべきである
                 }
