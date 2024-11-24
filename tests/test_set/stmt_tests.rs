@@ -62,6 +62,17 @@ pub fn stmt_test00() {
         a = 42;
         return (a + 1);
         ",
+        "
+        while (true){
+            a += 1;
+            if (a >= 5){
+                print(\"hello\");
+                break ;
+            };
+        } else {
+            print(\"end\");
+        }
+        ",
 
     ];
 
