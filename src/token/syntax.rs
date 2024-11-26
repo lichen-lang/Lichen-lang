@@ -223,6 +223,8 @@ fn wasm_while_gen(while_state:&SyntaxBranch) -> Result<String, GenerateError> {
             assembly_text.push_str(&format!("br_if ${}\n", block_addr));
             assembly_text.push_str(&wasm_stmt_gen(&while_state.contents)?);
             assembly_text.push_str(&format!("br ${}\n", loop_addr));
+            assembly_text.push_str("end\n");
+            assembly_text.push_str("end\n");
         }
         _ => {
             // dev error 
