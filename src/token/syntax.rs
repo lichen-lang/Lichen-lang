@@ -143,6 +143,7 @@ fn wasm_if_gen(if_state:&SyntaxBranch) -> Result<String, GenerateError>{
             } else if if_state.expr.len() == 1{
                 if let ExprElem::FuncElem(func_b) = &if_state.expr[0]{
                      // 式を展開
+                    assembly_text.push_str("else\n");
                     assembly_text.push_str(&func_b.generate_wasm()?);
                     assembly_text.push_str("if\n");
                     // 文をwasmように展開
@@ -183,15 +184,14 @@ fn wasm_if_gen(if_state:&SyntaxBranch) -> Result<String, GenerateError>{
 
 
 fn wasm_while_gen(while_state:&SyntaxBranch) -> Result<String, GenerateError> {
-    // 
+    use crate::gen::wasm::{BLOCK_ADDR, LOOP_ADDR};
     let mut assembly_text = String::default();
     
     // pass
     match &*while_state.name{
         "while" => {
-            let loop_addr = format!("lo{}", while_state.loopdepth);
-            let block_addr = format!("bl{}", while_state.loopdepth);
-            let expr_wasm = String::default();
+            let loop_addr = format!("{}{}", LOOP_ADDR, while_state.loopdepth);
+            let block_addr = format!("{}{}", BLOCK_ADDR, while_state.loopdepth);
 
             assembly_text.push_str(&format!("loop ${}\n", loop_addr));
             assembly_text.push_str(&format!("block ${}\n", block_addr));

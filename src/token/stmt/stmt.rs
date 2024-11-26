@@ -5,6 +5,7 @@ use crate::parser::expr_parser::ExprParser;
 use crate::errors::generate_errors::GenerateError;
 
 
+
 /// `return` `continue` `break` `yield` `let`
 /// などを処理をする
 /// 
@@ -66,21 +67,30 @@ impl ASTBranch for StmtBranch {
 
 impl Wasm_gen for StmtBranch {
     fn generate_wasm(&self) -> Result<String, GenerateError> {
+        use crate::gen::wasm::{BLOCK_ADDR, LOOP_ADDR};
+
         let mut assembly_text = String::default();
 
+        let loop_addr = format!("{}{}",LOOP_ADDR, self.loopdepth - 1);
+        let block_addr = format!("{}{}",BLOCK_ADDR, self.loopdepth - 1);
         match &*self.head {
             "return" => {
                 assembly_text.push_str("return\n");
             }
             "break" => {
                 // ここは、どのループの入れ子構造に属しているかで変わる
+                assembly_text.push_str(&format!("br ${}\n", block_addr));
+                assembly_text.push_str("unreachable\n");
             }
             "continue" => {
                 // ここは、どのループの入れ子構造に属しているかで変わる
+                assembly_text.push_str(&format!("br ${}\n", loop_addr));
+                assembly_text.push_str("unreachable\n");
             }
             _ => {
                 // error 不明なcontroll statement
-                //
+                // TODO
+                todo!()
             }
 
         }

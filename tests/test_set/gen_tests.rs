@@ -336,6 +336,32 @@ pub fn gen_test02(){
             i = i + 1;
         };
         ",
+        "
+        i = 0;
+        while (i < 10)
+        {
+            log(i);
+            if (5 <= i) {
+                break;
+            };
+            i = i + 1;
+        };
+        ",
+        "
+        i = 0;
+        while (i < 10)
+        {
+            j = 0;
+            while (!!(j < 10) && -1 < 0) {
+                /*hello world*/
+                log(i);
+                log(j);
+                break;
+                j = j + 1;
+            };
+            i = i + 1;
+        };
+        ",
     ];
 
 
