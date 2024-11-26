@@ -61,6 +61,10 @@ impl Wasm_gen for ExprBranch{
             match expr{
                 ExprElem::FuncElem(func_b) => {
                     // 普通の式の場合
+                    assembly_text.push_str(&func_b.generate_wasm()?);
+                }
+                ExprElem::SyntaxBoxElem(synt_b) => {
+                    assembly_text.push_str(&synt_b.generate_wasm()?);
                 }
                 _ => {
                     // ここではエラーを返すべきである

@@ -5,10 +5,12 @@ use crate::parser::expr_parser::ExprParser;
 use crate::errors::generate_errors::GenerateError;
 
 
-/// `return`
-/// `continue`
-/// `break`
+/// `return` `continue` `break` `yield` `let`
 /// などを処理をする
+/// 
+/// breakやcontinueなどの処理は、
+/// 外側のループ構造によってジャンプする先を
+/// 常に読み替える必要がある
 #[derive(Clone, Debug)]
 pub struct StmtBranch {
     pub head:String,
@@ -16,6 +18,7 @@ pub struct StmtBranch {
     pub depth: isize,
     pub loopdepth: isize,
 }
+
 
 impl RecursiveAnalysisElements for StmtBranch {
     fn resolve_self(&mut self) -> Result<(), ParserError> {
@@ -40,6 +43,7 @@ impl RecursiveAnalysisElements for StmtBranch {
     }
 }
 
+
 impl ASTBranch for StmtBranch {
     fn show(&self) {
         println!("control Branch {}", self.head);
@@ -47,7 +51,6 @@ impl ASTBranch for StmtBranch {
             inner.show();
         }
     }
-
 
     fn get_show_as_string(&self) -> String {
         let mut rtext = String::default();
@@ -63,6 +66,25 @@ impl ASTBranch for StmtBranch {
 
 impl Wasm_gen for StmtBranch {
     fn generate_wasm(&self) -> Result<String, GenerateError> {
-        todo!()
+        let mut assembly_text = String::default();
+
+        match &*self.head {
+            "return" => {
+                assembly_text.push_str("return\n");
+            }
+            "break" => {
+                // ここは、どのループの入れ子構造に属しているかで変わる
+            }
+            "continue" => {
+                // ここは、どのループの入れ子構造に属しているかで変わる
+            }
+            _ => {
+                // error 不明なcontroll statement
+                //
+            }
+
+        }
+        Ok(assembly_text)
     }
 }
+

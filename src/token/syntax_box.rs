@@ -44,31 +44,21 @@ impl Wasm_gen for SyntaxBoxBranch {
     fn generate_wasm(&self) -> Result<String, GenerateError> {
         let mut assembly_text = String::default();
         match &*self.name{
-            "if" => { 
+            "if" => {
                 for section in &self.contents{
-                    match &*section.name {
-                        "if" => {
-                            //
-                            assembly_text.push_str("if\n");
-                        }
-                        "elif" => {
-                            //
-                        }
-                        "else" => {
-                            // 
-                        }
-                        _ => {
-                            // ERROR
-                        }
-                    }
+                    assembly_text.push_str(&section.generate_wasm("if")?);
+                }
+                for i in 0..count_if_section(&self.contents){
                     assembly_text.push_str("end\n");
                 }
             }
             "while" => {
-
+                for section in &self.contents{
+                    assembly_text.push_str(&section.generate_wasm("while")?);
+                }
             }
             "for" => {
-                
+                todo!()
             }
             _ => {
                     return Err(GenerateError::Deverror);
@@ -77,3 +67,21 @@ impl Wasm_gen for SyntaxBoxBranch {
         Ok(assembly_text)
     }
 }
+
+
+fn count_if_section(if_state_contents:&[SyntaxBranch]) -> usize{
+    let mut c = 0;
+    for inner in if_state_contents{
+        match &*inner.name{
+            "if" | "elif" => {
+                c += 1;
+            }
+            _ => {
+                // pass
+            }
+        }
+    }
+    c
+}
+
+
