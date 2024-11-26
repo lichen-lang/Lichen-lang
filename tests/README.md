@@ -91,6 +91,12 @@ cargo test --package lichen-lang --test lib -- test_set::gen_tests::gen_test00 -
 cargo test --package lichen-lang --test lib -- test_set::gen_tests::gen_test01 --exact --show-output
 ```
 
+### gen test02
+文のコンパイルができるかどうかを確かめる
+```
+cargo test --package lichen-lang --test lib -- test_set::gen_tests::gen_test02 --exact --show-output
+```
+
 ## テストの走るタイミング
 
 テストはローカル環境で上のコマンドで実行することができる。

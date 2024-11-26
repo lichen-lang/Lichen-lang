@@ -4,7 +4,7 @@
 
 extern crate lichen_lang;
 use colored::{Color, Colorize};
-use lichen_lang::parser::core_parser::Parser;
+use lichen_lang::parser::{core_parser::Parser, stmt_parser::StmtParser};
 use lichen_lang::parser::expr_parser::ExprParser;
 use lichen_lang::abs::gen::Wasm_gen;
 use lichen_lang::abs::ast::*;
@@ -144,17 +144,17 @@ pub fn run_wasm3() -> anyhow::Result<()> {
     i32.const 0
     local.set $i
     ;;
-    loop $loop_00
-    block $block_00
+    loop $0
+    block $1
         i32.const 10
         local.get $i
         i32.eq
-        br_if $block_00
+        br_if $1
         i32.const 1
         local.get $i
         i32.add
         local.set $i
-        br $loop_00
+        br $0
     end
     end
     local.get $i
@@ -237,7 +237,7 @@ pub fn gen_test00(){
 }
 
 
-/// return がboolになるような2引数のケースをwasmerで実際に実行して、テストします。
+/// 
 /// 
 #[test]
 pub fn gen_test01(){
@@ -293,6 +293,74 @@ pub fn gen_test01(){
                     }
                 }
             }
+        }
+    }
+}
+
+#[test]
+pub fn gen_test02(){
+    let test_cases = [
+        "
+        i = 0;
+        while (i < 10)
+        {
+            log(i);
+            i = i + 1;
+        };
+        ",
+        "
+        i = 0;
+        while (i < 10)
+        {
+            j = 0;
+            while (j < 10){
+                log(i);
+                log(j);
+                j = j + 1;
+            };
+            i = i + 1;
+        };
+        ",
+    ];
+
+
+    for test_case in test_cases{
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+        println!("----------------------------------------------------------------");
+        if let Err(e) = s_parser.resolve()
+        {
+            println!("unexpected ParseError occured");
+            println!("{:?}", e);
+            panic!()
+        }
+        else
+        {
+            let mut wasm_text_format = String::new();
+
+            for inner in s_parser.code_list{
+                // 分けることのできない式の集合
+                match inner {
+                    StmtElem::ExprElem(expr_b) => {
+                        wasm_text_format.push_str(
+                            &expr_b
+                            .generate_wasm()
+                            .expect("wasm生成中にエラーが発生しました(ExprElem)")
+                            );
+                    }
+                    StmtElem::Special(controll_b) => {
+                        wasm_text_format.push_str(
+                            &controll_b
+                            .generate_wasm()
+                            .expect("wasm生成中にエラーが発生しました(Special)")
+                            );
+                    }
+                    _ => {
+                        // error
+                        panic!()
+                    }
+                }
+            }
+            println!("{}", wasm_text_format);
         }
     }
 }
