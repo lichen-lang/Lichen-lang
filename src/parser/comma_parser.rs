@@ -198,7 +198,7 @@ impl CommaParser {
                             // todo
                             _ => {
                                 // todo error処理
-                                return Err(ParserError::UnexpectedType);
+                                return Err(ParserError::UnexpectedTypeComma);
                             }
                         }
                     }

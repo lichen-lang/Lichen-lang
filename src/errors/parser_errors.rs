@@ -8,7 +8,9 @@ pub enum ParserError {
     CommentBlockNotClosed,
     // for developers
     UnableToConvertType, // StmtElem をExprElemに変換できないときに発生する
-    UnexpectedType,
+    UnexpectedTypeStmt,
+    UnexpectedTypeExpr,
+    UnexpectedTypeComma,
     DevError,
     Uncategorized,
 }

@@ -48,7 +48,7 @@ impl StmtParser {
         Ok(())
     }
 
-        fn grouping_string(&mut self) -> Result<(), ParserError> {
+    fn grouping_string(&mut self) -> Result<(), ParserError> {
         // now this function can group all string in  the program
         let mut group: String = String::new();
         let mut rlist: Vec<StmtElem> = Vec::new();
@@ -101,7 +101,7 @@ impl StmtParser {
                                     }
                                 } else {
                                     // defer type
-                                    return Err(ParserError::UnexpectedType);
+                                    return Err(ParserError::UnexpectedTypeStmt);
                                 }
                             } else {
                                 return Err(ParserError::CommentBlockNotClosed);
@@ -261,10 +261,19 @@ impl StmtParser {
                                     self.loopdepth,
                                 ));
                             }
+                            StmtElem::CommentElem(cb) => {
+                                group.push(ProcToken::t_commentblock(
+                                        cb.contents.clone(),
+                                        cb.depth, 
+                                        cb.loopdepth
+                                ));
+                            }
                             // todo
                             _ => {
                                 // todo error処理
-                                return Err(ParserError::UnexpectedType);
+                                println!("some thing wrong");
+                                println!("{:?}", inner);
+                                return Err(ParserError::UnexpectedTypeStmt);
                             }
                         }
                     }

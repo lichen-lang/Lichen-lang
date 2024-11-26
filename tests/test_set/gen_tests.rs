@@ -313,7 +313,8 @@ pub fn gen_test02(){
         while (i < 10)
         {
             j = 0;
-            while (j < 10){
+            while (!!(j < 10) && -1 < 0) {
+                /*hello world*/
                 log(i);
                 log(j);
                 j = j + 1;
@@ -331,7 +332,6 @@ pub fn gen_test02(){
         {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
-            panic!()
         }
         else
         {

@@ -170,7 +170,7 @@ impl ExprParser {
                                     }
                                 } else {
                                     // defer type
-                                    return Err(ParserError::UnexpectedType);
+                                    return Err(ParserError::UnexpectedTypeExpr);
                                 }
                             } else {
                                 return Err(ParserError::CommentBlockNotClosed);
@@ -333,7 +333,7 @@ impl ExprParser {
                             // todo
                             _ => {
                                 // todo error処理
-                                return Err(ParserError::UnexpectedType);
+                                return Err(ParserError::UnexpectedTypeExpr);
                             }
                         }
                     }

@@ -33,6 +33,7 @@ pub trait ProcToken {
     fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self;
     fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
     fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self;
 }
 
 /// # ExprElem
@@ -174,9 +175,15 @@ impl ProcToken for ExprElem {
             loopdepth,
         })
     }
+    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self {
+        Self::CommentElem(CommentBranch { 
+            contents,
+            depth,
+            loopdepth
+        })
+    }
 }
 
-impl ExprElem {}
 
 impl Token for TypeElem {
     fn set_char_as_unknown(c: char) -> Self {
@@ -288,6 +295,14 @@ impl ProcToken for StmtElem {
             contents,
             depth,
             loopdepth,
+        })
+    }
+
+    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self {
+        Self::CommentElem(CommentBranch { 
+            contents,
+            depth,
+            loopdepth
         })
     }
 }
