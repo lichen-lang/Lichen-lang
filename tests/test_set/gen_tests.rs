@@ -110,7 +110,7 @@ pub fn run_wasm2() -> anyhow::Result<()> {
     (type $t0 (func (param i32) (result i32)))
     (func $add_one (export "add_one") (type $t0) (param $p0 i32) (result i32)
     (local $a v128)
-    v128.const i32x4 3 2 3 4
+    v128.const i32x4 3 2 3 4  ;; v128(3, 2, 3, 4)
     local.set $a
     local.get $a
     i32x4.extract_lane 3
@@ -124,6 +124,50 @@ pub fn run_wasm2() -> anyhow::Result<()> {
     let instance = Instance::new(&mut store, &module, &import_object)?;
 
     let add_one = instance.exports.get_function("add_one")?;
+
+    for i in 0..10{
+        let result = add_one.call(&mut store, &[Value::I32(i)])?;
+        println!("i:{} result: {}", i,result[0]);
+        // assert_eq!(result[0], Value::I32(i + 1));
+    }
+    Ok(())
+}
+
+/// wasmでループを作る実験
+#[test]
+pub fn run_wasm3() -> anyhow::Result<()> {
+    let module_wat = r#"
+    (module
+    (type $t0 (func (param i32) (result i32)))
+    (func $while_test (export "while_test") (type $t0) (param $p0 i32) (result i32)
+    (local $i i32)
+    i32.const 0
+    local.set $i
+    ;;
+    loop $loop_00
+    block $block_00
+        i32.const 10
+        local.get $i
+        i32.eq
+        br_if $block_00
+        i32.const 1
+        local.get $i
+        i32.add
+        local.set $i
+        br $loop_00
+    end
+    end
+    local.get $i
+    ))
+    "#;
+
+    let mut store = Store::default();
+    let module = Module::new(&store, module_wat)?;
+    // The module doesn't import anything, so we create an empty import object.
+    let import_object = imports! {};
+    let instance = Instance::new(&mut store, &module, &import_object)?;
+
+    let add_one = instance.exports.get_function("while_test")?;
 
     for i in 0..10{
         let result = add_one.call(&mut store, &[Value::I32(i)])?;
