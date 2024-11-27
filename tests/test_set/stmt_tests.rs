@@ -169,3 +169,38 @@ pub fn stmt_test01() {
         }
     }
 }
+
+
+#[test]
+pub fn gen_test03(){
+    let test_cases = [
+        "
+        fn main(a:i32) -> i32{
+            print(\"hello world\");
+        }
+        ",
+    ];
+
+
+    for test_case in test_cases{
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+        println!("----------------------------------------------------------------");
+        if let Err(e) = s_parser.resolve()
+        {
+            println!("unexpected ParseError occured");
+            println!("{:?}", e);
+        }
+        else
+        {
+            let mut a = String::default();
+
+            for i in s_parser.code_list{
+                a.push_str(&i.get_show_as_string());
+            }
+
+            println!("{}", a);
+        }
+    }
+
+}
+

@@ -354,7 +354,7 @@ pub fn gen_test02(){
             j = 0;
             while (!!(j < 10) && -1 < 0) {
                 /*hello world*/
-                log(i);
+                log(i); // hello
                 log(j);
                 break;
                 j = j + 1;
@@ -404,3 +404,58 @@ pub fn gen_test02(){
         }
     }
 }
+
+
+
+
+#[test]
+pub fn gen_test03(){
+    let test_cases = [
+        "
+        fn main() -> i32{
+        }
+        ",
+    ];
+
+
+    for test_case in test_cases{
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+        println!("----------------------------------------------------------------");
+        if let Err(e) = s_parser.resolve()
+        {
+            println!("unexpected ParseError occured");
+            println!("{:?}", e);
+        }
+        else
+        {
+            let mut wasm_text_format = String::new();
+
+            for inner in s_parser.code_list{
+                // 分けることのできない式の集合
+                match inner {
+                    StmtElem::ExprElem(expr_b) => {
+                        wasm_text_format.push_str(
+                            &expr_b
+                            .generate_wasm()
+                            .expect("wasm生成中にエラーが発生しました(ExprElem)")
+                            );
+                    }
+                    StmtElem::Special(controll_b) => {
+                        wasm_text_format.push_str(
+                            &controll_b
+                            .generate_wasm()
+                            .expect("wasm生成中にエラーが発生しました(Special)")
+                            );
+                    }
+                    _ => {
+                        // error
+                        panic!()
+                    }
+                }
+            }
+            println!("{}", wasm_text_format);
+        }
+    }
+
+}
+
