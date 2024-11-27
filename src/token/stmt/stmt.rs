@@ -1,4 +1,4 @@
-use crate::abs::ast::{ASTBranch, ExprElem, RecursiveAnalysisElements, StmtElem, Token};
+use crate::abs::ast::{ASTBranch, ExprElem, RecursiveAnalysisElements, Token};
 use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::expr_parser::ExprParser;
@@ -60,7 +60,7 @@ impl ASTBranch for StmtBranch {
             rtext.push_str(&inner.get_show_as_string());
         }
         rtext.push_str(")\n");
-        return rtext;
+        rtext
     }
 }
 

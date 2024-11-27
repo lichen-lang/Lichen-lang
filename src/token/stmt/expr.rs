@@ -43,7 +43,7 @@ impl ASTBranch for ExprBranch {
 
     fn get_show_as_string(&self) -> String {
         //pass
-        let mut rlist: String = String::from(format!("ExprBranch({}){{\n", self.code_list.len()));
+        let mut rlist: String = format!("ExprBranch({}){{\n", self.code_list.len());
         for i in &self.code_list {
             rlist.push_str(&" ".repeat(4 * (self.depth as usize) + 1));
             rlist.push_str(&i.get_show_as_string());
