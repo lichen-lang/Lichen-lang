@@ -362,59 +362,29 @@ pub fn gen_test02(){
             i = i + 1;
         };
         ",
-    ];
-
-
-    for test_case in test_cases{
-        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
-        println!("----------------------------------------------------------------");
-        if let Err(e) = s_parser.resolve()
-        {
-            println!("unexpected ParseError occured");
-            println!("{:?}", e);
-        }
-        else
-        {
-            let mut wasm_text_format = String::new();
-
-            for inner in s_parser.code_list{
-                // 分けることのできない式の集合
-                match inner {
-                    StmtElem::ExprElem(expr_b) => {
-                        wasm_text_format.push_str(
-                            &expr_b
-                            .generate_wasm()
-                            .expect("wasm生成中にエラーが発生しました(ExprElem)")
-                            );
-                    }
-                    StmtElem::Special(controll_b) => {
-                        wasm_text_format.push_str(
-                            &controll_b
-                            .generate_wasm()
-                            .expect("wasm生成中にエラーが発生しました(Special)")
-                            );
-                    }
-                    _ => {
-                        // error
-                        panic!()
-                    }
-                }
-            }
-            println!("{}", wasm_text_format);
-        }
-    }
-}
-
-
-
-
-#[test]
-pub fn gen_test03(){
-    let test_cases = [
         "
-        fn main() -> i32{
-        }
-        ",
+        // 100までの素数を求めるプログラム
+        i = 2;
+        while (i < 100)
+        {
+            //コメント
+            j = 2;
+            c = 0;
+            while (j < i) {
+            // コメント２
+                if (i%j == 0) {
+                    // コメント ブロック内で更にコメントをする場合
+                    c = c + 1;
+                };
+                j = j + 1;
+            };
+            if (c == 0) {
+                // is prime
+                log(i);
+            };
+            i = i + 1;
+        };
+        "
     ];
 
 
@@ -434,18 +404,28 @@ pub fn gen_test03(){
                 // 分けることのできない式の集合
                 match inner {
                     StmtElem::ExprElem(expr_b) => {
-                        wasm_text_format.push_str(
-                            &expr_b
-                            .generate_wasm()
-                            .expect("wasm生成中にエラーが発生しました(ExprElem)")
-                            );
+                        if let Ok(a) = &expr_b .generate_wasm(){
+                            wasm_text_format.push_str(a);
+                        }
+                        else if let Err(e) = &expr_b .generate_wasm(){
+                            println!("wasm生成中にエラーが発生しました(ExprElem)");
+                            println!("{:?}", e);
+                            panic!();
+                        }
                     }
                     StmtElem::Special(controll_b) => {
-                        wasm_text_format.push_str(
-                            &controll_b
-                            .generate_wasm()
-                            .expect("wasm生成中にエラーが発生しました(Special)")
-                            );
+                        if let Ok(a) = &controll_b .generate_wasm(){
+                            wasm_text_format.push_str(a);
+                        }
+                        else if let Err(e) = &controll_b .generate_wasm(){
+                            println!("wasm生成中にエラーが発生しました(ControlElem)");
+                            println!("{:?}", e);
+                            panic!();
+                        }
+                    }
+                    StmtElem::CommentElem(_) => {
+                        // pass 
+                        //文中にコメントが入った場合は　pass
                     }
                     _ => {
                         // error
@@ -456,6 +436,6 @@ pub fn gen_test03(){
             println!("{}", wasm_text_format);
         }
     }
-
 }
+
 

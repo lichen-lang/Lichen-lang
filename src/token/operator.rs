@@ -47,6 +47,8 @@ impl OperatorBranch{
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.mul\n")?),
             "/" => assembly_text.push_str(
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.div\n")?) ,
+            "%" => assembly_text.push_str(
+                &normal_ope_gen_wasm(l_expr, r_expr, "i32.rem_s\n")?) ,
             "&&" => assembly_text.push_str(
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.and\n")?),
             "||" => assembly_text.push_str(
@@ -85,8 +87,9 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
         // とりあえず、パターンなどを考えず、一つの変数に値を代入する
         // 場合のみの実装
         if let ExprElem::WordElem(word_b) = &item_b.contents[0]{
-            assembly_text .push_str(&format!("local.set ${}\n" , word_b.contents));
-        } else {
+            assembly_text.push_str(&format!("local.set ${}\n" , word_b.contents));
+        }
+        else {
             // word 以外がパターンに渡された場合
             return Err(GenerateError::InvalidleftPattern);
         }
@@ -95,7 +98,6 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
     }
     Ok(assembly_text)
 }
-
 
 
 /// ふたつの引数を両端からとる"普通の"演算子の生成

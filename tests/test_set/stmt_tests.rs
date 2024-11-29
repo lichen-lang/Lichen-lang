@@ -102,7 +102,7 @@ pub fn stmt_test00() {
 /// 動かし方
 ///
 /// ```bash
-/// cargo test --package lichen-lang --test lib -- test_set::stmt_tests::stmt_test00 --exact --show-output
+/// cargo test --package lichen-lang --test lib -- test_set::stmt_tests::stmt_test01 --exact --show-output
 /// ```
 #[test]
 pub fn stmt_test01() {
@@ -144,6 +144,26 @@ pub fn stmt_test01() {
             };
             b = 1 + 1;
         ",
+        "
+        // こんにちは
+        let i:i32 = 2;
+        while (i < 100)
+        {
+            j = 2;
+            c = 0;
+            while (j < i) {
+                if (i%j == 0) {
+                    c = c + 1;
+                };
+                j = j + 1;
+            };
+            if (c == 0) {
+                // is prime
+                log(i);
+            };
+            i = i + 1;
+        };
+        "
 
     ];
 
@@ -164,7 +184,7 @@ pub fn stmt_test01() {
                 println!("{:?}", i);
                 ans_ast_string.push_str(i.get_show_as_string().as_str());
             }
-            // println!("{}", ans_ast_string);
+            println!("{}", ans_ast_string);
             ans_ast_string.clear();
         }
     }

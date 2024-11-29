@@ -6,6 +6,8 @@ use crate::parser::expr_parser::ExprParser;
 use crate::parser::stmt_parser::StmtParser;
 use crate::errors::generate_errors::GenerateError;
 
+use super::comment;
+
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct
 /// resolve_selfはそれぞれ
@@ -242,8 +244,14 @@ fn wasm_stmt_gen(stmt_list: &[StmtElem]) -> Result<String, GenerateError>{
             assembly_text.push_str(&expr_b.generate_wasm()?);
         }else if let StmtElem::Special(control_b) = s{
             assembly_text.push_str(&control_b.generate_wasm()?);
-        }else{
+        } else if let StmtElem::CommentElem(comment_b) = s {
+            // pass
+            assembly_text.push_str("");
+        }
+        else{
             // これ以外のわたしが認識していない場合
+            // コメントだった場合について実装する
+            //
             todo!()
         }
     }

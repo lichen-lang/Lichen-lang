@@ -5,7 +5,6 @@ use crate::parser::expr_parser::ExprParser;
 use crate::errors::generate_errors::GenerateError;
 
 
-
 /// `return` `continue` `break` `yield` `let`
 /// などを処理をする
 /// 
@@ -70,7 +69,6 @@ impl Wasm_gen for StmtBranch {
         use crate::gen::wasm::{BLOCK_ADDR, LOOP_ADDR};
 
         let mut assembly_text = String::default();
-
         let loop_addr = format!("{}{}",LOOP_ADDR, self.loopdepth - 1);
         let block_addr = format!("{}{}",BLOCK_ADDR, self.loopdepth - 1);
         match &*self.head {
@@ -90,9 +88,10 @@ impl Wasm_gen for StmtBranch {
             _ => {
                 // error 不明なcontroll statement
                 // TODO
+                println!("error 不明なcontroll statement {}", self.head.clone());
                 todo!()
-            }
 
+            }
         }
         Ok(assembly_text)
     }
