@@ -1,6 +1,7 @@
 use crate::abs::ast::*;
 use crate::abs::gen::Wasm_gen;
 use crate::errors::generate_errors::GenerateError;
+use crate::gen::wasm::MEMORY_SPACE_NAME;
 
 /// #OperatorBranch
 /// 全ての演算子
@@ -78,16 +79,56 @@ impl OperatorBranch{
 
 fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, GenerateError>{
     let mut assembly_text = String::default();
-    if let ExprElem::ItemElem(item_b) = r_expr{
-            assembly_text.push_str(&item_b.generate_wasm()?);
+    let mut r_assembly_text = String::default();
+
+    if let ExprElem::ItemElem(item_b) = r_expr {
+        r_assembly_text = item_b.generate_wasm()?;
     } else {
         return Err(GenerateError::Deverror);
     }
-    if let ExprElem::ItemElem(item_b) = l_expr{
+    if let ExprElem::ItemElem(item_b) = l_expr {
         // とりあえず、パターンなどを考えず、一つの変数に値を代入する
         // 場合のみの実装
         if let ExprElem::WordElem(word_b) = &item_b.contents[0]{
+            // 普通の変数に代入するのと同じ
+            // a = 1;
+            // のようなケース
+            assembly_text.push_str(&r_assembly_text);
             assembly_text.push_str(&format!("local.set ${}\n" , word_b.contents));
+        } else if let ExprElem::ListElem(list_b) = &item_b.contents[0] {
+            // pass
+            // TODO
+            // a[0] = 1;のようなケース
+            // ^
+            // 呼び出す対象が名前の場合
+            // ```
+            // <list elem> = <r_expr>
+            // ```
+
+            if let ExprElem::WordElem(word_b) = &*list_b.name {
+                if word_b.contents == MEMORY_SPACE_NAME {
+                    // 特別なケース、メモリに直接アクセスするための方法を提供する
+                    // ```
+                    // __mem[0] = 0;
+                    // ```
+                    assembly_text.push_str(&list_b.generate_contents_wasm()?);
+                    assembly_text.push_str(&r_assembly_text);
+                    assembly_text.push_str("i32.store\n");
+                } else {
+                    // 通常のケース
+                    // ```
+                    // a[0] = 0;
+                    // ```
+                    todo!()
+                }
+            } else {
+                // 呼び出しの対象が名前ではない場合
+                // ```
+                // lst[0][0]
+                // ^^^^^^
+                // ```
+                todo!()
+            }
         }
         else {
             // word 以外がパターンに渡された場合
@@ -98,6 +139,7 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
     }
     Ok(assembly_text)
 }
+
 
 
 /// ふたつの引数を両端からとる"普通の"演算子の生成

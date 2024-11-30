@@ -10,8 +10,7 @@ use lichen_lang::abs::gen::Wasm_gen;
 use lichen_lang::abs::ast::*;
 
 // install wasmer
-use wasmer::{Store, Module, Instance, Value, imports};
-use anyhow;
+use wasmer::{Store, Module, Instance, Value, imports, MemoryView};
 
 /// `a:i32` `b:i32`の２つの引数をうけとり一つ返り値を返却するような式をテストする
 ///
@@ -120,6 +119,7 @@ pub fn run_wasm2() -> anyhow::Result<()> {
     let mut store = Store::default();
     let module = Module::new(&store, module_wat)?;
     // The module doesn't import anything, so we create an empty import object.
+
     let import_object = imports! {};
     let instance = Instance::new(&mut store, &module, &import_object)?;
 
@@ -177,6 +177,54 @@ pub fn run_wasm3() -> anyhow::Result<()> {
     Ok(())
 }
 
+///
+/// malloc, free実装に向けての準備
+#[test]
+pub fn run_wasm4() -> anyhow::Result<()>{
+    let module_wat = r#"
+    (module
+    (type $t0 (func (param i32) (result i32)))
+      (memory $memory 1)
+      (export "memory" (memory $memory))
+
+    (func $while_test (export "while_test") (type $t0) (param $p0 i32) (result i32)
+    (local $i i32)
+    i32.const 0
+    local.set $i
+    ;;
+    loop $0
+    block $1
+        i32.const 10
+        local.get $i
+        i32.eq
+        br_if $1
+        i32.const 1
+        local.get $i
+        i32.add
+        local.set $i
+        br $0
+    end
+    end
+    local.get $i
+    ))
+    "#;
+
+    let mut store = Store::default();
+    let module = Module::new(&store, module_wat)?;
+    // The module doesn't import anything, so we create an empty import object.
+    let import_object = imports! {};
+    let instance = Instance::new(&mut store, &module, &import_object)?;
+
+    let add_one = instance.exports.get_function("while_test")?;
+
+    for i in 0..10{
+        let result = add_one.call(&mut store, &[Value::I32(i)])?;
+        println!("i:{} result: {}", i,result[0]);
+        // assert_eq!(result[0], Value::I32(i + 1));
+    }
+    Ok(())
+
+}
 
 #[test]
 pub fn gen_test00(){
@@ -384,6 +432,9 @@ pub fn gen_test02(){
             };
             i = i + 1;
         };
+        ",
+        "
+        __mem[a] = 42;
         "
     ];
 
@@ -438,4 +489,37 @@ pub fn gen_test02(){
     }
 }
 
+
+#[test]
+pub fn gen_test03(){
+    let test_cases = [
+        "
+        fn main(a:i32) -> i32{
+            print(\"hello world\");
+        }
+        ",
+    ];
+
+
+    for test_case in test_cases{
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+        println!("----------------------------------------------------------------");
+        if let Err(e) = s_parser.resolve()
+        {
+            println!("unexpected ParseError occured");
+            println!("{:?}", e);
+        }
+        else
+        {
+            let mut a = String::default();
+
+            for i in s_parser.code_list{
+                a.push_str(&i.get_show_as_string());
+            }
+
+            println!("{}", a);
+        }
+    }
+
+}
 

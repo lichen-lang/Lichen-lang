@@ -1,10 +1,13 @@
-use crate::abs::ast::*;
 
+use crate::abs::ast::*;
+use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
+use crate::gen::wasm::MEMORY_SPACE_NAME;
 use crate::parser::comma_parser::CommaParser;
 use crate::parser::core_parser::Parser;
 
 use crate::token::list_block::ListBlockBranch;
+use crate::errors::generate_errors::GenerateError;
 
 #[derive(Clone, Debug)]
 pub struct ListBranch {
@@ -71,4 +74,45 @@ impl RecursiveAnalysisElements for ListBranch {
         }
         Ok(())
     }
+}
+
+
+impl ListBranch{
+    /// indexの展開
+    pub fn generate_contents_wasm(&self)-> Result<String, GenerateError> {
+        let mut assembly_text = String::default();
+        match &self.contents[0] {
+            ExprElem::ItemElem(item_b) => {
+                assembly_text.push_str(&item_b.generate_wasm()?);
+            }
+            _=>{
+                return Err(GenerateError::Deverror);
+            }
+        }
+        Ok(assembly_text)
+    }
+}
+
+// Wasm_gen ---
+
+/// wasmで、メモリから値を取得する命令を記述する
+pub fn wasm_get_memory_value_gen(index:i32)-> Result<String, GenerateError>
+{
+    let mut assembly_text = String::default();
+
+    assembly_text.push_str(&format!("i32.const {}", index));
+    assembly_text.push_str("i32.load\n");
+
+    Ok(assembly_text)
+}
+
+///  wasmで、メモリに値を書く命令を記述する
+pub fn wasm_set_memory_value_gen(index:i32, r_assembly_text:&str)-> Result<String, GenerateError>
+{
+    let mut assembly_text = String::default();
+
+    assembly_text.push_str(&format!("i32.const {}", index));
+    assembly_text.push_str(r_assembly_text);
+    assembly_text.push_str("i32.store\n");
+    Ok(assembly_text)
 }

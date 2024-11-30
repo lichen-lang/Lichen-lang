@@ -188,19 +188,21 @@ pub fn stmt_test01() {
             ans_ast_string.clear();
         }
     }
+
 }
 
 
 #[test]
-pub fn gen_test03(){
-    let test_cases = [
+pub fn stmt_test02()
+{
+    let mut ans_ast_string = String::new();
+    let test_cases = vec![
         "
-        fn main(a:i32) -> i32{
-            print(\"hello world\");
-        }
+        __mem[0][0] = 10;
+        __mem[0] = 20;
+        log(__mem[0] + __mem[1]);
         ",
     ];
-
 
     for test_case in test_cases{
         let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
@@ -209,18 +211,17 @@ pub fn gen_test03(){
         {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
+            panic!()
         }
         else
         {
-            let mut a = String::default();
-
-            for i in s_parser.code_list{
-                a.push_str(&i.get_show_as_string());
+            for i in &s_parser.code_list{
+                // 分けることのできない式の集合
+                ans_ast_string.push_str(i.get_show_as_string().as_str());
             }
-
-            println!("{}", a);
+            println!("{}", ans_ast_string);
+            ans_ast_string.clear();
+            println!("{:?}", &s_parser.code_list);
         }
     }
-
 }
-
