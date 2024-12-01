@@ -434,12 +434,14 @@ pub fn gen_test02(){
         ",
         "
         __mem[a] = 42;
+        log(__mem[a]);
         ",
         "
         i = 0;
         while (i < 10)
         {
             __mem[i * 4] = -1;
+            log(__mem[i * 4]);
             i += 1;
         };
         ",
