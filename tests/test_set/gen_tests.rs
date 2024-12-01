@@ -10,7 +10,7 @@ use lichen_lang::abs::gen::Wasm_gen;
 use lichen_lang::abs::ast::*;
 
 // install wasmer
-use wasmer::{Store, Module, Instance, Value, imports, MemoryView};
+use wasmer::{Store, Module, Instance, Value, imports};
 
 /// `a:i32` `b:i32`の２つの引数をうけとり一つ返り値を返却するような式をテストする
 ///

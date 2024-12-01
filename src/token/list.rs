@@ -2,7 +2,6 @@
 use crate::abs::ast::*;
 use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
-use crate::gen::wasm::MEMORY_SPACE_NAME;
 use crate::parser::comma_parser::CommaParser;
 use crate::parser::core_parser::Parser;
 

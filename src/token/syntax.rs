@@ -6,7 +6,6 @@ use crate::parser::expr_parser::ExprParser;
 use crate::parser::stmt_parser::StmtParser;
 use crate::errors::generate_errors::GenerateError;
 
-use super::comment;
 
 /// # SyntaxBranch
 /// `if` `elif` `else` `while` `loop` `for`などのデータを扱うstruct

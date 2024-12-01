@@ -3,7 +3,6 @@ use crate::abs::gen::Wasm_gen;
 use crate::errors::generate_errors::GenerateError;
 use crate::gen::wasm::MEMORY_SPACE_NAME;
 
-use super::item;
 
 /// #OperatorBranch
 /// 全ての演算子
