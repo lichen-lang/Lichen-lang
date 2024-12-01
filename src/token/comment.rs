@@ -13,6 +13,6 @@ impl ASTBranch for CommentBranch {
     }
 
     fn get_show_as_string(&self) -> String {
-        format!("comment \"{}\"", self.contents)
+        format!("comment \"{}\"\n", self.contents)
     }
 }

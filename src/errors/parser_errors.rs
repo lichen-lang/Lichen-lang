@@ -7,7 +7,10 @@ pub enum ParserError {
     OperationError,         // OperationError 見つからない場合
     CommentBlockNotClosed,
     // for developers
-    UnexpectedType,
+    UnableToConvertType, // StmtElem をExprElemに変換できないときに発生する
+    UnexpectedTypeStmt,
+    UnexpectedTypeExpr,
+    UnexpectedTypeComma,
     DevError,
     Uncategorized,
 }

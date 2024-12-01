@@ -1,12 +1,23 @@
 use crate::abs::ast::*;
+use crate::abs::gen::Wasm_gen;
+use crate::errors::generate_errors::GenerateError;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::expr_parser::ExprParser;
+use crate::gen::wasm::MEMORY_SPACE_NAME;
 
+/// 引数などの式を格納します
 #[derive(Clone, Debug)]
 pub struct ItemBranch {
     pub contents: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
+}
+
+impl ItemBranch{
+    /// 何も要素を持たない引数だった場合trueを返却する
+    pub fn has_no_elem(&self) -> bool {
+        self.contents.is_empty()
+    }
 }
 
 impl ASTBranch for ItemBranch {
@@ -46,3 +57,53 @@ impl RecursiveAnalysisElements for ItemBranch {
         }
     }
 }
+
+impl Wasm_gen for ItemBranch {
+
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
+        // 複数の場合もあることに注意
+        let mut assembly_text = String::default();
+        if self.contents.is_empty(){
+            // itemの中に何も要素を持たない場合
+            // 例えば、考えられるのは'-'だったりする場合
+        } else if self.contents.len() == 1 {
+            // Itemの中に要素が一つだけの場合
+            // （特別に修飾子が付与されない場合）
+            // TODO
+            // ここでは、変数をi32として扱います
+            match &self.contents[0]{
+                ExprElem::WordElem(word_b) => {
+                    if word_b.self_is_num()? {
+                        // もし数字だった場合
+                        assembly_text.push_str(&format!("i32.const {}\n", word_b.contents));
+                    } else {
+                        // もし何らかの変数だった場合
+                        assembly_text.push_str(&format!("local.get ${}\n", word_b.contents));
+                    }
+                }
+
+                ExprElem::FuncElem(func_b) => {
+                    assembly_text.push_str(&func_b.generate_wasm()?);
+                }
+
+                ExprElem::ParenBlockElem(paren_b) => {
+                    assembly_text.push_str(&paren_b.generate_wasm()?);
+                }
+                ExprElem::ListElem(list_b) => {
+                    assembly_text.push_str(&list_b.generate_name_wasm()?);
+                    assembly_text.push_str("i32.load\n");
+                }
+                _ => {
+                    return Err(GenerateError::Deverror);
+                }
+            }
+        } else {
+            // ここは例えば、let mut aなどの場合
+            // 
+            // `borrow mut` `&mut` とか引数に
+            return Err(GenerateError::Deverror);// 未実装
+        }
+        Ok(assembly_text)
+    }
+}
+

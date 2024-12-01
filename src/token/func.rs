@@ -1,6 +1,8 @@
 use crate::abs::ast::*;
-use crate::errors::parser_errors::ParserError;
+use crate::abs::gen::*;
 
+use crate::errors::generate_errors::GenerateError;
+use crate::errors::parser_errors::ParserError;
 use crate::parser::comma_parser::CommaParser;
 use crate::parser::core_parser::Parser;
 
@@ -10,7 +12,7 @@ use super::paren_block::ParenBlockBranch;
 /// 関数呼び出しのトークン
 #[derive(Clone, Debug)]
 pub struct FuncBranch {
-    pub name: Box<ExprElem>,
+    pub name: Box<ExprElem>,     // 呼び出している関数の名前
     pub contents: Vec<ExprElem>, // 引数
     pub depth: isize,
     pub loopdepth: isize,
@@ -85,3 +87,50 @@ impl RecursiveAnalysisElements for FuncBranch {
         Ok(())
     }
 }
+
+
+impl Wasm_gen for FuncBranch {
+
+    fn generate_wasm(&self) -> Result<String, GenerateError> {
+        let mut assembly_text:String = String::new();
+
+        // 関数処理部分
+        match &*self.name {
+            // pass
+            ExprElem::OpeElem(ope_b) => {
+                // 演算子のとき
+                // 必ず２つの引数が渡されるが`-1`などの場合に注意が必要
+                assembly_text.push_str(&ope_b.generate_wasm(
+                        &self.contents[0],
+                        &self.contents[1]
+                )?);
+            }
+
+            ExprElem::WordElem(word_b) => {
+                // 普通の関数のとき
+                // 引数処理部分
+                for i in &self.contents{
+                    match i{
+                        ExprElem::ItemElem(b) => {
+                            assembly_text.push_str(&b.generate_wasm()?);
+                        }
+                        _ => {
+                            // 必ず引数はアイテムになるのでエラー
+                            // ここにitem以外の要素を検知した場合は、
+                            // コンパイラの実装に何らかの問題があります
+                            return Err(GenerateError::Deverror);
+                        }
+                    }
+                }
+                assembly_text.push_str(&format!("call ${}\n", word_b.contents));
+            }
+
+            _ => {
+                // ここは関数を返すifやwhileを定義しない限りerrorになる
+                return Err(GenerateError::Deverror);
+            }
+        }
+        Ok(assembly_text)
+    }
+}
+

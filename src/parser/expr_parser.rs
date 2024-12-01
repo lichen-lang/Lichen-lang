@@ -61,7 +61,7 @@ impl ExprParser {
         while self.contain_subscriptable() {
             self.grouping_subscription()?;
         }
-        self.grouoping_operator()?;
+        self.grouping_operator()?;
         self.resolve_operation()?;
         Ok(())
     }
@@ -70,18 +70,11 @@ impl ExprParser {
         // macro
         macro_rules! add_rlist {
             ($rlist:expr,$group:expr) => {
-                if let Ok(_) = Self::find_ope_priority(&$group) {
-                    $rlist.push(ExprElem::OpeElem(OperatorBranch {
-                        ope: $group.clone(),
-                        depth: self.depth,
-                    }))
-                } else {
-                    $rlist.push(ExprElem::WordElem(WordBranch {
-                        contents: $group.clone(),
-                        depth: self.depth,
-                        loopdepth: self.loopdepth,
-                    }));
-                }
+                $rlist.push(ExprElem::WordElem(WordBranch {
+                    contents: $group.clone(),
+                    depth: self.depth,
+                    loopdepth: self.loopdepth,
+                }));
             };
         }
         let mut rlist: Vec<ExprElem> = Vec::new();
@@ -177,7 +170,7 @@ impl ExprParser {
                                     }
                                 } else {
                                     // defer type
-                                    return Err(ParserError::UnexpectedType);
+                                    return Err(ParserError::UnexpectedTypeExpr);
                                 }
                             } else {
                                 return Err(ParserError::CommentBlockNotClosed);
@@ -242,7 +235,7 @@ impl ExprParser {
                     }
                 }
             } else {
-                return Err(ParserError::UnexpectedType);
+                rlist.push(inner.clone());
             }
         }
         if let StringAreaState::CommentStart = open_status {
@@ -260,17 +253,18 @@ impl ExprParser {
         Ok(())
     }
 
-    fn grouping_elements<T>(
+    fn grouping_elements<T, U>(
         &mut self,
         elemtype: fn(T) -> ExprElem,
         open_char: char,
         close_char: char,
     ) -> Result<(), ParserError>
     where
-        T: ASTAreaBranch,
+        T: ASTAreaBranch<U>,
+        U: Clone + Token + ProcToken,
     {
         let mut rlist: Vec<ExprElem> = Vec::new();
-        let mut group: Vec<ExprElem> = Vec::new();
+        let mut group: Vec<U> = Vec::new();
         let mut depth: isize = 0;
 
         for inner in &self.code_list {
@@ -278,7 +272,7 @@ impl ExprParser {
                 if b.contents == open_char {
                     match depth {
                         0 => { /*pass*/ }
-                        1.. => group.push(inner.clone()),
+                        1.. => group.push(Token::set_char_as_unknown(b.contents)),
                         _ => return Err(ParserError::BraceNotOpened),
                     }
                     depth += 1;
@@ -293,20 +287,56 @@ impl ExprParser {
                             )));
                             group.clear();
                         }
-                        1.. => group.push(inner.clone()),
+                        1.. => group.push(Token::set_char_as_unknown(b.contents)),
                         _ => return Err(ParserError::BraceNotOpened),
                     }
                 } else {
                     match depth {
                         0 => rlist.push(inner.clone()),
-                        1.. => group.push(inner.clone()),
+                        1.. => group.push(Token::set_char_as_unknown(b.contents)),
                         _ => return Err(ParserError::BraceNotOpened),
                     }
                 }
             } else {
                 match depth {
                     0 => rlist.push(inner.clone()),
-                    1.. => group.push(inner.clone()),
+                    1.. => {
+                        match &inner {
+                            ExprElem::StringElem(s) => {
+                                group.push(ProcToken::t_string(
+                                    s.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            ExprElem::BlockElem(bl) => {
+                                group.push(ProcToken::t_block(
+                                    bl.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            ExprElem::ParenBlockElem(pb) => {
+                                group.push(ProcToken::t_parenblock(
+                                    pb.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            ExprElem::ListBlockElem(lb) => {
+                                group.push(ProcToken::t_listblock(
+                                    lb.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            // todo
+                            _ => {
+                                // todo error処理
+                                return Err(ParserError::UnexpectedTypeExpr);
+                            }
+                        }
+                    }
                     _ => return Err(ParserError::BraceNotClosed),
                 }
             }
@@ -318,14 +348,14 @@ impl ExprParser {
         Ok(())
     }
 
-    fn grouoping_operator(&mut self) -> Result<(), ParserError> {
+    fn grouping_operator(&mut self) -> Result<(), ParserError> {
         for ope in Self::LENGTH_ORDER_OPE_LIST {
-            self.grouoping_operator_unit(ope.opestr.to_string())?;
+            self.grouping_operator_unit(ope.opestr.to_string())?;
         }
         Ok(())
     }
 
-    fn grouoping_operator_unit(&mut self, ope: String) -> Result<(), ParserError> {
+    fn grouping_operator_unit(&mut self, ope: String) -> Result<(), ParserError> {
         let mut group: String = String::new();
         let mut rlist: Vec<ExprElem> = Vec::new();
 

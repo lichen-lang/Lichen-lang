@@ -1,3 +1,4 @@
+// tokens
 use crate::token::block::BlockBranch;
 use crate::token::comment::CommentBranch;
 use crate::token::func::FuncBranch;
@@ -7,6 +8,7 @@ use crate::token::list_block::ListBlockBranch;
 use crate::token::operator::OperatorBranch;
 use crate::token::paren_block::ParenBlockBranch;
 use crate::token::stmt::expr::ExprBranch;
+use crate::token::stmt::stmt::StmtBranch;
 use crate::token::string::StringBranch;
 use crate::token::syntax::SyntaxBranch;
 use crate::token::syntax_box::SyntaxBoxBranch;
@@ -14,7 +16,7 @@ use crate::token::ttype::primitive::PrimitiveBranch;
 use crate::token::ttype::type_block::TypeBlockBranch;
 use crate::token::unknown::UnKnownBranch;
 use crate::token::word::WordBranch;
-
+// errors
 use crate::errors::parser_errors::ParserError;
 
 pub trait Token {
@@ -22,6 +24,16 @@ pub trait Token {
     fn show(&self);
     fn get_show_as_string(&self) -> String;
     fn resolve_self(&mut self) -> Result<(), ParserError>;
+}
+
+pub trait ProcToken {
+    // `ExprElem`と`StmtElem`に実装
+    // 解析時に揺れがある
+    fn t_string(contents: String, depth: isize, loopdepth: isize) -> Self;
+    fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self;
+    fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+    fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self;
 }
 
 /// # ExprElem
@@ -54,7 +66,17 @@ pub enum TypeElem {
 
 #[derive(Clone, Debug)]
 pub enum StmtElem {
+    BlockElem(BlockBranch),
+    ListBlockElem(ListBlockBranch),
+    ParenBlockElem(ParenBlockBranch),
+    // 
     ExprElem(ExprBranch),
+    Special(StmtBranch),
+    // without RecursiveAnalysisElements trait structures
+    StringElem(StringBranch),
+    WordElem(WordBranch),
+    OpeElem(OperatorBranch),
+    CommentElem(CommentBranch),
     UnKnownElem(UnKnownBranch),
 }
 
@@ -121,6 +143,48 @@ impl Token for ExprElem {
     }
 }
 
+impl ProcToken for ExprElem {
+    fn t_string(contents: String, depth: isize, loopdepth: isize) -> Self {
+        Self::StringElem(StringBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::BlockElem(BlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ParenBlockElem(ParenBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ListBlockElem(ListBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self {
+        Self::CommentElem(CommentBranch { 
+            contents,
+            depth,
+            loopdepth
+        })
+    }
+}
+
+
 impl Token for TypeElem {
     fn set_char_as_unknown(c: char) -> Self {
         TypeElem::UnKnownElem(UnKnownBranch { contents: c })
@@ -153,15 +217,93 @@ impl Token for StmtElem {
     }
 
     fn get_show_as_string(&self) -> String {
-        todo!()
+        match self {
+            Self::BlockElem(e) => e.get_show_as_string(),
+            Self::ListBlockElem(e) => e.get_show_as_string(),
+            Self::ParenBlockElem(e)=> e.get_show_as_string(),
+            Self::Special(e) => e.get_show_as_string(),
+            // without RecursiveAnalysisElements trait structures
+            Self::StringElem(e) => e.get_show_as_string(),
+            Self::CommentElem(e) => e.get_show_as_string(),
+            Self::ExprElem(e) => e.get_show_as_string(),
+            Self::WordElem(e) => e.get_show_as_string(),
+            Self::OpeElem(e) => e.get_show_as_string(),
+            Self::UnKnownElem(e) => e.get_show_as_string(),
+        }
     }
 
     fn show(&self) {
-        todo!()
+        match self {
+            Self::BlockElem(e) => e.show(),
+            Self::ListBlockElem(e) => e.show(),
+            Self::ParenBlockElem(e) => e.show(),
+            Self::Special(e) => e.show(),
+            // without RecursiveAnalysisElements trait structures
+            Self::StringElem(e) => e.show(),
+            Self::CommentElem(e) => e.show(),
+            Self::ExprElem(e) => e.show(),
+            Self::WordElem(e) => e.show(),
+            Self::OpeElem(e) => e.show(),
+            Self::UnKnownElem(e) => e.show(),
+        }
     }
 
     fn resolve_self(&mut self) -> Result<(), ParserError> {
-        todo!()
+        match self {
+            Self::BlockElem(e) => e.resolve_self(),
+            Self::ListBlockElem(e) => e.resolve_self(),
+            Self::ParenBlockElem(e) => e.resolve_self(),
+            Self::ExprElem(e) => e.resolve_self(),
+            Self::Special(e) => e.resolve_self(),
+            // without RecursiveAnalysisElements trait structures
+            Self::StringElem(_) => Ok(()),
+            Self::CommentElem(_) => Ok(()),
+            Self::WordElem(_) => Ok(()),
+            Self::OpeElem(_) => Ok(()),
+            Self::UnKnownElem(_) => Ok(()),
+        }
+    }
+}
+
+impl ProcToken for StmtElem {
+    fn t_string(contents: String, depth: isize, loopdepth: isize) -> Self {
+        Self::StringElem(StringBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::BlockElem(BlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ParenBlockElem(ParenBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+        Self::ListBlockElem(ListBlockBranch {
+            contents,
+            depth,
+            loopdepth,
+        })
+    }
+
+    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self {
+        Self::CommentElem(CommentBranch { 
+            contents,
+            depth,
+            loopdepth
+        })
     }
 }
 
@@ -170,13 +312,17 @@ impl Token for StmtElem {
 pub trait ASTBranch {
     fn show(&self);
     fn get_show_as_string(&self) -> String;
+   //  fn expand_assembly(&self) -> String;
 }
 
 /// # ASTAreaBranch
 /// ## resolve_self
 /// depthをインクリメントするときは、`resolve_self`内で宣言するParserにself.get_depth + 1をして実装する必要がある
-pub trait ASTAreaBranch {
-    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
+pub trait ASTAreaBranch<T>
+where
+    T: Token,
+{
+    fn new(contents: Vec<T>, depth: isize, loopdepth: isize) -> Self;
 }
 
 pub trait TypeAreaBranch {

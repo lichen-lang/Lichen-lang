@@ -34,7 +34,7 @@ impl ASTBranch for ListBlockBranch {
     }
 }
 
-impl ASTAreaBranch for ListBlockBranch {
+impl ASTAreaBranch<ExprElem> for ListBlockBranch {
     fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents,
@@ -58,3 +58,4 @@ impl RecursiveAnalysisElements for ListBlockBranch {
         Ok(())
     }
 }
+
