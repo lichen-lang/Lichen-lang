@@ -3,6 +3,8 @@ use crate::abs::gen::Wasm_gen;
 use crate::errors::generate_errors::GenerateError;
 use crate::gen::wasm::MEMORY_SPACE_NAME;
 
+use super::item;
+
 /// #OperatorBranch
 /// 全ての演算子
 ///
@@ -40,6 +42,11 @@ impl OperatorBranch{
         match &*self.ope{
             "=" => assembly_text.push_str(
                 &equal_gen_wasm(l_expr, r_expr)?), // equal
+            "+=" => assembly_text.push_str(&ref_aequal_gen_wasm(l_expr, r_expr, "+=")?),
+            "-=" => assembly_text.push_str(&ref_aequal_gen_wasm(l_expr, r_expr, "-=")?),
+            "*=" => assembly_text.push_str(&ref_aequal_gen_wasm(l_expr, r_expr, "*=")?),
+            "/=" => assembly_text.push_str(&ref_aequal_gen_wasm(l_expr, r_expr, "/=")?),
+            "%=" => assembly_text.push_str(&ref_aequal_gen_wasm(l_expr, r_expr, "%=")?),
             "+" => assembly_text.push_str(
                 &normal_ope_gen_wasm(l_expr, r_expr, "i32.add\n")?),
             "-" => assembly_text.push_str(
@@ -140,7 +147,66 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
     Ok(assembly_text)
 }
 
+pub fn ref_aequal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope:&str) -> Result<String, GenerateError> {
+    let mut assembly_text = String::default();
+    let r_assembly_text  :String;
+    let getter_assembly_text :String;
+    let setter_assembly_text :String;
 
+    // a += 1;
+    // ^    ^
+    // a = a + 1;
+    if let ExprElem::ItemElem(item_b) = r_expr{
+        r_assembly_text = item_b.generate_wasm()?;
+    } else {
+        return Err(GenerateError::Deverror);
+    }
+    if let ExprElem::ItemElem(item_b) = l_expr{
+        // 左は式ではなくパターンの処理をする必要があります
+        if let ExprElem::WordElem(word_b) = &item_b.contents[0]{
+            // pass
+            setter_assembly_text = format!("local.set ${}\n", word_b.contents); // setter
+            getter_assembly_text = format!("local.get ${}\n", word_b.contents); // setter
+        } else {
+            //
+            println!("まだサポートしていない書き方です"); // TODO
+            todo!()
+        }
+    } else {
+        return Err(GenerateError::Deverror);
+    }
+    // ```wat
+    // ;; 10 - 3
+    // local.get $a
+    // i32.const 1
+    // i32.sub ;; sub 
+    // local.set $a
+    // ```
+    assembly_text.push_str(&getter_assembly_text);
+    assembly_text.push_str(&r_assembly_text);
+    match ope{
+        "+=" => {
+            assembly_text.push_str("i32.add\n");
+        }
+        "-=" => {
+            assembly_text.push_str("i32.sub\n");
+        }
+        "*=" => {
+            assembly_text.push_str("i32.mul\n");
+        }
+        "/=" => {
+            assembly_text.push_str("i32.div\n");
+        }
+        "%=" => {
+            assembly_text.push_str("i32.rem_s\n");
+        }
+        _ => {
+            return Err(GenerateError::Deverror);
+        }
+    }
+    assembly_text.push_str(&setter_assembly_text);
+    Ok(assembly_text)
+}
 
 /// ふたつの引数を両端からとる"普通の"演算子の生成
 fn normal_ope_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope_string:&str)-> Result<String, GenerateError>{

@@ -89,7 +89,6 @@ pub fn run_wasm() -> anyhow::Result<()> {
     // The module doesn't import anything, so we create an empty import object.
     let import_object = imports! {};
     let instance = Instance::new(&mut store, &module, &import_object)?;
-
     let add_one = instance.exports.get_function("add_one")?;
 
     for i in 0..10{
@@ -435,7 +434,15 @@ pub fn gen_test02(){
         ",
         "
         __mem[a] = 42;
+        ",
         "
+        i = 0;
+        while (i < 10)
+        {
+            __mem[i * 4] = -1;
+            i += 1;
+        };
+        ",
     ];
 
 
