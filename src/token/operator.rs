@@ -168,7 +168,6 @@ pub fn ref_aequal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope:&str) -> Resu
             setter_assembly_text = format!("local.set ${}\n", word_b.contents); // setter
             getter_assembly_text = format!("local.get ${}\n", word_b.contents); // setter
         } else {
-            //
             println!("まだサポートしていない書き方です"); // TODO
             todo!()
         }
@@ -185,24 +184,13 @@ pub fn ref_aequal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem, ope:&str) -> Resu
     assembly_text.push_str(&getter_assembly_text);
     assembly_text.push_str(&r_assembly_text);
     match ope{
-        "+=" => {
-            assembly_text.push_str("i32.add\n");
-        }
-        "-=" => {
-            assembly_text.push_str("i32.sub\n");
-        }
-        "*=" => {
-            assembly_text.push_str("i32.mul\n");
-        }
-        "/=" => {
-            assembly_text.push_str("i32.div\n");
-        }
-        "%=" => {
-            assembly_text.push_str("i32.rem_s\n");
-        }
-        _ => {
-            return Err(GenerateError::Deverror);
-        }
+        "+=" => assembly_text.push_str("i32.add\n"),
+        "-=" => assembly_text.push_str("i32.sub\n"),
+        "*=" => assembly_text.push_str("i32.mul\n"),
+        "/=" => assembly_text.push_str("i32.div\n"),
+        "%=" => assembly_text.push_str("i32.rem_s\n"),
+        _ => 
+            return Err(GenerateError::Deverror),
     }
     assembly_text.push_str(&setter_assembly_text);
     Ok(assembly_text)
