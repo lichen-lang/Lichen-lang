@@ -90,29 +90,8 @@ impl Wasm_gen for ItemBranch {
                     assembly_text.push_str(&paren_b.generate_wasm()?);
                 }
                 ExprElem::ListElem(list_b) => {
-                    if let ExprElem::WordElem(word_b) = &*list_b.name {
-                        if word_b.contents == MEMORY_SPACE_NAME {
-                            // 特別なケース、メモリに直接アクセスするための方法を提供する
-                            // ```
-                            // __mem[0] = 0;
-                            // ```
-                            assembly_text.push_str(&list_b.generate_contents_wasm()?);
-                            assembly_text.push_str("i32.load\n");
-                        } else {
-                            // 通常のケース
-                            // ```
-                            // a[0] = 0;
-                            // ```
-                            todo!()
-                        }
-                    } else {
-                        // 呼び出しの対象が名前ではない場合
-                        // ```
-                        // lst[0][0]
-                        // ^^^^^^
-                        // ```
-                        todo!()
-                    }
+                    assembly_text.push_str(&list_b.generate_name_wasm()?);
+                    assembly_text.push_str("i32.load\n");
                 }
                 _ => {
                     return Err(GenerateError::Deverror);

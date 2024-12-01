@@ -1,4 +1,3 @@
-
 use crate::abs::ast::*;
 use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
@@ -7,6 +6,7 @@ use crate::parser::core_parser::Parser;
 
 use crate::token::list_block::ListBlockBranch;
 use crate::errors::generate_errors::GenerateError;
+use crate::gen::wasm::MEMORY_SPACE_NAME;
 
 #[derive(Clone, Debug)]
 pub struct ListBranch {
@@ -78,7 +78,7 @@ impl RecursiveAnalysisElements for ListBranch {
 
 impl ListBranch{
     /// indexの展開
-    pub fn generate_contents_wasm(&self)-> Result<String, GenerateError> {
+    pub fn generate_contents_wasm(&self) -> Result<String, GenerateError> {
         let mut assembly_text = String::default();
         match &self.contents[0] {
             ExprElem::ItemElem(item_b) => {
@@ -89,6 +89,34 @@ impl ListBranch{
             }
         }
         Ok(assembly_text)
+    }
+
+    pub fn generate_name_wasm(&self) -> Result<String, GenerateError>
+    {
+        let mut assembly_text = String::default();
+            if let ExprElem::WordElem(word_b) = &*self.name {
+                if word_b.contents == MEMORY_SPACE_NAME {
+                    // 特別なケース、メモリに直接アクセスするための方法を提供する
+                    // ```
+                    // __mem[0] = 0;
+                    // ```
+                    assembly_text.push_str(&self.generate_contents_wasm()?);
+                } else {
+                    // 通常のケース
+                    // ```
+                    // a[0] = 0;
+                    // ```
+                    todo!()
+                }
+            } else {
+                // 呼び出しの対象が名前ではない場合
+                // ```
+                // lst[0][0]
+                // ^^^^^^
+                // ```
+                todo!()
+            }
+            Ok(assembly_text)
     }
 }
 

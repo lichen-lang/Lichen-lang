@@ -110,31 +110,10 @@ fn equal_gen_wasm(l_expr:&ExprElem, r_expr:&ExprElem) -> Result<String, Generate
             // ```
             // <list elem> = <r_expr>
             // ```
-
-            if let ExprElem::WordElem(word_b) = &*list_b.name {
-                if word_b.contents == MEMORY_SPACE_NAME {
-                    // 特別なケース、メモリに直接アクセスするための方法を提供する
-                    // ```
-                    // __mem[0] = 0;
-                    // ```
-                    assembly_text.push_str(&list_b.generate_contents_wasm()?);
-                    assembly_text.push_str(&r_assembly_text);
-                    assembly_text.push_str("i32.store\n");
-                } else {
-                    // 通常のケース
-                    // ```
-                    // a[0] = 0;
-                    // ```
-                    todo!()
-                }
-            } else {
-                // 呼び出しの対象が名前ではない場合
-                // ```
-                // lst[0][0]
-                // ^^^^^^
-                // ```
-                todo!()
-            }
+            //
+            assembly_text.push_str(&list_b.generate_name_wasm()?);
+            assembly_text.push_str(&r_assembly_text);
+            assembly_text.push_str("i32.store\n");
         }
         else {
             // word 以外がパターンに渡された場合
