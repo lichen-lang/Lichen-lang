@@ -4,12 +4,11 @@
 extern crate colored;
 extern crate lichen_lang;
 use colored::*;
+use lichen_lang::abs::ast::*;
 use lichen_lang::parser::core_parser::Parser;
 use lichen_lang::parser::expr_parser::ExprParser;
-use lichen_lang::abs::ast::*;
 
 use crate::utils::testutils::insert_space;
-
 
 #[test]
 pub fn expr_test00() {
@@ -110,7 +109,6 @@ pub fn expr_test04() {
     }
 }
 
-
 /// 書き方の揺れのテスト
 ///
 #[test]
@@ -171,8 +169,6 @@ fn unit_test00() {
         }
     }
 }
-
-
 
 /// 関数が関数や配列を返したり、配列が関数や配列を返却するときのテスト
 #[test]

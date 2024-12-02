@@ -2,9 +2,9 @@
 // stmt
 
 extern crate lichen_lang;
+use lichen_lang::abs::ast::*;
 use lichen_lang::parser::core_parser::Parser;
 use lichen_lang::parser::stmt_parser::StmtParser;
-use lichen_lang::abs::ast::*;
 
 /// 動かし方
 /// ```bash
@@ -73,21 +73,17 @@ pub fn stmt_test00() {
             print(\"end\");
         }
         ",
-
     ];
 
-    for test_case in test_cases{
-        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+    for test_case in test_cases {
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0, 0);
         println!("----------------------------------------------------------------");
-        if let Err(e) = s_parser.resolve()
-        {
+        if let Err(e) = s_parser.resolve() {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
             panic!()
-        }
-        else
-        {
-            for i in s_parser.code_list{
+        } else {
+            for i in s_parser.code_list {
                 // 分けることのできない式の集合
                 println!("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
                 ans_ast_string.push_str(i.get_show_as_string().as_str());
@@ -97,7 +93,6 @@ pub fn stmt_test00() {
         }
     }
 }
-
 
 /// 動かし方
 ///
@@ -163,22 +158,18 @@ pub fn stmt_test01() {
             };
             i = i + 1;
         };
-        "
-
+        ",
     ];
 
-    for test_case in test_cases{
-        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+    for test_case in test_cases {
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0, 0);
         println!("----------------------------------------------------------------");
-        if let Err(e) = s_parser.resolve()
-        {
+        if let Err(e) = s_parser.resolve() {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
             panic!()
-        }
-        else
-        {
-            for i in s_parser.code_list{
+        } else {
+            for i in s_parser.code_list {
                 // 分けることのできない式の集合
                 println!("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
                 println!("{:?}", i);
@@ -188,13 +179,10 @@ pub fn stmt_test01() {
             ans_ast_string.clear();
         }
     }
-
 }
 
-
 #[test]
-pub fn stmt_test02()
-{
+pub fn stmt_test02() {
     let mut ans_ast_string = String::new();
     let test_cases = vec![
         "
@@ -204,18 +192,15 @@ pub fn stmt_test02()
         ",
     ];
 
-    for test_case in test_cases{
-        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+    for test_case in test_cases {
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0, 0);
         println!("----------------------------------------------------------------");
-        if let Err(e) = s_parser.resolve()
-        {
+        if let Err(e) = s_parser.resolve() {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
             panic!()
-        }
-        else
-        {
-            for i in &s_parser.code_list{
+        } else {
+            for i in &s_parser.code_list {
                 // 分けることのできない式の集合
                 ans_ast_string.push_str(i.get_show_as_string().as_str());
             }

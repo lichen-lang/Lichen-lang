@@ -1,12 +1,10 @@
 use crate::errors::generate_errors::GenerateError;
 
-
-enum wasm_instructions
-{
-    // 
+enum wasm_instructions {
+    //
     local_get,
     local_set,
-    // i32 
+    // i32
     const_i32,
     add_i32,
     // i64
@@ -18,8 +16,6 @@ enum wasm_instructions
     const_f64,
 }
 
-
-
 /// wasm target support
 ///
 /// この関数では関数の呼びだしに対して
@@ -30,8 +26,5 @@ enum wasm_instructions
 /// このトレイトはブランチ構造体に実装します。
 ///
 pub trait Wasm_gen {
-
     fn generate_wasm(&self) -> Result<String, GenerateError>;
 }
-
-

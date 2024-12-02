@@ -58,4 +58,3 @@ impl RecursiveAnalysisElements for ListBlockBranch {
         Ok(())
     }
 }
-

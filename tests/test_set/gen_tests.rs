@@ -4,22 +4,23 @@
 
 extern crate lichen_lang;
 use colored::{Color, Colorize};
-use lichen_lang::parser::{core_parser::Parser, stmt_parser::StmtParser};
-use lichen_lang::parser::expr_parser::ExprParser;
-use lichen_lang::abs::gen::Wasm_gen;
 use lichen_lang::abs::ast::*;
+use lichen_lang::abs::gen::Wasm_gen;
+use lichen_lang::parser::expr_parser::ExprParser;
+use lichen_lang::parser::{core_parser::Parser, stmt_parser::StmtParser};
 
 // install wasmer
-use wasmer::{Store, Module, Instance, Value, imports};
+use wasmer::{imports, Instance, Module, Store, Value};
 
 /// `a:i32` `b:i32`の２つの引数をうけとり一つ返り値を返却するような式をテストする
 ///
 pub fn wasm_test_2_args_1_return(
-        wasm_code:&str,
-        test_args_set:&[(i32, i32)],
-        ans:&[i32]
-    ) -> anyhow::Result<()> {
-    let module_wat = &format!(r#"
+    wasm_code: &str,
+    test_args_set: &[(i32, i32)],
+    ans: &[i32],
+) -> anyhow::Result<()> {
+    let module_wat = &format!(
+        r#"
 (module
 (type $t0 (func
 (param i32)
@@ -35,7 +36,7 @@ pub fn wasm_test_2_args_1_return(
 ;; --  end  --
 ))
     "#,
-    wasm_code
+        wasm_code
     );
     println!("--- wasm code ---");
     println!("{}", module_wat);
@@ -48,7 +49,7 @@ pub fn wasm_test_2_args_1_return(
 
     let wasm_test = instance.exports.get_function("test")?;
 
-    for (i, &(arg1,arg2)) in test_args_set.iter().enumerate(){
+    for (i, &(arg1, arg2)) in test_args_set.iter().enumerate() {
         let result = wasm_test.call(&mut store, &[Value::I32(arg1), Value::I32(arg2)])?;
         println!(
             "a:{}, b:{}, result: {} ans: {} -> {}",
@@ -56,15 +57,12 @@ pub fn wasm_test_2_args_1_return(
             arg2,
             result[0],
             ans[i],
-            if result[0] == Value::I32(ans[i])
-            {
+            if result[0] == Value::I32(ans[i]) {
                 "Ok".color(Color::Green)
-            }
-            else
-            {
+            } else {
                 "Failed".color(Color::Red)
             }
-            );
+        );
         assert_eq!(result[0], Value::I32(ans[i]));
     }
     Ok(())
@@ -91,14 +89,13 @@ pub fn run_wasm() -> anyhow::Result<()> {
     let instance = Instance::new(&mut store, &module, &import_object)?;
     let add_one = instance.exports.get_function("add_one")?;
 
-    for i in 0..10{
+    for i in 0..10 {
         let result = add_one.call(&mut store, &[Value::I32(i)])?;
-        println!("i:{} result: {}", i,result[0]);
+        println!("i:{} result: {}", i, result[0]);
         // assert_eq!(result[0], Value::I32(i + 1));
     }
     Ok(())
 }
-
 
 /// simdの実験
 #[test]
@@ -124,9 +121,9 @@ pub fn run_wasm2() -> anyhow::Result<()> {
 
     let add_one = instance.exports.get_function("add_one")?;
 
-    for i in 0..10{
+    for i in 0..10 {
         let result = add_one.call(&mut store, &[Value::I32(i)])?;
-        println!("i:{} result: {}", i,result[0]);
+        println!("i:{} result: {}", i, result[0]);
         // assert_eq!(result[0], Value::I32(i + 1));
     }
     Ok(())
@@ -168,9 +165,9 @@ pub fn run_wasm3() -> anyhow::Result<()> {
 
     let add_one = instance.exports.get_function("while_test")?;
 
-    for i in 0..10{
+    for i in 0..10 {
         let result = add_one.call(&mut store, &[Value::I32(i)])?;
-        println!("i:{} result: {}", i,result[0]);
+        println!("i:{} result: {}", i, result[0]);
         // assert_eq!(result[0], Value::I32(i + 1));
     }
     Ok(())
@@ -179,7 +176,7 @@ pub fn run_wasm3() -> anyhow::Result<()> {
 ///
 /// malloc, free実装に向けての準備
 #[test]
-pub fn run_wasm4() -> anyhow::Result<()>{
+pub fn run_wasm4() -> anyhow::Result<()> {
     let module_wat = r#"
     (module
     (type $t0 (func (param i32) (result i32)))
@@ -216,34 +213,33 @@ pub fn run_wasm4() -> anyhow::Result<()>{
 
     let add_one = instance.exports.get_function("while_test")?;
 
-    for i in 0..10{
+    for i in 0..10 {
         let result = add_one.call(&mut store, &[Value::I32(i)])?;
-        println!("i:{} result: {}", i,result[0]);
+        println!("i:{} result: {}", i, result[0]);
         // assert_eq!(result[0], Value::I32(i + 1));
     }
     Ok(())
-
 }
 
 #[test]
-pub fn gen_test00(){
+pub fn gen_test00() {
     let test_cases = vec![
-        "!a&&!b" , 
-        "a != b" , 
-        "0 <= a && a <= 10" , 
-        "-10+20"  , 
+        "!a&&!b",
+        "a != b",
+        "0 <= a && a <= 10",
+        "-10+20",
         // "a**b**c" ,
-        "a+b+c"   ,
-        "(a+bc)+(cde-defg)" ,
-        "func(10,1)+2*x"    ,
+        "a+b+c",
+        "(a+bc)+(cde-defg)",
+        "func(10,1)+2*x",
         // "tarai(1)(2)(3)"    ,
         // "if (0 < x){ 1 } else {0} + 1" ,
-        "c = !a&&!b" , 
-        "d = -10+20"  , 
+        "c = !a&&!b",
+        "d = -10+20",
         // "a**b**c" ,
-        "e = a+b+c"   ,
-        "f = (a+bc)+(cde-defg)" ,
-        "g = func(10,1)+2*x"    ,
+        "e = a+b+c",
+        "f = (a+bc)+(cde-defg)",
+        "g = func(10,1)+2*x",
         "var = (10 - 1) + 2 * ((1 + 4) * 5)", // 59
         "tarai(tarai(x - 1,  y, z), tarai(y - 1, z, x), tarai(z - 1, x, y))",
     ];
@@ -259,11 +255,11 @@ pub fn gen_test00(){
                 for i in e_parser.code_list {
                     i.show();
                     println!("--- wasm code ---");
-                    match &i{
+                    match &i {
                         ExprElem::FuncElem(a) => {
-                            match a.generate_wasm(){
+                            match a.generate_wasm() {
                                 Ok(wasm_code) => {
-                                    // 
+                                    //
                                     println!("{}", wasm_code);
                                 }
                                 Err(e) => {
@@ -283,18 +279,19 @@ pub fn gen_test00(){
     }
 }
 
-
-/// 
-/// 
+///
+///
 #[test]
-pub fn gen_test01(){
-    let test_cases = ["!a&&!b" , 
-        "!(a||b)" , 
-        "a != b" , 
-        "a * b != a + b" , 
-        "-a <= b && b <= a"];
+pub fn gen_test01() {
+    let test_cases = [
+        "!a&&!b",
+        "!(a||b)",
+        "a != b",
+        "a * b != a + b",
+        "-a <= b && b <= a",
+    ];
 
-    let arg_set:Vec<Vec<(i32, i32)>> = vec![
+    let arg_set: Vec<Vec<(i32, i32)>> = vec![
         vec![(0, 0), (0, 1), (1, 0), (1, 1)], // !a&&!b
         vec![(0, 0), (0, 1), (1, 0), (1, 1)], // !(a||b)
         vec![(0, 0), (0, 1), (1, 0), (1, 1)], // a != b
@@ -302,7 +299,7 @@ pub fn gen_test01(){
         vec![(0, 0), (0, 1), (1, 0), (1, 1)], // -a <= b && b <= a
     ];
 
-    let ans:Vec<Vec<i32>> = vec![
+    let ans: Vec<Vec<i32>> = vec![
         vec![1, 0, 0, 0], // !a&&!b
         vec![1, 0, 0, 0], // !(a||b)
         vec![0, 1, 1, 0], // a != b
@@ -320,19 +317,17 @@ pub fn gen_test01(){
             Ok(_) => {
                 for expr in e_parser.code_list {
                     expr.show();
-                    match &expr{
-                        ExprElem::FuncElem(a) => {
-                            match a.generate_wasm(){
-                                Ok(wasm_code) => {
-                                    let _ = wasm_test_2_args_1_return(&wasm_code,  &arg_set[i], &ans[i]);
-                                }
-                                Err(e) => {
-                                    println!("wasm生成中にerrorが発生しました");
-                                    println!("コンパイラに何らかの問題があります");
-                                    println!("{:?}", e);
-                                }
+                    match &expr {
+                        ExprElem::FuncElem(a) => match a.generate_wasm() {
+                            Ok(wasm_code) => {
+                                let _ = wasm_test_2_args_1_return(&wasm_code, &arg_set[i], &ans[i]);
                             }
-                        }
+                            Err(e) => {
+                                println!("wasm生成中にerrorが発生しました");
+                                println!("コンパイラに何らかの問題があります");
+                                println!("{:?}", e);
+                            }
+                        },
                         _ => {
                             println!("func 要素ではありませんでした");
                             continue;
@@ -345,7 +340,7 @@ pub fn gen_test01(){
 }
 
 #[test]
-pub fn gen_test02(){
+pub fn gen_test02() {
     let test_cases = [
         "
         i = 0;
@@ -472,44 +467,38 @@ pub fn gen_test02(){
         ",
     ];
 
-
-    for test_case in test_cases{
-        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+    for test_case in test_cases {
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0, 0);
         println!("----------------------------------------------------------------");
-        if let Err(e) = s_parser.resolve()
-        {
+        if let Err(e) = s_parser.resolve() {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
-        }
-        else
-        {
+        } else {
             let mut wasm_text_format = String::new();
 
-            for inner in s_parser.code_list{
+            for inner in s_parser.code_list {
                 // 分けることのできない式の集合
                 match inner {
                     StmtElem::ExprElem(expr_b) => {
-                        if let Ok(a) = &expr_b .generate_wasm(){
+                        if let Ok(a) = &expr_b.generate_wasm() {
                             wasm_text_format.push_str(a);
-                        }
-                        else if let Err(e) = &expr_b .generate_wasm(){
+                        } else if let Err(e) = &expr_b.generate_wasm() {
                             println!("wasm生成中にエラーが発生しました(ExprElem)");
                             println!("{:?}", e);
                             panic!();
                         }
                     }
                     StmtElem::Special(controll_b) => {
-                        if let Ok(a) = &controll_b .generate_wasm(){
+                        if let Ok(a) = &controll_b.generate_wasm() {
                             wasm_text_format.push_str(a);
-                        }
-                        else if let Err(e) = &controll_b .generate_wasm(){
+                        } else if let Err(e) = &controll_b.generate_wasm() {
                             println!("wasm生成中にエラーが発生しました(ControlElem)");
                             println!("{:?}", e);
                             panic!();
                         }
                     }
                     StmtElem::CommentElem(_) => {
-                        // pass 
+                        // pass
                         //文中にコメントが入った場合は　pass
                     }
                     _ => {
@@ -523,37 +512,28 @@ pub fn gen_test02(){
     }
 }
 
-
 #[test]
-pub fn gen_test03(){
-    let test_cases = [
-        "
+pub fn gen_test03() {
+    let test_cases = ["
         fn main(a:i32) -> i32{
             print(\"hello world\");
         }
-        ",
-    ];
+        "];
 
-
-    for test_case in test_cases{
-        let mut s_parser = StmtParser::new(test_case.to_string(), 0,0);
+    for test_case in test_cases {
+        let mut s_parser = StmtParser::new(test_case.to_string(), 0, 0);
         println!("----------------------------------------------------------------");
-        if let Err(e) = s_parser.resolve()
-        {
+        if let Err(e) = s_parser.resolve() {
             println!("unexpected ParseError occured");
             println!("{:?}", e);
-        }
-        else
-        {
+        } else {
             let mut a = String::default();
 
-            for i in s_parser.code_list{
+            for i in s_parser.code_list {
                 a.push_str(&i.get_show_as_string());
             }
 
             println!("{}", a);
         }
     }
-
 }
-

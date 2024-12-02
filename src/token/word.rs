@@ -1,7 +1,6 @@
 use crate::abs::ast::*;
 use crate::errors::generate_errors::GenerateError;
 
-
 /// # WordBranch
 /// 単語を格納するためのstruct
 /// ASTAreaBranchを実装しないため`resolve_self`メソッドを持たない
@@ -13,13 +12,13 @@ pub struct WordBranch {
     pub loopdepth: isize,
 }
 
-impl WordBranch{
+impl WordBranch {
     /// selfが数字か、または、それ以外なのかを判定する関数
     /// 数字のときはtrueを返却します
-    pub fn self_is_num(&self) -> Result<bool, GenerateError>{
+    pub fn self_is_num(&self) -> Result<bool, GenerateError> {
         // あとで16進数表記、8進数表記、2進数表記
         // この関数の実装は一時的なものであとで、詳細な実装が必要になる。
-        for (i, j    ) in self.contents.chars() .enumerate(){
+        for (i, j) in self.contents.chars().enumerate() {
             if j == '.' {
                 // 数字以外だった場合
                 if i == 0 || i == self.contents.len() - 1 {
@@ -29,15 +28,14 @@ impl WordBranch{
                     // pass
                 }
             } else if !j.is_ascii_digit() {
-                 return Ok(false);
+                return Ok(false);
             } else {
-                 // 数字だった場合はpass
+                // 数字だった場合はpass
             }
         }
         Ok(true)
     }
 }
-
 
 impl ASTBranch for WordBranch {
     fn show(&self) {

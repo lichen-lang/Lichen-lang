@@ -9,8 +9,8 @@ pub mod paren_block;
 pub mod syntax;
 pub mod syntax_box;
 
-pub mod decvalue;
 pub mod decfunc;
+pub mod decvalue;
 
 pub mod item;
 

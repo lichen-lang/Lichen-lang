@@ -33,7 +33,7 @@ pub trait ProcToken {
     fn t_block(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self;
     fn t_parenblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
     fn t_listblock(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self;
-    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self;
+    fn t_commentblock(contents: String, depth: isize, loopdepth: isize) -> Self;
 }
 
 /// # ExprElem
@@ -69,7 +69,7 @@ pub enum StmtElem {
     BlockElem(BlockBranch),
     ListBlockElem(ListBlockBranch),
     ParenBlockElem(ParenBlockBranch),
-    // 
+    //
     ExprElem(ExprBranch),
     Special(StmtBranch),
     // without RecursiveAnalysisElements trait structures
@@ -175,15 +175,14 @@ impl ProcToken for ExprElem {
             loopdepth,
         })
     }
-    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self {
-        Self::CommentElem(CommentBranch { 
+    fn t_commentblock(contents: String, depth: isize, loopdepth: isize) -> Self {
+        Self::CommentElem(CommentBranch {
             contents,
             depth,
-            loopdepth
+            loopdepth,
         })
     }
 }
-
 
 impl Token for TypeElem {
     fn set_char_as_unknown(c: char) -> Self {
@@ -220,7 +219,7 @@ impl Token for StmtElem {
         match self {
             Self::BlockElem(e) => e.get_show_as_string(),
             Self::ListBlockElem(e) => e.get_show_as_string(),
-            Self::ParenBlockElem(e)=> e.get_show_as_string(),
+            Self::ParenBlockElem(e) => e.get_show_as_string(),
             Self::Special(e) => e.get_show_as_string(),
             // without RecursiveAnalysisElements trait structures
             Self::StringElem(e) => e.get_show_as_string(),
@@ -298,11 +297,11 @@ impl ProcToken for StmtElem {
         })
     }
 
-    fn t_commentblock(contents: String, depth:isize, loopdepth:isize) -> Self {
-        Self::CommentElem(CommentBranch { 
+    fn t_commentblock(contents: String, depth: isize, loopdepth: isize) -> Self {
+        Self::CommentElem(CommentBranch {
             contents,
             depth,
-            loopdepth
+            loopdepth,
         })
     }
 }
@@ -312,7 +311,7 @@ impl ProcToken for StmtElem {
 pub trait ASTBranch {
     fn show(&self);
     fn get_show_as_string(&self) -> String;
-   //  fn expand_assembly(&self) -> String;
+    //  fn expand_assembly(&self) -> String;
 }
 
 /// # ASTAreaBranch

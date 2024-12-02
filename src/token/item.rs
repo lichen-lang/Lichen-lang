@@ -2,8 +2,8 @@ use crate::abs::ast::*;
 use crate::abs::gen::Wasm_gen;
 use crate::errors::generate_errors::GenerateError;
 use crate::errors::parser_errors::ParserError;
-use crate::parser::expr_parser::ExprParser;
 use crate::gen::wasm::MEMORY_SPACE_NAME;
+use crate::parser::expr_parser::ExprParser;
 
 /// 引数などの式を格納します
 #[derive(Clone, Debug)]
@@ -13,7 +13,7 @@ pub struct ItemBranch {
     pub loopdepth: isize,
 }
 
-impl ItemBranch{
+impl ItemBranch {
     /// 何も要素を持たない引数だった場合trueを返却する
     pub fn has_no_elem(&self) -> bool {
         self.contents.is_empty()
@@ -57,4 +57,3 @@ impl RecursiveAnalysisElements for ItemBranch {
         }
     }
 }
-

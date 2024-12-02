@@ -1,9 +1,8 @@
-use crate::abs::ast::{ ASTBranch, ExprElem, RecursiveAnalysisElements, Token};
+use crate::abs::ast::{ASTBranch, ExprElem, RecursiveAnalysisElements, Token};
 use crate::abs::gen::Wasm_gen;
+use crate::errors::generate_errors::GenerateError;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::expr_parser::ExprParser;
-use crate::errors::generate_errors::GenerateError;
-
 
 /// 式の集合を扱います
 #[derive(Clone, Debug)]
@@ -53,12 +52,11 @@ impl ASTBranch for ExprBranch {
     }
 }
 
-
-impl Wasm_gen for ExprBranch{
+impl Wasm_gen for ExprBranch {
     fn generate_wasm(&self) -> Result<String, GenerateError> {
         let mut assembly_text = String::new();
-        for expr in &self.code_list{
-            match expr{
+        for expr in &self.code_list {
+            match expr {
                 ExprElem::FuncElem(func_b) => {
                     // 普通の式の場合
                     assembly_text.push_str(&func_b.generate_wasm()?);

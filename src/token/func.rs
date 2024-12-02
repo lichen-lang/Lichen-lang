@@ -87,5 +87,3 @@ impl RecursiveAnalysisElements for FuncBranch {
         Ok(())
     }
 }
-
-

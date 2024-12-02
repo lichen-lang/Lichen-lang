@@ -27,7 +27,7 @@ macro_rules! def_ope {
     };
 }
 
-pub enum OpeTable{
+pub enum OpeTable {
     ARROW, // 矢印
     OR,
     AND,
@@ -53,35 +53,33 @@ pub enum OpeTable{
     NOT,
 }
 
-impl OpeTable{
-    pub fn set(s:&str) -> Result<Self, &str>{
-        match s{
+impl OpeTable {
+    pub fn set(s: &str) -> Result<Self, &str> {
+        match s {
             "->" => Ok(Self::OR),
             "||" => Ok(Self::OR),
             "&&" => Ok(Self::AND),
             "==" => Ok(Self::EQ),
             "!=" => Ok(Self::NE),
-            "<"  => Ok(Self::LT),
+            "<" => Ok(Self::LT),
             "<=" => Ok(Self::LE),
-            ">"  => Ok(Self::GT),
+            ">" => Ok(Self::GT),
             ">=" => Ok(Self::GE),
-            "+"  => Ok(Self::ADD),
-            "-"  => Ok(Self::SUB),
-            "*"  => Ok(Self::MUL),
-            "/"  => Ok(Self::DIV),
-            "%"  => Ok(Self::MOD),
-            "@"  => Ok(Self::DOT),
-            "="  => Ok(Self::ASSIGNMENT),
+            "+" => Ok(Self::ADD),
+            "-" => Ok(Self::SUB),
+            "*" => Ok(Self::MUL),
+            "/" => Ok(Self::DIV),
+            "%" => Ok(Self::MOD),
+            "@" => Ok(Self::DOT),
+            "=" => Ok(Self::ASSIGNMENT),
             "+=" => Ok(Self::ADDEQ),
             "-=" => Ok(Self::SUBEQ),
             "*=" => Ok(Self::MULEQ),
             "/=" => Ok(Self::DIVEQ),
             "%=" => Ok(Self::MODEQ),
             "**" => Ok(Self::POW),
-            "!"  => Ok(Self::NOT),
-            _ => {
-                Err("Invalid Operation String")
-            }
+            "!" => Ok(Self::NOT),
+            _ => Err("Invalid Operation String"),
         }
     }
 }

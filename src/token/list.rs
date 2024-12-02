@@ -4,9 +4,9 @@ use crate::errors::parser_errors::ParserError;
 use crate::parser::comma_parser::CommaParser;
 use crate::parser::core_parser::Parser;
 
-use crate::token::list_block::ListBlockBranch;
 use crate::errors::generate_errors::GenerateError;
 use crate::gen::wasm::MEMORY_SPACE_NAME;
+use crate::token::list_block::ListBlockBranch;
 
 #[derive(Clone, Debug)]
 pub struct ListBranch {
@@ -74,5 +74,3 @@ impl RecursiveAnalysisElements for ListBranch {
         Ok(())
     }
 }
-
-

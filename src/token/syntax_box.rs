@@ -37,4 +37,3 @@ impl RecursiveAnalysisElements for SyntaxBoxBranch {
         Ok(())
     }
 }
-
