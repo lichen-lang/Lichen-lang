@@ -1,15 +1,23 @@
-use crate::abs::ast::ASTBranch;
-use crate::abs::ast::ExprElem;
-use crate::abs::ast::RecursiveAnalysisElements;
+use crate::abs::ast::*;
+use crate::abs::gen::Wasm_gen;
+use crate::errors::generate_errors::GenerateError;
 use crate::errors::parser_errors::ParserError;
-use crate::parser::core_parser::Parser;
+use crate::gen::wasm::MEMORY_SPACE_NAME;
 use crate::parser::expr_parser::ExprParser;
 
+/// 引数などの式を格納します
 #[derive(Clone, Debug)]
 pub struct ItemBranch {
     pub contents: Vec<ExprElem>,
     pub depth: isize,
     pub loopdepth: isize,
+}
+
+impl ItemBranch {
+    /// 何も要素を持たない引数だった場合trueを返却する
+    pub fn has_no_elem(&self) -> bool {
+        self.contents.is_empty()
+    }
 }
 
 impl ASTBranch for ItemBranch {

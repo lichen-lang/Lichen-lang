@@ -1,12 +1,17 @@
 use crate::abs::ast::ASTAreaBranch;
 use crate::abs::ast::ExprElem;
 
+use crate::abs::ast::ProcToken;
+use crate::abs::ast::Token;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::Parser;
 
 use crate::token::item::ItemBranch;
 use crate::token::string::StringBranch;
 
+/// # CommaParser
+/// This parser is a bit anomalous.
+/// It performs specialized parsing of the argument part of a function that takes multiple arguments.
 pub struct CommaParser {
     pub code: String,
     pub code_list: Vec<ExprElem>,
@@ -14,8 +19,6 @@ pub struct CommaParser {
     pub loopdepth: isize,
 }
 
-/// This parser is a bit anomalous.
-/// It performs specialized parsing of the argument part of a function that takes multiple arguments.
 impl CommaParser {
     pub fn code2vec(&mut self) -> Result<(), ParserError> {
         self.grouping_quotation()?;
@@ -69,6 +72,7 @@ impl CommaParser {
         self.code_list = rlist;
         Ok(())
     }
+
     fn grouping_quotation(&mut self) -> Result<(), ParserError> {
         let mut open_flag = false;
         let mut escape_flag = false;
@@ -80,7 +84,8 @@ impl CommaParser {
                 if escape_flag {
                     group.push(v.contents);
                     escape_flag = false
-                } else if v.contents == '"'
+                } else if v.contents == Self::DOUBLE_QUOTATION
+                // '"'
                 // is quochar
                 {
                     if open_flag {
@@ -88,6 +93,7 @@ impl CommaParser {
                         rlist.push(ExprElem::StringElem(StringBranch {
                             contents: group.clone(),
                             depth: self.depth,
+                            loopdepth: self.loopdepth,
                         }));
                         group.clear();
                         open_flag = false;
@@ -96,7 +102,7 @@ impl CommaParser {
                         open_flag = true;
                     }
                 } else if open_flag {
-                    escape_flag = v.contents == '\\';
+                    escape_flag = v.contents == Self::ESCAPECHAR; // '\\'
                     group.push(v.contents);
                 } else {
                     rlist.push(inner.clone());
@@ -112,17 +118,18 @@ impl CommaParser {
         Ok(())
     }
 
-    fn grouping_elements<T>(
+    fn grouping_elements<T, U>(
         &mut self,
         elemtype: fn(T) -> ExprElem,
         open_char: char,
         close_char: char,
     ) -> Result<(), ParserError>
     where
-        T: ASTAreaBranch,
+        T: ASTAreaBranch<U>,
+        U: Clone + Token + ProcToken,
     {
         let mut rlist: Vec<ExprElem> = Vec::new();
-        let mut group: Vec<ExprElem> = Vec::new();
+        let mut group: Vec<U> = Vec::new();
         let mut depth: isize = 0;
 
         for inner in &self.code_list {
@@ -130,7 +137,7 @@ impl CommaParser {
                 if b.contents == open_char {
                     match depth {
                         0 => { /*pass*/ }
-                        1.. => group.push(inner.clone()),
+                        1.. => group.push(Token::set_char_as_unknown(b.contents)),
                         _ => return Err(ParserError::Uncategorized),
                     }
                     depth += 1;
@@ -145,20 +152,56 @@ impl CommaParser {
                             )));
                             group.clear();
                         }
-                        1.. => group.push(inner.clone()),
+                        1.. => group.push(Token::set_char_as_unknown(b.contents)),
                         _ => return Err(ParserError::Uncategorized),
                     }
                 } else {
                     match depth {
                         0 => rlist.push(inner.clone()),
-                        1.. => group.push(inner.clone()),
+                        1.. => group.push(Token::set_char_as_unknown(b.contents)),
                         _ => return Err(ParserError::Uncategorized),
                     }
                 }
             } else {
                 match depth {
                     0 => rlist.push(inner.clone()),
-                    1.. => group.push(inner.clone()),
+                    1.. => {
+                        match &inner {
+                            ExprElem::StringElem(s) => {
+                                group.push(ProcToken::t_string(
+                                    s.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            ExprElem::BlockElem(bl) => {
+                                group.push(ProcToken::t_block(
+                                    bl.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            ExprElem::ParenBlockElem(pb) => {
+                                group.push(ProcToken::t_parenblock(
+                                    pb.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            ExprElem::ListBlockElem(lb) => {
+                                group.push(ProcToken::t_listblock(
+                                    lb.contents.clone(),
+                                    self.depth,
+                                    self.loopdepth,
+                                ));
+                            }
+                            // todo
+                            _ => {
+                                // todo error処理
+                                return Err(ParserError::UnexpectedTypeComma);
+                            }
+                        }
+                    }
                     _ => return Err(ParserError::BraceNotClosed),
                 }
             }
@@ -169,10 +212,12 @@ impl CommaParser {
         self.code_list = rlist;
         Ok(())
     }
-}
 
-impl Parser<'_> for CommaParser {
-    fn create_parser_from_vec(code_list: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+    pub fn create_parser_from_vec(
+        code_list: Vec<ExprElem>,
+        depth: isize,
+        loopdepth: isize,
+    ) -> Self {
         Self {
             code: String::new(),
             code_list,
@@ -180,7 +225,9 @@ impl Parser<'_> for CommaParser {
             loopdepth,
         }
     }
+}
 
+impl Parser<'_> for CommaParser {
     fn new(code: String, depth: isize, loopdepth: isize) -> Self {
         Self {
             code,

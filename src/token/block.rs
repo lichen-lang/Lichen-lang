@@ -1,7 +1,5 @@
 use crate::abs::ast::*;
-
 use crate::errors::parser_errors::ParserError;
-use crate::parser::core_parser::Parser;
 use crate::parser::stmt_parser::*;
 
 /// # BlockBranch
@@ -10,7 +8,7 @@ use crate::parser::stmt_parser::*;
 ///
 #[derive(Clone, Debug)]
 pub struct BlockBranch {
-    pub contents: Vec<ExprElem>,
+    pub contents: Vec<StmtElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -26,9 +24,6 @@ impl RecursiveAnalysisElements for BlockBranch {
             Ok(_) => {
                 let mut rlist = parser.code_list;
                 for i in &mut rlist {
-                    // if let Err(e) = i.resolve_self() {
-                    //     return Err(e);
-                    // }
                     i.resolve_self()?;
                 }
                 self.contents = rlist;
@@ -39,8 +34,8 @@ impl RecursiveAnalysisElements for BlockBranch {
     }
 }
 
-impl ASTAreaBranch for BlockBranch {
-    fn new(contents: Vec<ExprElem>, depth: isize, loopdepth: isize) -> Self {
+impl ASTAreaBranch<StmtElem> for BlockBranch {
+    fn new(contents: Vec<StmtElem>, depth: isize, loopdepth: isize) -> Self {
         Self {
             contents,
             depth,

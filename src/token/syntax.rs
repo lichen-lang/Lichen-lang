@@ -1,4 +1,6 @@
 use crate::abs::ast::*;
+use crate::abs::gen::Wasm_gen;
+use crate::errors::generate_errors::GenerateError;
 use crate::errors::parser_errors::ParserError;
 use crate::parser::core_parser::Parser;
 use crate::parser::expr_parser::ExprParser;
@@ -14,7 +16,7 @@ use crate::parser::stmt_parser::StmtParser;
 pub struct SyntaxBranch {
     pub name: String,
     pub expr: Vec<ExprElem>,
-    pub contents: Vec<ExprElem>,
+    pub contents: Vec<StmtElem>,
     pub depth: isize,
     pub loopdepth: isize,
 }
@@ -56,8 +58,15 @@ impl RecursiveAnalysisElements for SyntaxBranch {
             ExprParser::create_parser_from_vec(self.expr.clone(), self.depth, self.loopdepth);
         e_parser.resolve()?;
         self.expr = e_parser.code_list;
-        let mut s_parser =
-            StmtParser::create_parser_from_vec(self.contents.clone(), self.depth, self.loopdepth);
+        let mut s_parser = StmtParser::create_parser_from_vec(
+            self.contents.clone(),
+            self.depth,
+            if self.name == "while" || self.name == "for" {
+                self.loopdepth + 1
+            } else {
+                self.loopdepth
+            },
+        );
         s_parser.resolve()?;
         self.contents = s_parser.code_list;
         Ok(())

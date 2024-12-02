@@ -9,3 +9,5 @@ license = "MIT"
 
 [dev-dependencies]
 colored = "1.9"
+wasmer = "5.0.1"
+anyhow = "1.0"
