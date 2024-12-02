@@ -1,8 +1,6 @@
 use crate::abs::ast::*;
-use crate::abs::gen::Wasm_gen;
 use crate::errors::parser_errors::ParserError;
 use crate::token::syntax::SyntaxBranch;
-use crate::errors::generate_errors::GenerateError;
 
 /// # SyntaxBoxBranch
 /// まとまった文法として解釈される`if elif else` `while else` `for else`などの文法をまとめる
@@ -39,49 +37,4 @@ impl RecursiveAnalysisElements for SyntaxBoxBranch {
         Ok(())
     }
 }
-
-impl Wasm_gen for SyntaxBoxBranch {
-    fn generate_wasm(&self) -> Result<String, GenerateError> {
-        let mut assembly_text = String::default();
-        match &*self.name{
-            "if" => {
-                for section in &self.contents{
-                    assembly_text.push_str(&section.generate_wasm("if")?);
-                }
-                for i in 0..count_if_section(&self.contents){
-                    assembly_text.push_str("end\n");
-                }
-            }
-            "while" => {
-                for section in &self.contents{
-                    assembly_text.push_str(&section.generate_wasm("while")?);
-                }
-            }
-            "for" => {
-                todo!()
-            }
-            _ => {
-                    return Err(GenerateError::Deverror);
-            }
-        }
-        Ok(assembly_text)
-    }
-}
-
-
-fn count_if_section(if_state_contents:&[SyntaxBranch]) -> usize{
-    let mut c = 0;
-    for inner in if_state_contents{
-        match &*inner.name{
-            "if" | "elif" => {
-                c += 1;
-            }
-            _ => {
-                // pass
-            }
-        }
-    }
-    c
-}
-
 
